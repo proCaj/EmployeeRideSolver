@@ -23,14 +23,11 @@ public class Driver implements Standstill {
     private Duration maxWeeklyHours = Duration.ofHours(40);
     private Employee employee;
     
-    @PlanningListVariable(valueRangeProviderRefs = "eventRange")
-    private List<Event> events = new ArrayList<>();
-    
-    @InverseRelationShadowVariable(sourceVariableName = "driver")
+    @InverseRelationShadowVariable(sourceVariableName = "previousStandstill")
     private List<Event> assignedEvents = new ArrayList<>();
     
     @ShadowVariable(variableListenerClass = RouteSplitterListener.class, 
-                     sourceVariableName = "events")
+                     sourceVariableName = "assignedEvents")
     private List<Route> routes = new ArrayList<>();
     
     @ShadowVariable(variableListenerClass = HoursTrackingListener.class, 
@@ -82,12 +79,12 @@ public class Driver implements Standstill {
     }
     
     public int getTotalLoad() {
-        if (events == null || events.isEmpty()) {
+        if (assignedEvents == null || assignedEvents.isEmpty()) {
             return 0;
         }
         int maxLoad = 0;
         int currentLoad = 0;
-        for (Event event : events) {
+        for (Event event : assignedEvents) {
             if (event.isPickup()) {
                 currentLoad++;
             } else {
@@ -171,11 +168,7 @@ public class Driver implements Standstill {
     }
     
     public List<Event> getEvents() {
-        return events;
-    }
-    
-    public void setEvents(List<Event> events) {
-        this.events = events;
+        return assignedEvents;
     }
     
     public List<Event> getAssignedEvents() {
@@ -258,6 +251,6 @@ public class Driver implements Standstill {
     @Override
     public String toString() {
         return "Driver{" + id + ", home=" + homeLocation.name() + 
-               ", events=" + (events != null ? events.size() : 0) + "}";
+               ", events=" + (assignedEvents != null ? assignedEvents.size() : 0) + "}";
     }
 }

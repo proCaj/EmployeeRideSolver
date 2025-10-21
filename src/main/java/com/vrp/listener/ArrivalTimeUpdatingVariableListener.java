@@ -60,10 +60,23 @@ public class ArrivalTimeUpdatingVariableListener implements VariableListener<Vrp
         sourceEvent.setArrivalTime(arrivalTime);
         scoreDirector.afterVariableChanged(sourceEvent, "arrivalTime");
         
-        Event shadowEvent = sourceEvent.getNextEvent();
+        Event shadowEvent = findNextEvent(sourceEvent);
         while (shadowEvent != null) {
             updateArrivalTime(scoreDirector, shadowEvent);
-            shadowEvent = shadowEvent.getNextEvent();
+            shadowEvent = findNextEvent(shadowEvent);
         }
+    }
+    
+    private Event findNextEvent(Event currentEvent) {
+        Driver driver = currentEvent.getDriver();
+        if (driver == null || driver.getAssignedEvents() == null) {
+            return null;
+        }
+        for (Event event : driver.getAssignedEvents()) {
+            if (event.getPreviousStandstill() == currentEvent) {
+                return event;
+            }
+        }
+        return null;
     }
 }

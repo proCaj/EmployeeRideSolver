@@ -26,17 +26,8 @@ public class Event implements Standstill {
     private Duration earlyArrivalMin;
     private Duration earlyArrivalMax;
     
-    @PlanningVariable(valueRangeProviderRefs = "driverRange")
-    private Driver driver;
-    
     @PlanningVariable(valueRangeProviderRefs = "standstillRange")
     private Standstill previousStandstill;
-    
-    @PreviousElementShadowVariable(sourceVariableName = "previousStandstill")
-    private Event previousEvent;
-    
-    @NextElementShadowVariable(sourceVariableName = "previousStandstill")
-    private Event nextEvent;
     
     @ShadowVariable(variableListenerClass = ArrivalTimeUpdatingVariableListener.class, 
                      sourceVariableName = "previousStandstill")
@@ -70,7 +61,10 @@ public class Event implements Standstill {
     
     @Override
     public Driver getDriver() {
-        return driver;
+        if (previousStandstill == null) {
+            return null;
+        }
+        return previousStandstill.getDriver();
     }
     
     public Instant getDepartureTime() {
@@ -192,9 +186,6 @@ public class Event implements Standstill {
         this.earlyArrivalMax = earlyArrivalMax;
     }
     
-    public void setDriver(Driver driver) {
-        this.driver = driver;
-    }
     
     public Standstill getPreviousStandstill() {
         return previousStandstill;
@@ -202,22 +193,6 @@ public class Event implements Standstill {
     
     public void setPreviousStandstill(Standstill previousStandstill) {
         this.previousStandstill = previousStandstill;
-    }
-    
-    public Event getPreviousEvent() {
-        return previousEvent;
-    }
-    
-    public void setPreviousEvent(Event previousEvent) {
-        this.previousEvent = previousEvent;
-    }
-    
-    public Event getNextEvent() {
-        return nextEvent;
-    }
-    
-    public void setNextEvent(Event nextEvent) {
-        this.nextEvent = nextEvent;
     }
     
     public Instant getArrivalTime() {
