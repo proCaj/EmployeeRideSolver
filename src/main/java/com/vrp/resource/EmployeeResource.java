@@ -1,0 +1,77 @@
+package com.vrp.resource;
+
+import com.vrp.entity.Employee;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
+import java.util.List;
+
+@Path("/api/employees")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public class EmployeeResource {
+    
+    @GET
+    public List<Employee> listAll() {
+        return Employee.listAll();
+    }
+    
+    @GET
+    @Path("/{id}")
+    public Employee get(@PathParam("id") Long id) {
+        Employee employee = Employee.findById(id);
+        if (employee == null) {
+            throw new NotFoundException("Employee not found");
+        }
+        return employee;
+    }
+    
+    @POST
+    @Transactional
+    public Response create(Employee employee) {
+        employee.persist();
+        return Response.status(Response.Status.CREATED).entity(employee).build();
+    }
+    
+    @PUT
+    @Path("/{id}")
+    @Transactional
+    public Employee update(@PathParam("id") Long id, Employee updatedEmployee) {
+        Employee employee = Employee.findById(id);
+        if (employee == null) {
+            throw new NotFoundException("Employee not found");
+        }
+        employee.name = updatedEmployee.name;
+        employee.email = updatedEmployee.email;
+        employee.phoneNumber = updatedEmployee.phoneNumber;
+        employee.skills = updatedEmployee.skills;
+        employee.active = updatedEmployee.active;
+        return employee;
+    }
+    
+    @DELETE
+    @Path("/{id}")
+    @Transactional
+    public Response delete(@PathParam("id") Long id) {
+        Employee employee = Employee.findById(id);
+        if (employee == null) {
+            throw new NotFoundException("Employee not found");
+        }
+        employee.delete();
+        return Response.noContent().build();
+    }
+    
+    @PATCH
+    @Path("/{id}/toggle")
+    @Transactional
+    public Employee toggleActive(@PathParam("id") Long id) {
+        Employee employee = Employee.findById(id);
+        if (employee == null) {
+            throw new NotFoundException("Employee not found");
+        }
+        employee.active = !employee.active;
+        return employee;
+    }
+}

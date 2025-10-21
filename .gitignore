@@ -1,0 +1,39 @@
+# Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Database
+db/
+*.db
+
+# GraphHopper Cache
+graphhopper-cache/
+*.osm.pbf
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Quarkus
+.quarkus/
+
+# Replit
+.replit
+replit.nix
