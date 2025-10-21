@@ -1,0 +1,616 @@
+# MVP Implementation Prompt: Employee Transportation VRP Solver (Replit Edition)
+
+## Project Context
+
+Build a **Minimum Viable Product (MVP)** for an employee transportation routing system using **Quarkus 3.17.3**, **Timefold Solver 1.17.0**, and **GraphHopper** routing engine with **Java 17**. This system optimizes driver routes for transporting employees between a central hub (Hauptbahnhof Worms) and multiple customer locations with complex scheduling requirements.
+
+## Problem Overview
+
+### Core Business Problem
+Transport employees from a central hub to various customer locations for shift work, optimizing for:
+1. **Minimize total distance** (highest priority - reduces gas and vehicle wear)
+2. **Maximize consecutive working hours** for drivers (soft constraint - aim for 4-hour blocks)
+3. **Minimize employee travel time** (lower priority)
+
+### Key Constraints
+- **Hard Constraints:**
+  - Vehicle capacity: 6 passengers per vehicle
+  - Time windows: Employees must arrive within 30-45 minutes before shift start
+  - Work hours: Max 10 hours/day, 40 hours/week per driver
+  - Driver breaks: 30 min minimum, 4 hours maximum between routes
+  - Pickup-dropoff pairing: Dropoffs must occur after corresponding pickups
+
+- **Soft Constraints:**
+  - Minimize total distance traveled (HIGH priority)
+  - Maximize consecutive working hours (aim for 4-hour blocks)
+  - Minimize total travel time
+  - Minimize waiting time
+
+## Routing Engine: GraphHopper
+
+### Why GraphHopper?
+- ✅ **Native Java integration** - No external HTTP service required
+- ✅ **Self-contained** - Runs in same JVM as Quarkus
+- ✅ **Offline routing** - Download OSM data once, works without internet
+- ✅ **Replit compatible** - Entire stack runs in one container
+- ✅ **Accurate** - Real-world road network distances and times
+- ✅ **Maven dependency** - Simple `pom.xml` addition
+
+### Maven Dependency
+```xml
+<dependency>
+    <groupId>com.graphhopper</groupId>
+    <artifactId>graphhopper-core</artifactId>
+    <version>8.0</version>
+</dependency>
+```
+
+### GraphHopper Setup
+```java
+// Initialize once at startup
+GraphHopper hopper = new GraphHopper();
+hopper.setOSMFile("germany-latest.osm.pbf"); // ~3GB download
+hopper.setGraphHopperLocation("./graphhopper-cache");
+hopper.setProfiles(new Profile("car").setVehicle("car").setWeighting("fastest"));
+hopper.importOrLoad();
+
+// Use for routing
+GHRequest request = new GHRequest(lat1, lon1, lat2, lon2)
+    .setProfile("car");
+GHResponse response = hopper.route(request);
+PathWrapper path = response.getBest();
+long distanceMeters = Math.round(path.getDistance());
+long timeMillis = path.getTime();
+```
+
+### Integration Strategy
+1. **Startup:** Download OSM extract for Rhineland-Palatinate/Hesse region (smaller than full Germany)
+2. **Cache:** Store routing graph in `./graphhopper-cache` directory
+3. **Distance Calculator:** Replace Haversine with GraphHopper actual routing
+4. **Fallback:** Use Haversine if GraphHopper fails (for robustness)
+
+## Domain Model Requirements
+
+### 1. Location (Immutable Record)
+```java
+- name: String
+- latitude: double
+- longitude: double
+- getDistanceTo(Location, GraphHopper): long // GraphHopper routing, fallback to Haversine
+- getTravelTime(Location, GraphHopper): Duration // GraphHopper time estimate
+```
+
+**Fixed Hub:** Hauptbahnhof Worms (49.634, 8.359)
+
+### 2. Customer (JPA Entity for UI)
+```java
+@Entity
+- id: Long (auto-generated)
+- name: String
+- address: String
+- latitude: double
+- longitude: double
+- shiftDemands: OneToMany<ShiftDemand>
+```
+
+### 3. ShiftDemand (JPA Entity for UI)
+```java
+@Entity
+- id: Long (auto-generated)
+- customer: ManyToOne<Customer>
+- shiftType: String // "Frühschicht", "Spätschicht", "Nachtschicht"
+- dayOfWeek: DayOfWeek
+- startTime: LocalTime
+- endTime: LocalTime
+- requiredEmployees: int
+- earlyArrivalBufferMin: Duration // Default: 30 min
+- earlyArrivalBufferMax: Duration // Default: 45 min
+- requiresReturnTrip: boolean // Default: true
+- active: boolean // Enable/disable shifts via UI
+```
+
+### 4. Employee (JPA Entity for UI)
+```java
+@Entity
+- id: Long (auto-generated)
+- name: String
+- email: String
+- phoneNumber: String
+- defaultPickupLocation: Location // Fixed to hub for MVP
+- skills: Set<String>
+- active: boolean // Enable/disable employees via UI
+- assignments: ManyToMany<ShiftDemand> // Which shifts employee works
+```
+
+### 5. Event (@PlanningEntity) - Core Planning Unit
+```java
+- id: String
+- fromLocation: Location // Hub for pickup, Customer for dropoff
+- toLocation: Location // Customer for pickup, Hub for dropoff
+- minStartTime: Instant
+- maxEndTime: Instant
+- duration: Duration // Travel + service time (from GraphHopper)
+- distance: long // Meters (from GraphHopper)
+- isPickup: boolean // true = hub→customer, false = customer→hub
+- pairedEvent: Event // Linked pickup/dropoff (null if single event)
+- assignedEmployee: Employee // Pre-assigned to shift
+- dayType: String // "weekday" or "weekend"
+- earlyArrivalMin/Max: Duration
+
+// Planning Variables
+- @PlanningVariable driver: Driver
+- @PlanningVariable previousStandstill: Standstill
+- @PreviousElementShadowVariable previousEvent: Event
+- @NextElementShadowVariable nextEvent: Event
+- @ShadowVariable arrivalTime: Instant // Updated by ArrivalTimeUpdatingVariableListener
+```
+
+### 6. Driver (@PlanningEntity)
+```java
+- id: String
+- homeLocation: Location
+- maxCapacity: long // 6 seats
+- maxConsecutiveHours: Duration // 4 hours
+- minBreak: Duration // 30 min
+- maxBreak: Duration // 4 hours
+- maxDailyHours: Duration // 10 hours
+- maxWeeklyHours: Duration // 40 hours
+- employee: Employee // Linked employee data
+
+// Planning Variables
+- @PlanningListVariable events: List<Event>
+
+// Shadow Variables
+- @InverseRelationShadowVariable assignedEvents: List<Event>
+- @ShadowVariable routes: List<Route> // Split by breaks, updated by RouteSplitterListener
+- @ShadowVariable totalDailyHours: Duration
+- @ShadowVariable totalWeeklyHours: Duration
+- @ShadowVariable totalDistanceMeters: long
+- @ShadowVariable totalTravelTime: Duration
+- @ShadowVariable consecutiveWorkingHours: Duration
+- @ShadowVariable totalWaitingTime: Duration
+```
+
+### 7. Route (Non-Entity Helper Class)
+```java
+- events: List<Event>
+- durationSeconds: long // Driving + service time
+```
+
+### 8. VrpSolution (@PlanningSolution)
+```java
+- @ProblemFactCollectionProperty locations: List<Location>
+- @ProblemFactCollectionProperty customers: List<Customer>
+- @ProblemFactCollectionProperty employees: List<Employee>
+- @PlanningEntityCollectionProperty drivers: List<Driver>
+- @PlanningEntityCollectionProperty events: List<Event>
+- @ValueRangeProvider("driverRange") driverRange: List<Driver>
+- @ValueRangeProvider("eventRange") eventRange: List<Event>
+- @ValueRangeProvider("standstillRange") standstillRange: List<Standstill>
+- @ProblemFactProperty planningStartDate: LocalDate
+- @PlanningScore score: HardMediumSoftLongScore
+```
+
+## Event Generation Logic
+
+For each `ShiftDemand` (when active):
+1. **Always generate pickup event:** Hub → Customer
+   - `minStartTime` = shift start - earlyArrivalBufferMax (e.g., 45 min)
+   - `maxEndTime` = shift start - earlyArrivalBufferMin (e.g., 30 min)
+   - Duration & Distance = GraphHopper route calculation
+   - Assign to employees based on `employee.assignments`
+
+2. **Conditionally generate dropoff event:** Customer → Hub
+   - Only if `requiresReturnTrip == true`
+   - `minStartTime` = shift end
+   - `maxEndTime` = shift end + 1 hour
+   - Link to pickup via `pairedEvent`
+
+3. **Pre-assign employees:** Each event is pre-assigned based on `ShiftDemand.assignments`
+
+## Constraint Provider Requirements
+
+Implement `VrpConstraintProvider` with:
+
+### Hard Constraints
+1. **Capacity constraint:** `driver.getTotalLoad() ≤ driver.maxCapacity`
+2. **Time window constraint:** Events must arrive within early arrival buffer and complete before maxEndTime
+3. **Pairing constraint:** If paired, dropoff must occur after pickup
+4. **Break constraint:** Between routes, breaks must be 30min-4hours
+5. **Work hour constraint:** Max 10h/day, 40h/week
+
+### Soft Constraints (Priority Order)
+1. **SOFT (HIGH):** Minimize total distance (meters) - **Weight: 1**
+2. **MEDIUM:** Maximize consecutive working hours (seconds) - **Weight: 1**
+3. **SOFT (LOW):** Minimize total travel time (seconds) - **Weight: 1/100**
+4. **SOFT (LOW):** Minimize waiting time (minutes) - **Weight: 1/60**
+
+## Variable Listeners Required
+
+1. **ArrivalTimeUpdatingVariableListener**
+   - Updates `Event.arrivalTime` based on `previousStandstill` departure time + travel time (from GraphHopper)
+   - Triggers on changes to `previousStandstill` or `driver`
+
+2. **RouteSplitterListener**
+   - Splits `Driver.events` into multiple `Route` objects when consecutive hours exceed 4h
+   - Automatically inserts break periods between routes
+   - Triggers on changes to `Driver.events`
+
+3. **HoursTrackingListener**
+   - Calculates `totalDailyHours` and `totalWeeklyHours` from routes
+   - Groups by date and aggregates durations
+   - Triggers on changes to `Driver.routes`
+
+4. **TotalMetricsListener**
+   - Calculates distance, travel time, consecutive hours, waiting time
+   - Uses GraphHopper distances from events
+   - Waiting time = sum of (minStartTime - arrivalTime) for early arrivals
+   - Triggers on changes to `Driver.routes`
+
+## UI Requirements (Replit Web Interface)
+
+### Technology Stack
+- **Frontend:** Quarkus Qute templates + HTMX for reactivity (lightweight, no npm needed)
+- **Styling:** TailwindCSS CDN or Bootstrap CDN
+- **Database:** H2 (in-memory for MVP, persisted file for production)
+- **ORM:** Hibernate with Panache
+
+### UI Pages Required
+
+#### 1. Dashboard (`/`)
+- **Overview cards:**
+  - Total active employees
+  - Total active customers
+  - Total shifts scheduled this week
+  - Last optimization run (timestamp, score)
+- **Quick actions:**
+  - "Run Optimization" button (triggers solver)
+  - "View Routes" link
+  - "Manage Employees" link
+  - "Manage Customers" link
+
+#### 2. Employee Management (`/employees`)
+- **Table view:**
+  - Columns: Name, Email, Phone, Status (Active/Inactive), Assigned Shifts
+  - Actions: Edit, Delete, Toggle Active
+- **Add Employee Form:**
+  - Name (required)
+  - Email
+  - Phone number
+  - Skills (multi-select: "driving", "forklift", etc.)
+  - Active checkbox (default: true)
+- **Edit Employee:**
+  - Same as add, pre-filled
+  - Assign to shifts (multi-select dropdown grouped by customer)
+
+#### 3. Customer & Shift Management (`/customers`)
+- **Accordion view by customer:**
+  - Customer header: Name, Address, Location (lat/lon), Edit/Delete buttons
+  - Expand to show shifts table:
+    - Columns: Day, Shift Type, Time, Required Employees, Assigned Employees, Active
+    - Actions: Edit Shift, Delete Shift, Toggle Active
+- **Add Customer Form:**
+  - Name (required)
+  - Address (required, with geocoding suggestion via Nominatim API)
+  - Latitude/Longitude (auto-filled from address or manual)
+- **Add Shift to Customer:**
+  - Shift type dropdown
+  - Day of week
+  - Start/End time
+  - Required employees (number)
+  - Early arrival buffer (min/max in minutes)
+  - Return trip required (checkbox)
+  - Assign employees (multi-select from active employees)
+
+#### 4. Optimization View (`/optimize`)
+- **Solver controls:**
+  - "Start Optimization" button
+  - Termination time slider (30s to 10min)
+  - "Stop Optimization" button (if running)
+- **Live progress:**
+  - Current score (hard/medium/soft breakdown)
+  - Time elapsed
+  - Best score so far
+  - Progress bar (estimated based on time limit)
+- **Results display:**
+  - For each driver:
+    - Total distance, total time, number of routes
+    - Expandable route details:
+      - Route 1: Timeline of events (Home → Pickup A at 04:50 → Customer X → ...)
+      - Break periods
+      - Route 2: ...
+  - Map visualization (optional for MVP, use Leaflet.js with OSM tiles)
+
+#### 5. Route View (`/routes`)
+- **Week selector:** Choose week to display
+- **Per-day tabs:** Monday through Sunday
+- **Route timeline per day:**
+  - Visual timeline (Gantt-style) showing:
+    - Driver routes as horizontal bars
+    - Events as markers on timeline
+    - Breaks as gaps
+  - Table view alternative:
+    - Driver | Route # | Start Time | Events | End Time | Distance | Duration
+
+### REST API Endpoints (for UI)
+
+```java
+// Employee Management
+GET    /api/employees                    // List all
+POST   /api/employees                    // Create new
+GET    /api/employees/{id}               // Get details
+PUT    /api/employees/{id}               // Update
+DELETE /api/employees/{id}               // Delete
+PATCH  /api/employees/{id}/toggle        // Toggle active status
+
+// Customer Management
+GET    /api/customers                    // List all
+POST   /api/customers                    // Create new
+GET    /api/customers/{id}               // Get details
+PUT    /api/customers/{id}               // Update
+DELETE /api/customers/{id}               // Delete
+
+// Shift Management
+POST   /api/customers/{id}/shifts        // Add shift to customer
+PUT    /api/shifts/{id}                  // Update shift
+DELETE /api/shifts/{id}                  // Delete shift
+PATCH  /api/shifts/{id}/toggle           // Toggle active status
+POST   /api/shifts/{id}/assign-employee  // Assign employee to shift
+DELETE /api/shifts/{id}/unassign/{empId} // Unassign employee
+
+// Solver Operations
+POST   /api/solve                        // Start optimization (returns jobId)
+GET    /api/solve/{jobId}/status         // Get solving status
+GET    /api/solve/{jobId}/solution       // Get current best solution
+DELETE /api/solve/{jobId}                // Stop solving
+
+// Route Viewing
+GET    /api/routes?week=2025-W37         // Get routes for specific week
+GET    /api/routes/{jobId}               // Get routes from specific solve
+
+// Geocoding Helper
+GET    /api/geocode?address={address}    // Geocode address to lat/lon
+```
+
+## Demo Data (Initial Bootstrap)
+
+### Customers (5)
+1. **Otto Cosmetic GmbH** (49.58, 8.47)
+   - Address: Werner-von-Siemens-Straße 3, 68649 Groß-Rohrheim
+   - Frühschicht: Mon-Fri, 06:00-14:00, 2 employees
+   - Spätschicht: Mon-Fri, 14:00-22:00, 2 employees
+   - Nachtschicht: Sun-Thu, 22:00-06:00, 2 employees (no return trip)
+
+2. **Deichmann Logistiklager** (49.62, 8.35)
+   - Address: Carl-Benz-Straße 10, 67590 Monsheim
+   - Frühschicht: Mon-Fri, 07:00-15:00, 2 employees
+
+3. **Importhaus Wilms** (49.65, 8.36)
+   - Address: Robert-Bosch-Straße 33, 55232 Alzey
+   - Frühschicht: Mon-Fri, 07:00-16:00, 1 employee
+
+4. **CHEP Servicecenter Biebesheim** (49.78, 8.46)
+   - Address: Am Winkelgraben 13, 64584 Biebesheim am Rhein
+   - Frühschicht: Mon-Fri, 05:30-14:00, 2 employees
+   - Spätschicht: Mon-Fri, 14:00-22:30, 2 employees
+
+5. **Agrarhandel Kunz** (49.72, 8.43)
+   - Address: Außerhalb 66, 67575 Eich
+   - Frühschicht: Mon-Fri, 06:00-15:00, 2 employees
+   - Spätschicht: Mon-Fri, 09:00-18:00, 2 employees
+
+### Employees (5+)
+- Achim → Otto Cosmetic Frühschicht
+- Bernd → Deichmann Frühschicht
+- Christian → Importhaus Wilms Frühschicht
+- Dirk → CHEP Servicecenter Frühschicht
+- Emre → Agrarhandel Kunz Frühschicht
+- (Add more for Spätschicht coverage)
+
+### Drivers (2)
+- Driver D1: Home location (49.6, 8.3), capacity 6
+- Driver D2: Home location (49.6, 8.3), capacity 6
+
+### Bootstrap Script
+```java
+@ApplicationScoped
+public class DataBootstrap {
+    @Inject EntityManager em;
+    @Inject GraphHopper graphHopper;
+
+    @Transactional
+    void onStart(@Observes StartupEvent ev) {
+        if (Customer.count() == 0) {
+            // Create all demo customers, shifts, employees
+            // Persist to H2 database
+        }
+    }
+}
+```
+
+## Solver Configuration
+
+```java
+SolverConfig config = new SolverConfig()
+    .withSolutionClass(VrpSolution.class)
+    .withEntityClasses(Driver.class, Event.class)
+    .withConstraintProviderClass(VrpConstraintProvider.class)
+    .withTerminationConfig(new TerminationConfig()
+        .withSecondsSpentLimit(120L)); // Default 2 min, configurable via UI
+
+config.withPhases(
+    new ConstructionHeuristicPhaseConfig(),
+    new LocalSearchPhaseConfig()
+);
+```
+
+## Route Structure Requirements
+
+Routes can be **fully interleaved** - no strict sequential phases required:
+- ✅ Valid: Home → Pickup1 → Pickup2 → Dropoff1 → Pickup3 → Dropoff2 → Dropoff3 → Home
+- ✅ Valid: Home → Pickup1 → Customer1 → Pickup2 → Customer2 → Pickup3 → Home
+- ❌ Invalid: Dropoff before its paired pickup
+- ❌ Invalid: Exceeding 4 consecutive hours without a break
+
+**Break insertion:** After ~4 hours of driving, create a new route with a break period (30min-4hours) in between.
+
+## MVP Scope and Deliverables
+
+### Phase 1: Core Backend + GraphHopper Integration
+1. ✅ Setup GraphHopper with OSM data (Rhineland-Palatinate extract)
+2. ✅ Implement all domain classes with JPA + Timefold annotations
+3. ✅ Implement all 4 variable listeners (using GraphHopper distances)
+4. ✅ Implement complete constraint provider
+5. ✅ Create bootstrap data loader
+6. ✅ Create REST API endpoints for CRUD operations
+7. ✅ Create async solver service with job management
+
+### Phase 2: Web UI (Quarkus Qute + HTMX)
+1. ✅ Dashboard page with overview
+2. ✅ Employee management pages (list, add, edit, delete)
+3. ✅ Customer & shift management pages
+4. ✅ Optimization page with live progress
+5. ✅ Route viewing page with timeline visualization
+6. ✅ Basic styling with TailwindCSS/Bootstrap
+
+### Phase 3: Enhancements (Stretch Goals)
+- 🎯 Interactive map with Leaflet.js showing routes
+- 🎯 Export routes to PDF/Excel
+- 🎯 Email notifications when optimization completes
+- 🎯 Historical optimization comparison
+- 🎯 Employee availability calendar
+- 🎯 Multi-tenant support (different companies)
+
+## Expected UI Flow
+
+### Scenario: Adding a New Customer and Shift
+
+1. **User navigates to `/customers`**
+2. **Clicks "Add Customer" button**
+3. **Fills form:**
+   - Name: "NewCorp GmbH"
+   - Address: "Industriestraße 1, 67547 Worms"
+   - (System geocodes to lat/lon automatically)
+4. **Submits → Customer created**
+5. **Expands NewCorp accordion, clicks "Add Shift"**
+6. **Fills shift form:**
+   - Type: Frühschicht
+   - Day: Monday
+   - Time: 06:00-14:00
+   - Required: 3 employees
+   - Assigns: Achim, Bernd, Christian
+7. **Submits → Shift created and assigned**
+8. **Navigates to `/optimize`**
+9. **Clicks "Start Optimization"**
+10. **Watches live progress bar and score updates**
+11. **After 2 minutes, sees optimized routes**
+12. **Navigates to `/routes` to view detailed timeline**
+
+## Testing Strategy
+
+### Backend Tests
+1. **Unit tests:** Test each constraint independently
+2. **Integration tests:** Test GraphHopper integration
+3. **Solver test:** Full solve with demo data (validate score)
+4. **REST API tests:** Test all CRUD endpoints
+
+### UI Tests (Optional for MVP)
+- Manual testing of all user flows
+- (Later: Playwright/Selenium for E2E tests)
+
+## Deployment on Replit
+
+### Replit Configuration (`.replit`)
+```toml
+run = "mvn quarkus:dev"
+language = "java"
+
+[env]
+JAVA_HOME = "/nix/store/...-graalvm-ce-17.0.7"
+MAVEN_OPTS = "-Xmx2g"
+
+[nix]
+channel = "stable-23_11"
+
+[deployment]
+run = ["sh", "-c", "mvn clean package && java -jar target/quarkus-app/quarkus-run.jar"]
+```
+
+### OSM Data Setup
+```bash
+# Download Rhineland-Palatinate OSM extract (~400MB)
+wget https://download.geofabrik.de/europe/germany/rheinland-pfalz-latest.osm.pbf -O germany-latest.osm.pbf
+
+# GraphHopper will build routing graph on first run (~1-2 min)
+# Cache stored in ./graphhopper-cache/
+```
+
+### Environment Variables
+```properties
+# application.properties
+quarkus.datasource.db-kind=h2
+quarkus.datasource.jdbc.url=jdbc:h2:file:./db/vrp;AUTO_SERVER=TRUE
+quarkus.hibernate-orm.database.generation=update
+quarkus.http.port=8080
+
+# GraphHopper config
+graphhopper.osm.file=germany-latest.osm.pbf
+graphhopper.cache.dir=./graphhopper-cache
+graphhopper.profiles=car
+
+# Timefold config
+quarkus.timefold.solver.termination.spent-limit=120s
+```
+
+## Success Criteria
+
+1. ✅ GraphHopper successfully loads and routes with real road distances
+2. ✅ All hard constraints satisfied (0 hard score)
+3. ✅ Drivers start/end at home
+4. ✅ All pickups and dropoffs scheduled
+5. ✅ Routes respect 4-hour consecutive limit with breaks
+6. ✅ Time windows respected (employees arrive 30-45 min early)
+7. ✅ Solution found within 2-5 minutes
+8. ✅ Total distance minimized (using real road distances)
+9. ✅ **UI allows adding/removing employees and shifts without code changes**
+10. ✅ **UI shows live optimization progress**
+11. ✅ **UI displays routes in human-readable format**
+12. ✅ **Entire application runs on Replit without external services**
+
+## Key Design Decisions for MVP
+
+1. **GraphHopper for routing:** Real-world distances, fully integrated, no external dependencies
+2. **JPA entities:** Customers, Employees, Shifts stored in H2 database
+3. **Quarkus Qute + HTMX:** Lightweight UI without npm/webpack complexity
+4. **Async solving:** Long-running optimizations don't block UI
+5. **Single-week planning:** Focus on one week at a time (expandable later)
+6. **Pre-assigned employees:** Employees assigned to shifts via UI, solver assigns to drivers
+7. **Bootstrap data:** Demo data loaded on first startup for testing
+
+## Implementation Order
+
+### Backend First
+1. Setup GraphHopper service bean
+2. Create JPA entities (Customer, Employee, ShiftDemand)
+3. Create Timefold domain classes (Event, Driver, VrpSolution)
+4. Implement variable listeners (using GraphHopper distances)
+5. Implement constraint provider
+6. Create event generation service (ShiftDemand → Events)
+7. Create async solver service
+8. Create REST API controllers
+9. Create bootstrap data loader
+10. Test solver with demo data via API
+
+### Frontend Second
+1. Create base Qute template with navigation
+2. Implement dashboard page
+3. Implement employee CRUD pages
+4. Implement customer/shift CRUD pages
+5. Implement optimization page with HTMX polling
+6. Implement route viewing page
+7. Add styling (TailwindCSS/Bootstrap)
+8. Test full user flows
+
+---
+
+**Start with Backend First (steps 1-10), ensuring GraphHopper integration works and solver produces valid solutions. Then build Frontend Second (steps 1-7) to provide the interactive UI for Replit users.**
