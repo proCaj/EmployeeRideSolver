@@ -101,7 +101,15 @@ public class WebResource {
     @Path("/optimize")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance optimizePage() {
-        return optimize.data("title", "Route Optimization");
+        long customerCount = Customer.count();
+        long driverCount = Employee.count("active = true and employeeType = 'DRIVER'");
+        long employeeCount = Employee.count("active = true and employeeType = 'SITE_EMPLOYEE'");
+        
+        return optimize
+            .data("title", "Route Optimization")
+            .data("customerCount", customerCount)
+            .data("driverCount", driverCount)
+            .data("employeeCount", employeeCount);
     }
     
     @GET

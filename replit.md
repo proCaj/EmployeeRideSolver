@@ -30,6 +30,18 @@ A Java-based employee transportation routing optimization system using Quarkus 3
 6. Live optimization progress tracking
 
 ## Recent Changes
+- **October 22, 2025 - Driver/Employee Type Distinction & VRP Integration:**
+  - Implemented EmployeeType enum (DRIVER vs SITE_EMPLOYEE) for proper role distinction
+  - Updated Employee entity with employeeType field (EnumType.STRING, default SITE_EMPLOYEE)
+  - Modified SolverService to filter active DRIVER employees as vehicles for VRP optimization
+  - Created createDriversFromEmployees method to convert DRIVER employees to Driver domain objects
+  - Removed hardcoded dummy drivers - system now uses real employees marked as DRIVER type
+  - Updated employee forms and REST endpoints to support employee type selection
+  - Enhanced employee list page to display employee type badges and shift assignments
+  - DataBootstrap updated to seed 2 drivers and 6 site employees with proper type assignments
+  - Database schema recreated to accommodate employeeType column
+  - Architect-reviewed and approved: drivers properly filtered and used as optimization vehicles
+  
 - **October 22, 2025 - Employee-Shift Assignment Feature:**
   - Added employee management UI with list view and create/edit forms
   - Implemented employee-shift assignment UI on shift edit page
@@ -50,3 +62,25 @@ A Java-based employee transportation routing optimization system using Quarkus 3
   - Maven structure created with Quarkus, Timefold, GraphHopper dependencies
   - Application properties configured for H2 database and GraphHopper
   - Core domain entities and constraint provider implemented
+
+## System Architecture
+
+### Employee Type System
+The system distinguishes between two employee types:
+1. **DRIVER** - Employees who operate vehicles and transport site employees
+   - Converted to Driver domain objects for VRP optimization
+   - Used as vehicles in the Timefold solver
+   - Must be marked as active to participate in route planning
+
+2. **SITE_EMPLOYEE** - Employees who need transportation to customer sites
+   - Generate pickup and dropoff events in the VRP solution
+   - Assigned to drivers based on optimization results
+   - Linked to shifts via ShiftDemand assignments
+
+### VRP Optimization Flow
+1. User triggers optimization via `/optimize` page (POST /api/solve)
+2. SolverService filters active DRIVER employees and creates Driver domain objects
+3. Site employees and shift demands generate Event objects (pickups/dropoffs)
+4. Timefold solver assigns events to drivers while respecting constraints
+5. Solution accessible via GET /api/solve/{jobId}/solution
+6. Routes displayable on `/routes` page with driver timelines
