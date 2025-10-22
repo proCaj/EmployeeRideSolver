@@ -30,6 +30,22 @@ public class EmployeeResource {
     
     @POST
     @Transactional
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response createFromForm(
+            @FormParam("name") String name,
+            @FormParam("email") String email,
+            @FormParam("phoneNumber") String phoneNumber) {
+        Employee employee = new Employee();
+        employee.name = name;
+        employee.email = (email != null && !email.trim().isEmpty()) ? email : null;
+        employee.phoneNumber = (phoneNumber != null && !phoneNumber.trim().isEmpty()) ? phoneNumber : null;
+        employee.persist();
+        return Response.status(Response.Status.CREATED).entity(employee).build();
+    }
+    
+    @POST
+    @Transactional
+    @Consumes(MediaType.APPLICATION_JSON)
     public Response create(Employee employee) {
         employee.persist();
         return Response.status(Response.Status.CREATED).entity(employee).build();
@@ -38,6 +54,26 @@ public class EmployeeResource {
     @PUT
     @Path("/{id}")
     @Transactional
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Employee updateFromForm(
+            @PathParam("id") Long id,
+            @FormParam("name") String name,
+            @FormParam("email") String email,
+            @FormParam("phoneNumber") String phoneNumber) {
+        Employee employee = Employee.findById(id);
+        if (employee == null) {
+            throw new NotFoundException("Employee not found");
+        }
+        employee.name = name;
+        employee.email = (email != null && !email.trim().isEmpty()) ? email : null;
+        employee.phoneNumber = (phoneNumber != null && !phoneNumber.trim().isEmpty()) ? phoneNumber : null;
+        return employee;
+    }
+    
+    @PUT
+    @Path("/{id}")
+    @Transactional
+    @Consumes(MediaType.APPLICATION_JSON)
     public Employee update(@PathParam("id") Long id, Employee updatedEmployee) {
         Employee employee = Employee.findById(id);
         if (employee == null) {

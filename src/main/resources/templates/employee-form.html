@@ -11,7 +11,7 @@
             </div>
         </div>
         <div class="mt-5 md:mt-0 md:col-span-2">
-            <form action="/api/employees{isEdit ? '/' + employee.id : ''}" method="POST" hx-post="/api/employees{isEdit ? '/' + employee.id : ''}" hx-target="#message">
+            <form hx-{isEdit ? 'put' : 'post'}="/api/employees{isEdit ? '/' + employee.id : ''}" hx-swap="none" onsubmit="setTimeout(() => window.location.href='/employees', 500); return true;">
                 <div class="shadow sm:rounded-md sm:overflow-hidden">
                     <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
                         <div id="message"></div>
