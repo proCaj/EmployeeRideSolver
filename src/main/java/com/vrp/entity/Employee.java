@@ -28,6 +28,10 @@ public class Employee extends PanacheEntity {
     @Column(nullable = false)
     public boolean active = true;
     
+    @Enumerated(EnumType.STRING)
+    @Column(name = "employee_type", nullable = false)
+    public EmployeeType employeeType = EmployeeType.SITE_EMPLOYEE;
+    
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "employee_shift_assignments",
@@ -39,10 +43,11 @@ public class Employee extends PanacheEntity {
     public Employee() {
     }
     
-    public Employee(String name, String email, String phoneNumber) {
+    public Employee(String name, String email, String phoneNumber, EmployeeType employeeType) {
         this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
+        this.employeeType = employeeType;
     }
     
     public void assignToShift(ShiftDemand shift) {

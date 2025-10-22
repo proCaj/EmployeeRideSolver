@@ -2,6 +2,7 @@ package com.vrp.service;
 
 import com.vrp.entity.Customer;
 import com.vrp.entity.Employee;
+import com.vrp.entity.EmployeeType;
 import com.vrp.entity.ShiftDemand;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -61,23 +62,29 @@ public class DataBootstrap {
         );
         agrarhandel.persist();
         
-        Employee achim = new Employee("Achim Müller", "achim@example.com", "+49 151 1234 5601");
+        Employee achim = new Employee("Achim Müller", "achim@example.com", "+49 151 1234 5601", EmployeeType.SITE_EMPLOYEE);
         achim.persist();
         
-        Employee bernd = new Employee("Bernd Schmidt", "bernd@example.com", "+49 151 1234 5602");
+        Employee bernd = new Employee("Bernd Schmidt", "bernd@example.com", "+49 151 1234 5602", EmployeeType.SITE_EMPLOYEE);
         bernd.persist();
         
-        Employee christian = new Employee("Christian Weber", "christian@example.com", "+49 151 1234 5603");
+        Employee christian = new Employee("Christian Weber", "christian@example.com", "+49 151 1234 5603", EmployeeType.SITE_EMPLOYEE);
         christian.persist();
         
-        Employee dirk = new Employee("Dirk Fischer", "dirk@example.com", "+49 151 1234 5604");
+        Employee dirk = new Employee("Dirk Fischer", "dirk@example.com", "+49 151 1234 5604", EmployeeType.SITE_EMPLOYEE);
         dirk.persist();
         
-        Employee emre = new Employee("Emre Yilmaz", "emre@example.com", "+49 151 1234 5605");
+        Employee emre = new Employee("Emre Yilmaz", "emre@example.com", "+49 151 1234 5605", EmployeeType.SITE_EMPLOYEE);
         emre.persist();
         
-        Employee frank = new Employee("Frank Becker", "frank@example.com", "+49 151 1234 5606");
+        Employee frank = new Employee("Frank Becker", "frank@example.com", "+49 151 1234 5606", EmployeeType.SITE_EMPLOYEE);
         frank.persist();
+        
+        Employee thomas = new Employee("Thomas Koch", "thomas@example.com", "+49 151 1234 5607", EmployeeType.DRIVER);
+        thomas.persist();
+        
+        Employee sarah = new Employee("Sarah Meyer", "sarah@example.com", "+49 151 1234 5608", EmployeeType.DRIVER);
+        sarah.persist();
         
         for (DayOfWeek day : new DayOfWeek[]{DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY}) {
             ShiftDemand ottoFrueh = new ShiftDemand(otto, "Frühschicht", day, LocalTime.of(6, 0), LocalTime.of(14, 0), 2);
@@ -100,6 +107,6 @@ public class DataBootstrap {
             achim.assignToShift(chepFrueh);
         }
         
-        LOG.info("Demo data loaded successfully: 5 customers, 6 employees, multiple shifts");
+        LOG.info("Demo data loaded successfully: 5 customers, 8 employees (6 site employees + 2 drivers), multiple shifts");
     }
 }

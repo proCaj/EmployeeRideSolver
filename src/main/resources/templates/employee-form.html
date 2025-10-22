@@ -34,6 +34,16 @@
                                    class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
                         </div>
 
+                        <div>
+                            <label for="employeeType" class="block text-sm font-medium text-gray-700">Employee Type</label>
+                            <select name="employeeType" id="employeeType" required
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                                <option value="SITE_EMPLOYEE" {#if employee.employeeType.name() == 'SITE_EMPLOYEE'}selected{/if}>Site Employee (needs transport)</option>
+                                <option value="DRIVER" {#if employee.employeeType.name() == 'DRIVER'}selected{/if}>Driver (provides transport)</option>
+                            </select>
+                            <p class="mt-1 text-sm text-gray-500">Drivers transport employees; Site Employees work at customer locations</p>
+                        </div>
+
                         <div class="flex items-start">
                             <div class="flex items-center h-5">
                                 <input id="active" name="active" type="checkbox" {#if employee.active}checked{/if}

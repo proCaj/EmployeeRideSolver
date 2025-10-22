@@ -1,6 +1,7 @@
 package com.vrp.resource;
 
 import com.vrp.entity.Employee;
+import com.vrp.entity.EmployeeType;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -35,11 +36,13 @@ public class EmployeeResource {
             @FormParam("name") String name,
             @FormParam("email") String email,
             @FormParam("phoneNumber") String phoneNumber,
+            @FormParam("employeeType") String employeeTypeStr,
             @FormParam("active") Boolean active) {
         Employee employee = new Employee();
         employee.name = name;
         employee.email = (email != null && !email.trim().isEmpty()) ? email : null;
         employee.phoneNumber = (phoneNumber != null && !phoneNumber.trim().isEmpty()) ? phoneNumber : null;
+        employee.employeeType = employeeTypeStr != null ? EmployeeType.valueOf(employeeTypeStr) : EmployeeType.SITE_EMPLOYEE;
         employee.active = active != null && active;
         employee.persist();
         return Response.status(Response.Status.CREATED).entity(employee).build();
@@ -62,6 +65,7 @@ public class EmployeeResource {
             @FormParam("name") String name,
             @FormParam("email") String email,
             @FormParam("phoneNumber") String phoneNumber,
+            @FormParam("employeeType") String employeeTypeStr,
             @FormParam("active") Boolean active) {
         Employee employee = Employee.findById(id);
         if (employee == null) {
@@ -70,6 +74,7 @@ public class EmployeeResource {
         employee.name = name;
         employee.email = (email != null && !email.trim().isEmpty()) ? email : null;
         employee.phoneNumber = (phoneNumber != null && !phoneNumber.trim().isEmpty()) ? phoneNumber : null;
+        employee.employeeType = employeeTypeStr != null ? EmployeeType.valueOf(employeeTypeStr) : employee.employeeType;
         employee.active = active != null && active;
         return employee;
     }
@@ -86,6 +91,7 @@ public class EmployeeResource {
         employee.name = updatedEmployee.name;
         employee.email = updatedEmployee.email;
         employee.phoneNumber = updatedEmployee.phoneNumber;
+        employee.employeeType = updatedEmployee.employeeType;
         employee.skills = updatedEmployee.skills;
         employee.active = updatedEmployee.active;
         return employee;
