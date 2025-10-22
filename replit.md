@@ -30,6 +30,15 @@ A Java-based employee transportation routing optimization system using Quarkus 3
 6. Live optimization progress tracking
 
 ## Recent Changes
+- **October 22, 2025 - Employee-Shift Assignment Feature:**
+  - Added employee management UI with list view and create/edit forms
+  - Implemented employee-shift assignment UI on shift edit page
+  - Added form-encoded support to EmployeeResource with active parameter
+  - Fixed employee form to use PUT method for updates via HTMX
+  - Implemented equals/hashCode in Employee entity for Hibernate proxy compatibility
+  - Assignment buttons correctly show assign/unassign state based on actual assignments
+  - Dual input support for all CRUD endpoints (JSON + form-encoded data)
+  
 - **October 22, 2025 - UI Implementation:**
   - Added complete customer management UI (list view with cards, create/edit forms)
   - Added complete shift management UI (day-grouped list view, create/edit forms)
