@@ -162,7 +162,7 @@
                     </div>
                 </div>
                 <div>
-                    {#if shift.assignedEmployees.stream().anyMatch(e -> e.id.equals(employee.id))}
+                    {#if shift.assignedEmployees.contains(employee)}
                     <button 
                         hx-delete="/api/shifts/{shift.id}/unassign/{employee.id}"
                         hx-swap="outerHTML"

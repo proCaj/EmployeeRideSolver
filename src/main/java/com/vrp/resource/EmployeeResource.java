@@ -34,11 +34,13 @@ public class EmployeeResource {
     public Response createFromForm(
             @FormParam("name") String name,
             @FormParam("email") String email,
-            @FormParam("phoneNumber") String phoneNumber) {
+            @FormParam("phoneNumber") String phoneNumber,
+            @FormParam("active") Boolean active) {
         Employee employee = new Employee();
         employee.name = name;
         employee.email = (email != null && !email.trim().isEmpty()) ? email : null;
         employee.phoneNumber = (phoneNumber != null && !phoneNumber.trim().isEmpty()) ? phoneNumber : null;
+        employee.active = active != null && active;
         employee.persist();
         return Response.status(Response.Status.CREATED).entity(employee).build();
     }
@@ -59,7 +61,8 @@ public class EmployeeResource {
             @PathParam("id") Long id,
             @FormParam("name") String name,
             @FormParam("email") String email,
-            @FormParam("phoneNumber") String phoneNumber) {
+            @FormParam("phoneNumber") String phoneNumber,
+            @FormParam("active") Boolean active) {
         Employee employee = Employee.findById(id);
         if (employee == null) {
             throw new NotFoundException("Employee not found");
@@ -67,6 +70,7 @@ public class EmployeeResource {
         employee.name = name;
         employee.email = (email != null && !email.trim().isEmpty()) ? email : null;
         employee.phoneNumber = (phoneNumber != null && !phoneNumber.trim().isEmpty()) ? phoneNumber : null;
+        employee.active = active != null && active;
         return employee;
     }
     
