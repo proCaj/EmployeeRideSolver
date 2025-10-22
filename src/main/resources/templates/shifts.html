@@ -1,0 +1,112 @@
+{#include base}
+{#content}
+<div class="px-4 py-6 sm:px-0">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900">Shift Demands</h2>
+            <p class="mt-1 text-sm text-gray-500">Manage weekly employee transportation schedules</p>
+        </div>
+        <a href="/shifts/new" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700">
+            Add Shift
+        </a>
+    </div>
+    
+    {#if shifts.isEmpty()}
+    <div class="bg-white shadow rounded-lg p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No shifts</h3>
+        <p class="mt-1 text-sm text-gray-500">Get started by adding a new shift demand.</p>
+        <div class="mt-6">
+            <a href="/shifts/new" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700">
+                Add Shift
+            </a>
+        </div>
+    </div>
+    {#else}
+    <div class="space-y-6">
+        {#for dayShifts in shiftsByDay.entrySet()}
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">{dayShifts.key}</h3>
+                <p class="text-sm text-gray-500">{dayShifts.value.size()} shift(s)</p>
+            </div>
+            
+            <div class="divide-y divide-gray-200">
+                {#for shift in dayShifts.value}
+                <div class="px-6 py-4 hover:bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {#if shift.shiftType.toString() == 'PICKUP'}bg-green-100 text-green-800{#else}bg-purple-100 text-purple-800{/if}">
+                                    {shift.shiftType}
+                                </span>
+                                <h4 class="ml-3 text-base font-medium text-gray-900">{shift.customer.name}</h4>
+                                {#if !shift.active}
+                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                    Inactive
+                                </span>
+                                {/if}
+                            </div>
+                            
+                            <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                                <div class="flex items-center text-gray-600">
+                                    <svg class="h-4 w-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>{shift.startTime} - {shift.endTime}</span>
+                                </div>
+                                
+                                <div class="flex items-center text-gray-600">
+                                    <svg class="h-4 w-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    <span>{shift.requiredEmployees} employee(s)</span>
+                                </div>
+                                
+                                <div class="flex items-center text-gray-600">
+                                    <svg class="h-4 w-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    <span class="truncate">{shift.customer.address}</span>
+                                </div>
+                            </div>
+                            
+                            {#if shift.requiresReturnTrip}
+                            <div class="mt-2">
+                                <span class="inline-flex items-center text-xs text-blue-600">
+                                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                    </svg>
+                                    Return trip required
+                                </span>
+                            </div>
+                            {/if}
+                        </div>
+                        
+                        <div class="flex items-center space-x-2 ml-4">
+                            <a href="/shifts/{shift.id}/edit" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Edit
+                            </a>
+                            <button 
+                                hx-delete="/api/shifts/{shift.id}" 
+                                hx-confirm="Are you sure you want to delete this shift?"
+                                hx-target="closest .px-6"
+                                hx-swap="outerHTML swap:1s"
+                                class="inline-flex items-center px-3 py-1.5 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {/for}
+            </div>
+        </div>
+        {/for}
+    </div>
+    {/if}
+</div>
+{/content}
+{/include}

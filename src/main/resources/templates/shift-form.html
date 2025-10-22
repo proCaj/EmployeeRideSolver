@@ -1,0 +1,145 @@
+{#include base}
+{#content}
+<div class="px-4 py-6 sm:px-0 max-w-3xl mx-auto">
+    <div class="mb-6">
+        <a href="/shifts" class="text-sm text-gray-500 hover:text-gray-700">
+            ← Back to Shifts
+        </a>
+    </div>
+    
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-900">{title}</h2>
+        </div>
+        
+        <form id="shift-form" class="px-6 py-6 space-y-6">
+            {#if isEdit}
+            <input type="hidden" name="id" value="{shift.id}">
+            {/if}
+            
+            <div>
+                <label for="customerId" class="block text-sm font-medium text-gray-700">Customer *</label>
+                <select id="customerId" name="customerId" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
+                    <option value="">Select a customer...</option>
+                    {#for customer in customers}
+                    <option value="{customer.id}" {#if shift.customer != null && shift.customer.id == customer.id}selected{/if}>
+                        {customer.name} - {customer.address}
+                    </option>
+                    {/for}
+                </select>
+            </div>
+            
+            <div>
+                <label for="dayOfWeek" class="block text-sm font-medium text-gray-700">Day of Week *</label>
+                <select id="dayOfWeek" name="dayOfWeek" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
+                    <option value="">Select a day...</option>
+                    <option value="MONDAY" {#if shift.dayOfWeek.toString() == 'MONDAY'}selected{/if}>Monday</option>
+                    <option value="TUESDAY" {#if shift.dayOfWeek.toString() == 'TUESDAY'}selected{/if}>Tuesday</option>
+                    <option value="WEDNESDAY" {#if shift.dayOfWeek.toString() == 'WEDNESDAY'}selected{/if}>Wednesday</option>
+                    <option value="THURSDAY" {#if shift.dayOfWeek.toString() == 'THURSDAY'}selected{/if}>Thursday</option>
+                    <option value="FRIDAY" {#if shift.dayOfWeek.toString() == 'FRIDAY'}selected{/if}>Friday</option>
+                    <option value="SATURDAY" {#if shift.dayOfWeek.toString() == 'SATURDAY'}selected{/if}>Saturday</option>
+                    <option value="SUNDAY" {#if shift.dayOfWeek.toString() == 'SUNDAY'}selected{/if}>Sunday</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="shiftType" class="block text-sm font-medium text-gray-700">Shift Type *</label>
+                <select id="shiftType" name="shiftType" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
+                    <option value="PICKUP" {#if shift.shiftType.toString() == 'PICKUP'}selected{/if}>Pickup (From Hub to Customer)</option>
+                    <option value="DROPOFF" {#if shift.shiftType.toString() == 'DROPOFF'}selected{/if}>Drop-off (From Customer to Hub)</option>
+                </select>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                    <label for="startTime" class="block text-sm font-medium text-gray-700">Start Time *</label>
+                    <input type="time" id="startTime" name="startTime" value="{shift.startTime ?: ''}" required
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
+                </div>
+                
+                <div>
+                    <label for="endTime" class="block text-sm font-medium text-gray-700">End Time *</label>
+                    <input type="time" id="endTime" name="endTime" value="{shift.endTime ?: ''}" required
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
+                </div>
+            </div>
+            
+            <div>
+                <label for="requiredEmployees" class="block text-sm font-medium text-gray-700">Required Employees *</label>
+                <input type="number" id="requiredEmployees" name="requiredEmployees" value="{shift.requiredEmployees ?: 1}" min="1" max="10" required
+                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
+                <p class="mt-1 text-sm text-gray-500">Number of employees needed for this shift</p>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                    <label for="earlyArrivalBufferMin" class="block text-sm font-medium text-gray-700">Min Early Arrival (minutes)</label>
+                    <input type="number" id="earlyArrivalBufferMin" name="earlyArrivalBufferMin" value="{shift.earlyArrivalBufferMin ?: 15}" min="0" max="60"
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
+                    <p class="mt-1 text-sm text-gray-500">Minimum acceptable early arrival</p>
+                </div>
+                
+                <div>
+                    <label for="earlyArrivalBufferMax" class="block text-sm font-medium text-gray-700">Max Early Arrival (minutes)</label>
+                    <input type="number" id="earlyArrivalBufferMax" name="earlyArrivalBufferMax" value="{shift.earlyArrivalBufferMax ?: 30}" min="0" max="120"
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
+                    <p class="mt-1 text-sm text-gray-500">Maximum acceptable early arrival</p>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="requiresReturnTrip" name="requiresReturnTrip" type="checkbox" {#if shift.requiresReturnTrip}checked{/if}
+                           class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="requiresReturnTrip" class="font-medium text-gray-700">Requires Return Trip</label>
+                    <p class="text-gray-500">Driver must return employees to the hub after shift</p>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="active" name="active" type="checkbox" {#if shift.active}checked{/if}
+                           class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="active" class="font-medium text-gray-700">Active</label>
+                    <p class="text-gray-500">Include this shift in optimization</p>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                <a href="/shifts" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button 
+                    type="submit"
+                    {#if isEdit}
+                    hx-put="/api/shifts/{shift.id}"
+                    {#else}
+                    hx-post="/api/shifts"
+                    {/if}
+                    hx-include="#shift-form"
+                    hx-swap="none"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700">
+                    {#if isEdit}Update{#else}Create{/if} Shift
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.body.addEventListener('htmx:afterRequest', function(event) \{
+        if (event.detail.successful && (event.detail.pathInfo.requestPath.includes('/api/shifts'))) \{
+            window.location.href = '/shifts';
+        \}
+    \});
+</script>
+{/content}
+{/include}
