@@ -125,17 +125,17 @@
 </div>
 
 <script>
-    document.body.addEventListener('htmx:afterRequest', function(event) {
-        if (event.detail.pathInfo.requestPath.includes('/solve')) {
+    document.body.addEventListener('htmx:afterRequest', function(event) \{
+        if (event.detail.pathInfo.requestPath.includes('/solve')) \{
             pollSolverStatus();
-        }
-    });
+        \}
+    \});
     
-    function pollSolverStatus() {
-        setInterval(function() {
-            htmx.ajax('GET', '/api/solver/status', {target: '#solver-status'});
-        }, 2000);
-    }
+    function pollSolverStatus() \{
+        setInterval(function() \{
+            htmx.ajax('GET', '/api/solver/status', \{target: '#solver-status'\});
+        \}, 2000);
+    \}
 </script>
 {/content}
 {/include}
