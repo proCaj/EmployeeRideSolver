@@ -1,0 +1,62 @@
+{#include base}
+{#content}
+<div class="px-4 py-6 sm:px-0">
+    <div class="md:grid md:grid-cols-3 md:gap-6">
+        <div class="md:col-span-1">
+            <div class="px-4 sm:px-0">
+                <h3 class="text-lg font-medium leading-6 text-gray-900">{isEdit ? 'Edit' : 'New'} Employee</h3>
+                <p class="mt-1 text-sm text-gray-600">
+                    {isEdit ? 'Update employee information' : 'Add a new driver to your workforce'}
+                </p>
+            </div>
+        </div>
+        <div class="mt-5 md:mt-0 md:col-span-2">
+            <form action="/api/employees{isEdit ? '/' + employee.id : ''}" method="POST" hx-post="/api/employees{isEdit ? '/' + employee.id : ''}" hx-target="#message">
+                <div class="shadow sm:rounded-md sm:overflow-hidden">
+                    <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
+                        <div id="message"></div>
+                        
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                            <input type="text" name="name" id="name" value="{employee.name ?: ''}" required
+                                   class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" name="email" id="email" value="{employee.email ?: ''}"
+                                   class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
+                        </div>
+
+                        <div>
+                            <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                            <input type="tel" name="phoneNumber" id="phoneNumber" value="{employee.phoneNumber ?: ''}"
+                                   class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
+                        </div>
+
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                <input id="active" name="active" type="checkbox" {#if employee.active}checked{/if}
+                                       class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded">
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="active" class="font-medium text-gray-700">Active</label>
+                                <p class="text-gray-500">This employee is available for route assignments</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-4 py-3 bg-gray-50 text-right sm:px-6 space-x-3">
+                        <a href="/employees" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Cancel
+                        </a>
+                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700">
+                            {isEdit ? 'Update' : 'Create'} Employee
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{/content}
+{/include}
