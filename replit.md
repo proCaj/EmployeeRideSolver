@@ -30,6 +30,14 @@ A Java-based employee transportation routing optimization system using Quarkus 3
 6. Live optimization progress tracking
 
 ## Recent Changes
-- Initial project setup (October 21, 2025)
-- Maven structure created with Quarkus, Timefold, GraphHopper dependencies
-- Application properties configured for H2 database and GraphHopper
+- **October 22, 2025 - UI Implementation:**
+  - Added complete customer management UI (list view with cards, create/edit forms)
+  - Added complete shift management UI (day-grouped list view, create/edit forms)
+  - Implemented dual input support for REST endpoints (JSON + form-encoded data)
+  - Fixed Qute template enum/string handling for proper form preselection
+  - Added HTMX-powered delete operations for customers and shifts
+  
+- **October 21, 2025 - Initial Setup:**
+  - Maven structure created with Quarkus, Timefold, GraphHopper dependencies
+  - Application properties configured for H2 database and GraphHopper
+  - Core domain entities and constraint provider implemented
