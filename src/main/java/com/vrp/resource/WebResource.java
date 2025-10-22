@@ -181,6 +181,7 @@ public class WebResource {
             .data("title", "New Shift")
             .data("shift", shift)
             .data("customers", customerList)
+            .data("employees", List.of())
             .data("isEdit", false);
     }
     
@@ -190,10 +191,26 @@ public class WebResource {
     public TemplateInstance editShift(@PathParam("id") Long id) {
         ShiftDemand shift = ShiftDemand.findById(id);
         List<Customer> customerList = Customer.listAll();
+        List<Employee> employeeList = Employee.listAll();
         return shiftForm
             .data("title", "Edit Shift")
             .data("shift", shift)
             .data("customers", customerList)
+            .data("employees", employeeList)
+            .data("isEdit", true);
+    }
+    
+    @GET
+    @Path("/shifts/{id}")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance shiftDetail(@PathParam("id") Long id) {
+        ShiftDemand shift = ShiftDemand.findById(id);
+        List<Employee> allEmployees = Employee.listAll();
+        return shiftForm
+            .data("title", "Shift Details")
+            .data("shift", shift)
+            .data("customers", Customer.listAll())
+            .data("employees", allEmployees)
             .data("isEdit", true);
     }
 }

@@ -134,10 +134,79 @@
     </div>
 </div>
 
+{#if isEdit && employees}
+<div class="mt-8 bg-white shadow rounded-lg">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-bold text-gray-900">Employee Assignments</h2>
+        <p class="mt-1 text-sm text-gray-500">Assign employees who need transportation for this shift</p>
+    </div>
+    
+    <div class="px-6 py-6">
+        {#if employees.isEmpty()}
+        <p class="text-sm text-gray-500">No employees available. <a href="/employees/new" class="text-primary hover:underline">Add employees</a> to assign them to shifts.</p>
+        {#else}
+        <div class="space-y-3">
+            {#for employee in employees}
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <span class="text-blue-600 font-semibold">{employee.name.substring(0, 1)}</span>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">{employee.name}</p>
+                        {#if employee.email}
+                        <p class="text-xs text-gray-500">{employee.email}</p>
+                        {/if}
+                    </div>
+                </div>
+                <div>
+                    {#if shift.assignedEmployees.stream().anyMatch(e -> e.id.equals(employee.id))}
+                    <button 
+                        hx-delete="/api/shifts/{shift.id}/unassign/{employee.id}"
+                        hx-swap="outerHTML"
+                        hx-target="closest div"
+                        class="inline-flex items-center px-3 py-1.5 border border-red-300 text-xs font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Unassign
+                    </button>
+                    {#else}
+                    <button 
+                        hx-post="/api/shifts/{shift.id}/assign-employee?employeeId={employee.id}"
+                        hx-swap="outerHTML"
+                        hx-target="closest div"
+                        class="inline-flex items-center px-3 py-1.5 border border-green-300 text-xs font-medium rounded-md text-green-700 bg-white hover:bg-green-50">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Assign
+                    </button>
+                    {/if}
+                </div>
+            </div>
+            {/for}
+        </div>
+        <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+            <p class="text-sm text-blue-700">
+                <strong>{shift.assignedEmployees.size()}</strong> of <strong>{shift.requiredEmployees}</strong> required employees assigned
+            </p>
+        </div>
+        {/if}
+    </div>
+</div>
+{/if}
+
 <script>
     document.body.addEventListener('htmx:afterRequest', function(event) \{
         if (event.detail.successful && (event.detail.pathInfo.requestPath.includes('/api/shifts'))) \{
-            window.location.href = '/shifts';
+            if (!event.detail.pathInfo.requestPath.includes('/assign') && !event.detail.pathInfo.requestPath.includes('/unassign')) \{
+                window.location.href = '/shifts';
+            \} else \{
+                window.location.reload();
+            \}
         \}
     \});
 </script>
