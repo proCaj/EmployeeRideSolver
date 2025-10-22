@@ -35,13 +35,13 @@
                 <select id="dayOfWeek" name="dayOfWeek" required
                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
                     <option value="">Select a day...</option>
-                    <option value="MONDAY" {#if shift.dayOfWeek.toString() == 'MONDAY'}selected{/if}>Monday</option>
-                    <option value="TUESDAY" {#if shift.dayOfWeek.toString() == 'TUESDAY'}selected{/if}>Tuesday</option>
-                    <option value="WEDNESDAY" {#if shift.dayOfWeek.toString() == 'WEDNESDAY'}selected{/if}>Wednesday</option>
-                    <option value="THURSDAY" {#if shift.dayOfWeek.toString() == 'THURSDAY'}selected{/if}>Thursday</option>
-                    <option value="FRIDAY" {#if shift.dayOfWeek.toString() == 'FRIDAY'}selected{/if}>Friday</option>
-                    <option value="SATURDAY" {#if shift.dayOfWeek.toString() == 'SATURDAY'}selected{/if}>Saturday</option>
-                    <option value="SUNDAY" {#if shift.dayOfWeek.toString() == 'SUNDAY'}selected{/if}>Sunday</option>
+                    <option value="MONDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'MONDAY'}selected{/if}>Monday</option>
+                    <option value="TUESDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'TUESDAY'}selected{/if}>Tuesday</option>
+                    <option value="WEDNESDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'WEDNESDAY'}selected{/if}>Wednesday</option>
+                    <option value="THURSDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'THURSDAY'}selected{/if}>Thursday</option>
+                    <option value="FRIDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'FRIDAY'}selected{/if}>Friday</option>
+                    <option value="SATURDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'SATURDAY'}selected{/if}>Saturday</option>
+                    <option value="SUNDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'SUNDAY'}selected{/if}>Sunday</option>
                 </select>
             </div>
             
@@ -49,8 +49,8 @@
                 <label for="shiftType" class="block text-sm font-medium text-gray-700">Shift Type *</label>
                 <select id="shiftType" name="shiftType" required
                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
-                    <option value="PICKUP" {#if shift.shiftType.toString() == 'PICKUP'}selected{/if}>Pickup (From Hub to Customer)</option>
-                    <option value="DROPOFF" {#if shift.shiftType.toString() == 'DROPOFF'}selected{/if}>Drop-off (From Customer to Hub)</option>
+                    <option value="PICKUP" {#if shift.shiftType == 'PICKUP'}selected{/if}>Pickup (From Hub to Customer)</option>
+                    <option value="DROPOFF" {#if shift.shiftType == 'DROPOFF'}selected{/if}>Drop-off (From Customer to Hub)</option>
                 </select>
             </div>
             

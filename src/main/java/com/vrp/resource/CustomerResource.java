@@ -31,6 +31,24 @@ public class CustomerResource {
     
     @POST
     @Transactional
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response createFromForm(
+            @FormParam("name") String name,
+            @FormParam("address") String address,
+            @FormParam("latitude") Double latitude,
+            @FormParam("longitude") Double longitude) {
+        Customer customer = new Customer();
+        customer.name = name;
+        customer.address = address;
+        customer.latitude = latitude;
+        customer.longitude = longitude;
+        customer.persist();
+        return Response.status(Response.Status.CREATED).entity(customer).build();
+    }
+    
+    @POST
+    @Transactional
+    @Consumes(MediaType.APPLICATION_JSON)
     public Response create(Customer customer) {
         customer.persist();
         return Response.status(Response.Status.CREATED).entity(customer).build();
@@ -39,6 +57,28 @@ public class CustomerResource {
     @PUT
     @Path("/{id}")
     @Transactional
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Customer updateFromForm(
+            @PathParam("id") Long id,
+            @FormParam("name") String name,
+            @FormParam("address") String address,
+            @FormParam("latitude") Double latitude,
+            @FormParam("longitude") Double longitude) {
+        Customer customer = Customer.findById(id);
+        if (customer == null) {
+            throw new NotFoundException("Customer not found");
+        }
+        customer.name = name;
+        customer.address = address;
+        customer.latitude = latitude;
+        customer.longitude = longitude;
+        return customer;
+    }
+    
+    @PUT
+    @Path("/{id}")
+    @Transactional
+    @Consumes(MediaType.APPLICATION_JSON)
     public Customer update(@PathParam("id") Long id, Customer updatedCustomer) {
         Customer customer = Customer.findById(id);
         if (customer == null) {

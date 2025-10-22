@@ -11,7 +11,11 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import java.time.DayOfWeek;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Path("/")
 public class WebResource {
@@ -25,6 +29,20 @@ public class WebResource {
     @Inject
     @io.quarkus.qute.Location("employee-form.html")
     Template employeeForm;
+    
+    @Inject
+    Template customers;
+    
+    @Inject
+    @io.quarkus.qute.Location("customer-form.html")
+    Template customerForm;
+    
+    @Inject
+    Template shifts;
+    
+    @Inject
+    @io.quarkus.qute.Location("shift-form.html")
+    Template shiftForm;
     
     @Inject
     Template optimize;
@@ -99,21 +117,83 @@ public class WebResource {
     @Path("/customers")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance customersPage() {
-        return dashboard
-            .data("title", "Customers - Coming Soon")
-            .data("employeeCount", Employee.count())
-            .data("customerCount", Customer.count())
-            .data("shiftCount", ShiftDemand.count());
+        List<Customer> customerList = Customer.listAll();
+        return customers
+            .data("title", "Customers")
+            .data("customers", customerList);
+    }
+    
+    @GET
+    @Path("/customers/new")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance newCustomer() {
+        Customer customer = new Customer();
+        return customerForm
+            .data("title", "New Customer")
+            .data("customer", customer)
+            .data("isEdit", false);
+    }
+    
+    @GET
+    @Path("/customers/{id}/edit")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance editCustomer(@PathParam("id") Long id) {
+        Customer customer = Customer.findById(id);
+        return customerForm
+            .data("title", "Edit Customer")
+            .data("customer", customer)
+            .data("isEdit", true);
     }
     
     @GET
     @Path("/shifts")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance shiftsPage() {
-        return dashboard
-            .data("title", "Shifts - Coming Soon")
-            .data("employeeCount", Employee.count())
-            .data("customerCount", Customer.count())
-            .data("shiftCount", ShiftDemand.count());
+        List<ShiftDemand> shiftList = ShiftDemand.listAll();
+        
+        Map<DayOfWeek, List<ShiftDemand>> shiftsByDay = new LinkedHashMap<>();
+        shiftsByDay.put(DayOfWeek.MONDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.MONDAY).collect(Collectors.toList()));
+        shiftsByDay.put(DayOfWeek.TUESDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.TUESDAY).collect(Collectors.toList()));
+        shiftsByDay.put(DayOfWeek.WEDNESDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.WEDNESDAY).collect(Collectors.toList()));
+        shiftsByDay.put(DayOfWeek.THURSDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.THURSDAY).collect(Collectors.toList()));
+        shiftsByDay.put(DayOfWeek.FRIDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.FRIDAY).collect(Collectors.toList()));
+        shiftsByDay.put(DayOfWeek.SATURDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.SATURDAY).collect(Collectors.toList()));
+        shiftsByDay.put(DayOfWeek.SUNDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.SUNDAY).collect(Collectors.toList()));
+        
+        shiftsByDay.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+        
+        return shifts
+            .data("title", "Shifts")
+            .data("shifts", shiftList)
+            .data("shiftsByDay", shiftsByDay);
+    }
+    
+    @GET
+    @Path("/shifts/new")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance newShift() {
+        ShiftDemand shift = new ShiftDemand();
+        shift.active = true;
+        shift.requiresReturnTrip = false;
+        shift.requiredEmployees = 1;
+        List<Customer> customerList = Customer.listAll();
+        return shiftForm
+            .data("title", "New Shift")
+            .data("shift", shift)
+            .data("customers", customerList)
+            .data("isEdit", false);
+    }
+    
+    @GET
+    @Path("/shifts/{id}/edit")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance editShift(@PathParam("id") Long id) {
+        ShiftDemand shift = ShiftDemand.findById(id);
+        List<Customer> customerList = Customer.listAll();
+        return shiftForm
+            .data("title", "Edit Shift")
+            .data("shift", shift)
+            .data("customers", customerList)
+            .data("isEdit", true);
     }
 }
