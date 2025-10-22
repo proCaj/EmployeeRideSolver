@@ -1,16 +1,23 @@
 package com.vrp.resource;
 
+import com.vrp.entity.Customer;
 import com.vrp.entity.Employee;
 import com.vrp.entity.ShiftDemand;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.List;
 
 @Path("/api/shifts")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ShiftResource {
+    
+    @GET
+    public List<ShiftDemand> listAll() {
+        return ShiftDemand.listAll();
+    }
     
     @GET
     @Path("/{id}")
@@ -20,6 +27,20 @@ public class ShiftResource {
             throw new NotFoundException("Shift not found");
         }
         return shift;
+    }
+    
+    @POST
+    @Transactional
+    public Response create(ShiftDemand shift) {
+        if (shift.customer != null && shift.customer.id != null) {
+            Customer customer = Customer.findById(shift.customer.id);
+            if (customer == null) {
+                throw new NotFoundException("Customer not found");
+            }
+            shift.customer = customer;
+        }
+        shift.persist();
+        return Response.status(Response.Status.CREATED).entity(shift).build();
     }
     
     @PUT
