@@ -8,6 +8,7 @@ import com.vrp.domain.Location;
 import com.vrp.domain.VrpSolution;
 import com.vrp.entity.Customer;
 import com.vrp.entity.Employee;
+import com.vrp.entity.EmployeeType;
 import com.vrp.entity.ShiftDemand;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class SolverService {
@@ -40,9 +42,19 @@ public class SolverService {
         
         LOG.info("Starting solve job " + problemId + " for week " + weekStart);
         
+        List<Employee> driverEmployees = employees.stream()
+            .filter(e -> e.employeeType == EmployeeType.DRIVER && e.active)
+            .collect(Collectors.toList());
+        
+        List<Employee> siteEmployees = employees.stream()
+            .filter(e -> e.employeeType == EmployeeType.SITE_EMPLOYEE && e.active)
+            .collect(Collectors.toList());
+        
+        LOG.info("Found " + driverEmployees.size() + " active drivers and " + siteEmployees.size() + " active site employees");
+        
         List<Event> events = eventGenerationService.generateEventsForWeek(shiftDemands, weekStart);
         
-        List<Driver> drivers = createDrivers(2);
+        List<Driver> drivers = createDriversFromEmployees(driverEmployees);
         
         List<Location> locations = new ArrayList<>();
         locations.add(Location.HUB);
@@ -96,13 +108,15 @@ public class SolverService {
         }
     }
     
-    private List<Driver> createDrivers(int count) {
+    private List<Driver> createDriversFromEmployees(List<Employee> driverEmployees) {
         List<Driver> drivers = new ArrayList<>();
-        for (int i = 1; i <= count; i++) {
-            Driver driver = new Driver("D" + i, Location.HUB);
+        for (Employee employee : driverEmployees) {
+            Driver driver = new Driver("DRIVER-" + employee.id, Location.HUB, employee);
             driver.setMaxCapacity(6);
             drivers.add(driver);
+            LOG.info("Created driver from employee: " + employee.name + " (ID: " + employee.id + ")");
         }
+        LOG.info("Created " + drivers.size() + " driver(s) for optimization");
         return drivers;
     }
 }
