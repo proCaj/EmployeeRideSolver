@@ -30,6 +30,14 @@ A Java-based employee transportation routing optimization system using Quarkus 3
 6. Live optimization progress tracking
 
 ## Recent Changes
+- **November 29, 2025 - Bug Fixes & Validation:**
+  - Fixed HTTP 415 Unsupported Media Type error on employee unassignment endpoints by adding @Consumes(MediaType.WILDCARD)
+  - Implemented concurrent shift assignment validation: checkShiftConflict() prevents employees from being assigned to overlapping shifts on the same day
+  - Returns HTTP 409 with styled error message showing conflicting shift details
+  - Fixed HTMX reload logic using explicit status code check (event.detail.xhr.status >= 200 && < 300) to preserve conflict messages
+  - Fixed location display in optimization results using event.toLocation property
+  - Solver successfully optimizes: 2 drivers, 68 events, ~614 km total distance
+
 - **November 29, 2025 - Dark Theme UI Overhaul:**
   - Implemented complete dark theme redesign across all pages
   - Created custom CSS color scheme with modern styling (DM Sans font family)
