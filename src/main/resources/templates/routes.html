@@ -1,100 +1,82 @@
 {#include base}
 {#content}
-<div class="px-4 py-6 sm:px-0">
-    <div class="sm:flex sm:items-center">
-        <div class="sm:flex-auto">
-            <h2 class="text-3xl font-bold text-gray-900">Route Schedule</h2>
-            <p class="mt-2 text-sm text-gray-700">View optimized driver routes for the week</p>
-        </div>
-        <div class="mt-4 sm:mt-0 sm:ml-16">
-            <input type="week" id="week-selector" 
-                   class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
-        </div>
+<header class="header">
+    <div class="header-left">
+        <h1>Route Schedule</h1>
+        <p>View optimized driver routes for the week</p>
     </div>
+    <div class="header-actions">
+        <input type="week" id="week-selector" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; color: var(--text-primary); font-size: 14px;">
+    </div>
+</header>
 
-    <div class="mt-8">
-        {#if routes and routes.size > 0}
-        <div class="space-y-6">
-            {#for route in routes}
-            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div class="px-4 py-5 sm:px-6 bg-gradient-to-r from-blue-50 to-purple-50">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                                {route.driver.employee.name}
-                            </h3>
-                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                                Route #{route.routeNumber} • {route.events.size} stops
-                            </p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-medium text-gray-900">{route.totalDistance / 1000} km</p>
-                            <p class="text-sm text-gray-500">{route.totalDuration}</p>
-                        </div>
+<div class="content-area">
+    {#if routes and routes.size > 0}
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        {#for route in routes}
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div style="padding: 20px; background: linear-gradient(135deg, rgba(10, 132, 255, 0.1) 0%, rgba(175, 82, 222, 0.1) 100%); border-bottom: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">
+                            {route.driver.employee.name}
+                        </h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">
+                            Route #{route.routeNumber} - {route.events.size} stops
+                        </p>
                     </div>
-                </div>
-                <div class="border-t border-gray-200">
-                    <div class="px-4 py-5 sm:p-6">
-                        <div class="flow-root">
-                            <ul class="-mb-8">
-                                {#for event in route.events}
-                                <li>
-                                    <div class="relative pb-8">
-                                        {#if !event_hasNext}
-                                        <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
-                                        {/if}
-                                        <div class="relative flex space-x-3">
-                                            <div>
-                                                <span class="h-8 w-8 rounded-full {event.isPickup ? 'bg-green-500' : 'bg-blue-500'} flex items-center justify-center ring-8 ring-white">
-                                                    <svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                        {#if event.isPickup}
-                                                        <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/>
-                                                        {#else}
-                                                        <path d="M4 9a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z"/>
-                                                        {/if}
-                                                    </svg>
-                                                </span>
-                                            </div>
-                                            <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                                                <div>
-                                                    <p class="text-sm text-gray-900">
-                                                        {event.isPickup ? 'Pick up' : 'Drop off'} at 
-                                                        <span class="font-medium">{event.toLocation.name}</span>
-                                                    </p>
-                                                    <p class="text-sm text-gray-500">
-                                                        Employee: {event.assignedEmployee.name}
-                                                    </p>
-                                                </div>
-                                                <div class="text-right text-sm whitespace-nowrap text-gray-500">
-                                                    <time>{event.arrivalTime}</time>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                                {/for}
-                            </ul>
-                        </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 16px; font-weight: 600;">{route.totalDistance / 1000} km</div>
+                        <div style="font-size: 13px; color: var(--text-muted);">{route.totalDuration}</div>
                     </div>
                 </div>
             </div>
-            {/for}
+            <div style="padding: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    {#for event in route.events}
+                    <div style="display: flex; align-items: flex-start; gap: 16px;">
+                        <div style="flex-shrink: 0;">
+                            <span style="width: 32px; height: 32px; border-radius: 50%; background: {event.isPickup ? 'var(--accent-early)' : 'var(--accent-blue)'}; display: flex; align-items: center; justify-content: center;">
+                                <svg width="14" height="14" fill="white" stroke="white" viewBox="0 0 20 20">
+                                    {#if event.isPickup}
+                                    <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/>
+                                    {#else}
+                                    <path d="M4 9a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z"/>
+                                    {/if}
+                                </svg>
+                            </span>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 14px; font-weight: 500;">
+                                {event.isPickup ? 'Pick up' : 'Drop off'} at 
+                                <span style="color: var(--accent-blue);">{event.toLocation.name}</span>
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-muted);">
+                                Employee: {event.assignedEmployee.name}
+                            </div>
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
+                            {event.arrivalTime}
+                        </div>
+                    </div>
+                    {/for}
+                </div>
+            </div>
         </div>
-        {#else}
-        <div class="text-center py-12 bg-white shadow rounded-lg">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/for}
+    </div>
+    {#else}
+    <div class="card">
+        <div class="empty-state">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
             </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">No routes available</h3>
-            <p class="mt-1 text-sm text-gray-500">Run an optimization to generate routes.</p>
-            <div class="mt-6">
-                <a href="/optimize" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700">
-                    Go to Optimization
-                </a>
-            </div>
+            <h3>No routes available</h3>
+            <p>Run an optimization to generate routes</p>
+            <a href="/optimize" class="btn btn-primary">Go to Optimization</a>
         </div>
-        {/if}
     </div>
+    {/if}
 </div>
 {/content}
 {/include}

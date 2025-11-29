@@ -1,203 +1,179 @@
 {#include base}
 {#content}
-<div class="px-4 py-6 sm:px-0 max-w-3xl mx-auto">
-    <div class="mb-6">
-        <a href="/shifts" class="text-sm text-gray-500 hover:text-gray-700">
-            ← Back to Shifts
-        </a>
+<header class="header">
+    <div class="header-left">
+        <h1>{title}</h1>
+        <p>{isEdit ? 'Update shift information' : 'Create a new shift demand'}</p>
     </div>
-    
-    <div class="bg-white shadow rounded-lg">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-2xl font-bold text-gray-900">{title}</h2>
+</header>
+
+<div class="content-area">
+    <div style="max-width: 600px;">
+        <a href="/shifts" style="display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 14px; margin-bottom: 24px; text-decoration: none;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Back to Shifts
+        </a>
+        
+        <div class="card">
+            <form id="shift-form">
+                {#if isEdit}
+                <input type="hidden" name="id" value="{shift.id}">
+                {/if}
+                
+                <div class="form-group">
+                    <label for="customerId">Customer *</label>
+                    <select id="customerId" name="customerId" required>
+                        <option value="">Select a customer...</option>
+                        {#for customer in customers}
+                        <option value="{customer.id}" {#if shift.customer != null && shift.customer.id == customer.id}selected{/if}>
+                            {customer.name} - {customer.address}
+                        </option>
+                        {/for}
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dayOfWeek">Day of Week *</label>
+                        <select id="dayOfWeek" name="dayOfWeek" required>
+                            <option value="">Select a day...</option>
+                            <option value="MONDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'MONDAY'}selected{/if}>Monday</option>
+                            <option value="TUESDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'TUESDAY'}selected{/if}>Tuesday</option>
+                            <option value="WEDNESDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'WEDNESDAY'}selected{/if}>Wednesday</option>
+                            <option value="THURSDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'THURSDAY'}selected{/if}>Thursday</option>
+                            <option value="FRIDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'FRIDAY'}selected{/if}>Friday</option>
+                            <option value="SATURDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'SATURDAY'}selected{/if}>Saturday</option>
+                            <option value="SUNDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'SUNDAY'}selected{/if}>Sunday</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shiftType">Shift Type *</label>
+                        <select id="shiftType" name="shiftType" required>
+                            <option value="PICKUP" {#if shift.shiftType == 'PICKUP'}selected{/if}>Pickup (Hub to Customer)</option>
+                            <option value="DROPOFF" {#if shift.shiftType == 'DROPOFF'}selected{/if}>Drop-off (Customer to Hub)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startTime">Start Time *</label>
+                        <input type="time" id="startTime" name="startTime" value="{shift.startTime ?: ''}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="endTime">End Time *</label>
+                        <input type="time" id="endTime" name="endTime" value="{shift.endTime ?: ''}" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="requiredEmployees">Required Employees *</label>
+                    <input type="number" id="requiredEmployees" name="requiredEmployees" value="{shift.requiredEmployees ?: 1}" min="1" max="10" required>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Number of employees needed for this shift</p>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="earlyArrivalBufferMin">Min Early Arrival (min)</label>
+                        <input type="number" id="earlyArrivalBufferMin" name="earlyArrivalBufferMin" value="{shift.earlyArrivalBufferMinMinutes ?: 15}" min="0" max="60">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="earlyArrivalBufferMax">Max Early Arrival (min)</label>
+                        <input type="number" id="earlyArrivalBufferMax" name="earlyArrivalBufferMax" value="{shift.earlyArrivalBufferMaxMinutes ?: 30}" min="0" max="120">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+                    <input id="requiresReturnTrip" name="requiresReturnTrip" type="checkbox" {#if shift.requiresReturnTrip}checked{/if} style="width: 18px; height: 18px; accent-color: var(--accent-blue);">
+                    <div>
+                        <label for="requiresReturnTrip" style="margin: 0; cursor: pointer;">Requires Return Trip</label>
+                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Driver must return employees to the hub after shift</p>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+                    <input id="active" name="active" type="checkbox" {#if shift.active}checked{/if} style="width: 18px; height: 18px; accent-color: var(--accent-blue);">
+                    <div>
+                        <label for="active" style="margin: 0; cursor: pointer;">Active</label>
+                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Include this shift in optimization</p>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 24px; border-top: 1px solid var(--border); margin-top: 24px;">
+                    <a href="/shifts" class="btn btn-secondary">Cancel</a>
+                    <button 
+                        type="submit"
+                        {#if isEdit}
+                        hx-put="/api/shifts/{shift.id}"
+                        {#else}
+                        hx-post="/api/shifts"
+                        {/if}
+                        hx-include="#shift-form"
+                        hx-swap="none"
+                        class="btn btn-primary">
+                        {#if isEdit}Update{#else}Create{/if} Shift
+                    </button>
+                </div>
+            </form>
         </div>
         
-        <form id="shift-form" class="px-6 py-6 space-y-6">
-            {#if isEdit}
-            <input type="hidden" name="id" value="{shift.id}">
-            {/if}
+        {#if isEdit && employees}
+        <div class="card" style="margin-top: 24px;">
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Employee Assignments</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">Assign employees who need transportation for this shift</p>
             
-            <div>
-                <label for="customerId" class="block text-sm font-medium text-gray-700">Customer *</label>
-                <select id="customerId" name="customerId" required
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
-                    <option value="">Select a customer...</option>
-                    {#for customer in customers}
-                    <option value="{customer.id}" {#if shift.customer != null && shift.customer.id == customer.id}selected{/if}>
-                        {customer.name} - {customer.address}
-                    </option>
-                    {/for}
-                </select>
-            </div>
-            
-            <div>
-                <label for="dayOfWeek" class="block text-sm font-medium text-gray-700">Day of Week *</label>
-                <select id="dayOfWeek" name="dayOfWeek" required
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
-                    <option value="">Select a day...</option>
-                    <option value="MONDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'MONDAY'}selected{/if}>Monday</option>
-                    <option value="TUESDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'TUESDAY'}selected{/if}>Tuesday</option>
-                    <option value="WEDNESDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'WEDNESDAY'}selected{/if}>Wednesday</option>
-                    <option value="THURSDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'THURSDAY'}selected{/if}>Thursday</option>
-                    <option value="FRIDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'FRIDAY'}selected{/if}>Friday</option>
-                    <option value="SATURDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'SATURDAY'}selected{/if}>Saturday</option>
-                    <option value="SUNDAY" {#if shift.dayOfWeek != null && shift.dayOfWeek.name == 'SUNDAY'}selected{/if}>Sunday</option>
-                </select>
-            </div>
-            
-            <div>
-                <label for="shiftType" class="block text-sm font-medium text-gray-700">Shift Type *</label>
-                <select id="shiftType" name="shiftType" required
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
-                    <option value="PICKUP" {#if shift.shiftType == 'PICKUP'}selected{/if}>Pickup (From Hub to Customer)</option>
-                    <option value="DROPOFF" {#if shift.shiftType == 'DROPOFF'}selected{/if}>Drop-off (From Customer to Hub)</option>
-                </select>
-            </div>
-            
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <div>
-                    <label for="startTime" class="block text-sm font-medium text-gray-700">Start Time *</label>
-                    <input type="time" id="startTime" name="startTime" value="{shift.startTime ?: ''}" required
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
-                </div>
-                
-                <div>
-                    <label for="endTime" class="block text-sm font-medium text-gray-700">End Time *</label>
-                    <input type="time" id="endTime" name="endTime" value="{shift.endTime ?: ''}" required
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
-                </div>
-            </div>
-            
-            <div>
-                <label for="requiredEmployees" class="block text-sm font-medium text-gray-700">Required Employees *</label>
-                <input type="number" id="requiredEmployees" name="requiredEmployees" value="{shift.requiredEmployees ?: 1}" min="1" max="10" required
-                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
-                <p class="mt-1 text-sm text-gray-500">Number of employees needed for this shift</p>
-            </div>
-            
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <div>
-                    <label for="earlyArrivalBufferMin" class="block text-sm font-medium text-gray-700">Min Early Arrival (minutes)</label>
-                    <input type="number" id="earlyArrivalBufferMin" name="earlyArrivalBufferMin" value="{shift.earlyArrivalBufferMin ?: 15}" min="0" max="60"
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
-                    <p class="mt-1 text-sm text-gray-500">Minimum acceptable early arrival</p>
-                </div>
-                
-                <div>
-                    <label for="earlyArrivalBufferMax" class="block text-sm font-medium text-gray-700">Max Early Arrival (minutes)</label>
-                    <input type="number" id="earlyArrivalBufferMax" name="earlyArrivalBufferMax" value="{shift.earlyArrivalBufferMax ?: 30}" min="0" max="120"
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
-                    <p class="mt-1 text-sm text-gray-500">Maximum acceptable early arrival</p>
-                </div>
-            </div>
-            
-            <div class="flex items-start">
-                <div class="flex items-center h-5">
-                    <input id="requiresReturnTrip" name="requiresReturnTrip" type="checkbox" {#if shift.requiresReturnTrip}checked{/if}
-                           class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded">
-                </div>
-                <div class="ml-3 text-sm">
-                    <label for="requiresReturnTrip" class="font-medium text-gray-700">Requires Return Trip</label>
-                    <p class="text-gray-500">Driver must return employees to the hub after shift</p>
-                </div>
-            </div>
-            
-            <div class="flex items-start">
-                <div class="flex items-center h-5">
-                    <input id="active" name="active" type="checkbox" {#if shift.active}checked{/if}
-                           class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded">
-                </div>
-                <div class="ml-3 text-sm">
-                    <label for="active" class="font-medium text-gray-700">Active</label>
-                    <p class="text-gray-500">Include this shift in optimization</p>
-                </div>
-            </div>
-            
-            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-                <a href="/shifts" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Cancel
-                </a>
-                <button 
-                    type="submit"
-                    {#if isEdit}
-                    hx-put="/api/shifts/{shift.id}"
-                    {#else}
-                    hx-post="/api/shifts"
-                    {/if}
-                    hx-include="#shift-form"
-                    hx-swap="none"
-                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700">
-                    {#if isEdit}Update{#else}Create{/if} Shift
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-{#if isEdit && employees}
-<div class="mt-8 bg-white shadow rounded-lg">
-    <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-xl font-bold text-gray-900">Employee Assignments</h2>
-        <p class="mt-1 text-sm text-gray-500">Assign employees who need transportation for this shift</p>
-    </div>
-    
-    <div class="px-6 py-6">
-        {#if employees.isEmpty()}
-        <p class="text-sm text-gray-500">No employees available. <a href="/employees/new" class="text-primary hover:underline">Add employees</a> to assign them to shifts.</p>
-        {#else}
-        <div class="space-y-3">
-            {#for employee in employees}
-            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span class="text-blue-600 font-semibold">{employee.name.substring(0, 1)}</span>
+            {#if employees.isEmpty()}
+            <p style="font-size: 14px; color: var(--text-muted);">No employees available. <a href="/employees/new" style="color: var(--accent-blue);">Add employees</a> to assign them to shifts.</p>
+            {#else}
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                {#for employee in employees}
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); transition: all 0.2s ease;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-blue), #5856d6); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: white;">
+                            {employee.name.substring(0, 1)}
+                        </div>
+                        <div>
+                            <div style="font-size: 14px; font-weight: 500;">{employee.name}</div>
+                            {#if employee.email}
+                            <div style="font-size: 12px; color: var(--text-muted);">{employee.email}</div>
+                            {/if}
                         </div>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">{employee.name}</p>
-                        {#if employee.email}
-                        <p class="text-xs text-gray-500">{employee.email}</p>
+                    <div>
+                        {#if shift.assignedEmployees.contains(employee)}
+                        <button 
+                            hx-delete="/api/shifts/{shift.id}/unassign/{employee.id}"
+                            hx-swap="outerHTML"
+                            hx-target="closest div"
+                            class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;">
+                            Unassign
+                        </button>
+                        {#else}
+                        <button 
+                            hx-post="/api/shifts/{shift.id}/assign-employee?employeeId={employee.id}"
+                            hx-swap="outerHTML"
+                            hx-target="closest div"
+                            class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">
+                            Assign
+                        </button>
                         {/if}
                     </div>
                 </div>
-                <div>
-                    {#if shift.assignedEmployees.contains(employee)}
-                    <button 
-                        hx-delete="/api/shifts/{shift.id}/unassign/{employee.id}"
-                        hx-swap="outerHTML"
-                        hx-target="closest div"
-                        class="inline-flex items-center px-3 py-1.5 border border-red-300 text-xs font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
-                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        Unassign
-                    </button>
-                    {#else}
-                    <button 
-                        hx-post="/api/shifts/{shift.id}/assign-employee?employeeId={employee.id}"
-                        hx-swap="outerHTML"
-                        hx-target="closest div"
-                        class="inline-flex items-center px-3 py-1.5 border border-green-300 text-xs font-medium rounded-md text-green-700 bg-white hover:bg-green-50">
-                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Assign
-                    </button>
-                    {/if}
-                </div>
+                {/for}
             </div>
-            {/for}
-        </div>
-        <div class="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p class="text-sm text-blue-700">
-                <strong>{shift.assignedEmployees.size()}</strong> of <strong>{shift.requiredEmployees}</strong> required employees assigned
-            </p>
+            <div style="margin-top: 16px; padding: 12px; background: var(--accent-blue-bg); border-radius: var(--radius-sm);">
+                <p style="font-size: 13px; color: var(--accent-blue); margin: 0;">
+                    <strong>{shift.assignedEmployees.size()}</strong> of <strong>{shift.requiredEmployees}</strong> required employees assigned
+                </p>
+            </div>
+            {/if}
         </div>
         {/if}
     </div>
 </div>
-{/if}
 
 <script>
     document.body.addEventListener('htmx:afterRequest', function(event) \{

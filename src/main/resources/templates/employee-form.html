@@ -1,72 +1,70 @@
 {#include base}
 {#content}
-<div class="px-4 py-6 sm:px-0">
-    <div class="md:grid md:grid-cols-3 md:gap-6">
-        <div class="md:col-span-1">
-            <div class="px-4 sm:px-0">
-                <h3 class="text-lg font-medium leading-6 text-gray-900">{isEdit ? 'Edit' : 'New'} Employee</h3>
-                <p class="mt-1 text-sm text-gray-600">
-                    {isEdit ? 'Update employee information' : 'Add a new driver to your workforce'}
-                </p>
-            </div>
-        </div>
-        <div class="mt-5 md:mt-0 md:col-span-2">
-            <form hx-{isEdit ? 'put' : 'post'}="/api/employees{isEdit ? '/' + employee.id : ''}" hx-swap="none" onsubmit="setTimeout(() => window.location.href='/employees', 500); return true;">
-                <div class="shadow sm:rounded-md sm:overflow-hidden">
-                    <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
-                        <div id="message"></div>
-                        
-                        <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                            <input type="text" name="name" id="name" value="{employee.name ?: ''}" required
-                                   class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
-                        </div>
+<header class="header">
+    <div class="header-left">
+        <h1>{isEdit ? 'Edit' : 'New'} Employee</h1>
+        <p>{isEdit ? 'Update employee information' : 'Add a new employee to your workforce'}</p>
+    </div>
+</header>
 
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                            <input type="email" name="email" id="email" value="{employee.email ?: ''}"
-                                   class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
-                        </div>
+<div class="content-area">
+    <div style="max-width: 600px;">
+        <a href="/employees" style="display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 14px; margin-bottom: 24px; text-decoration: none;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Back to Employees
+        </a>
+        
+        <div class="card">
+            <form id="employee-form" hx-{isEdit ? 'put' : 'post'}="/api/employees{isEdit ? '/' + employee.id : ''}" hx-swap="none">
+                <div class="form-group">
+                    <label for="name">Name *</label>
+                    <input type="text" name="name" id="name" value="{employee.name ?: ''}" required placeholder="Enter employee name">
+                </div>
 
-                        <div>
-                            <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
-                            <input type="tel" name="phoneNumber" id="phoneNumber" value="{employee.phoneNumber ?: ''}"
-                                   class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
-                        </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" name="email" id="email" value="{employee.email ?: ''}" placeholder="employee@example.com">
+                </div>
 
-                        <div>
-                            <label for="employeeType" class="block text-sm font-medium text-gray-700">Employee Type</label>
-                            <select name="employeeType" id="employeeType" required
-                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
-                                <option value="SITE_EMPLOYEE" {#if employee.employeeType.name() == 'SITE_EMPLOYEE'}selected{/if}>Site Employee (needs transport)</option>
-                                <option value="DRIVER" {#if employee.employeeType.name() == 'DRIVER'}selected{/if}>Driver (provides transport)</option>
-                            </select>
-                            <p class="mt-1 text-sm text-gray-500">Drivers transport employees; Site Employees work at customer locations</p>
-                        </div>
+                <div class="form-group">
+                    <label for="phoneNumber">Phone Number</label>
+                    <input type="tel" name="phoneNumber" id="phoneNumber" value="{employee.phoneNumber ?: ''}" placeholder="+49 123 456789">
+                </div>
 
-                        <div class="flex items-start">
-                            <div class="flex items-center h-5">
-                                <input id="active" name="active" type="checkbox" {#if employee.active}checked{/if}
-                                       class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded">
-                            </div>
-                            <div class="ml-3 text-sm">
-                                <label for="active" class="font-medium text-gray-700">Active</label>
-                                <p class="text-gray-500">This employee is available for route assignments</p>
-                            </div>
-                        </div>
+                <div class="form-group">
+                    <label for="employeeType">Employee Type *</label>
+                    <select name="employeeType" id="employeeType" required>
+                        <option value="SITE_EMPLOYEE" {#if employee.employeeType.name() == 'SITE_EMPLOYEE'}selected{/if}>Site Employee (needs transport)</option>
+                        <option value="DRIVER" {#if employee.employeeType.name() == 'DRIVER'}selected{/if}>Driver (provides transport)</option>
+                    </select>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Drivers transport employees; Site Employees work at customer locations</p>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+                    <input id="active" name="active" type="checkbox" {#if employee.active}checked{/if} style="width: 18px; height: 18px; accent-color: var(--accent-blue);">
+                    <div>
+                        <label for="active" style="margin: 0; cursor: pointer;">Active</label>
+                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">This employee is available for route assignments</p>
                     </div>
-                    <div class="px-4 py-3 bg-gray-50 text-right sm:px-6 space-x-3">
-                        <a href="/employees" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Cancel
-                        </a>
-                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700">
-                            {isEdit ? 'Update' : 'Create'} Employee
-                        </button>
-                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 24px; border-top: 1px solid var(--border); margin-top: 24px;">
+                    <a href="/employees" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        {isEdit ? 'Update' : 'Create'} Employee
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    document.body.addEventListener('htmx:afterRequest', function(event) \{
+        if (event.detail.successful && (event.detail.pathInfo.requestPath.includes('/api/employees'))) \{
+            window.location.href = '/employees';
+        \}
+    \});
+</script>
 {/content}
 {/include}

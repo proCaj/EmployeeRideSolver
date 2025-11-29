@@ -1,59 +1,55 @@
 {#include base}
 {#content}
-<div class="px-4 py-6 sm:px-0">
-    <h2 class="text-3xl font-bold text-gray-900 mb-6">Route Optimization</h2>
-    
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2">
-            <div class="bg-white shadow rounded-lg p-6 mb-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Optimization Settings</h3>
+<header class="header">
+    <div class="header-left">
+        <h1>Route Optimization</h1>
+        <p>Configure and run the Timefold solver to optimize driver routes</p>
+    </div>
+</header>
+
+<div class="content-area">
+    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 24px;">
+        <div>
+            <div class="card" style="margin-bottom: 24px;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 20px;">Optimization Settings</h3>
                 
                 <form id="optimize-form">
-                    <div class="space-y-4">
+                    <div class="form-group">
+                        <label for="date">Target Date</label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="max-runtime">Max Runtime (seconds)</label>
+                        <input type="number" id="max-runtime" name="maxRuntime" value="30" min="5" max="300">
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Longer runtime may yield better solutions</p>
+                    </div>
+                    
+                    <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+                        <input id="minimize-distance" name="minimizeDistance" type="checkbox" checked style="width: 18px; height: 18px; accent-color: var(--accent-blue);">
                         <div>
-                            <label for="date" class="block text-sm font-medium text-gray-700">Target Date</label>
-                            <input type="date" id="date" name="date" required
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
-                        </div>
-                        
-                        <div>
-                            <label for="max-runtime" class="block text-sm font-medium text-gray-700">Max Runtime (seconds)</label>
-                            <input type="number" id="max-runtime" name="maxRuntime" value="30" min="5" max="300"
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-3 py-2 border">
-                            <p class="mt-1 text-sm text-gray-500">Longer runtime may yield better solutions</p>
-                        </div>
-                        
-                        <div class="flex items-start">
-                            <div class="flex items-center h-5">
-                                <input id="minimize-distance" name="minimizeDistance" type="checkbox" checked
-                                       class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded">
-                            </div>
-                            <div class="ml-3 text-sm">
-                                <label for="minimize-distance" class="font-medium text-gray-700">Minimize Total Distance</label>
-                                <p class="text-gray-500">Prioritize shorter routes</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-start">
-                            <div class="flex items-center h-5">
-                                <input id="maximize-consecutive" name="maximizeConsecutive" type="checkbox" checked
-                                       class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded">
-                            </div>
-                            <div class="ml-3 text-sm">
-                                <label for="maximize-consecutive" class="font-medium text-gray-700">Maximize Consecutive Hours</label>
-                                <p class="text-gray-500">Reduce driver breaks and idle time</p>
-                            </div>
+                            <label for="minimize-distance" style="margin: 0; cursor: pointer;">Minimize Total Distance</label>
+                            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Prioritize shorter routes</p>
                         </div>
                     </div>
                     
-                    <div class="mt-6 flex space-x-3">
+                    <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+                        <input id="maximize-consecutive" name="maximizeConsecutive" type="checkbox" checked style="width: 18px; height: 18px; accent-color: var(--accent-blue);">
+                        <div>
+                            <label for="maximize-consecutive" style="margin: 0; cursor: pointer;">Maximize Consecutive Hours</label>
+                            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Reduce driver breaks and idle time</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; padding-top: 20px; border-top: 1px solid var(--border); margin-top: 20px;">
                         <button 
                             type="button"
                             id="start-btn"
                             hx-post="/api/solver/solve"
                             hx-include="#optimize-form"
                             hx-target="#solver-status"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none">
+                            class="btn btn-primary" style="background: var(--accent-early);">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             Start Optimization
                         </button>
                         <button 
@@ -61,62 +57,74 @@
                             id="stop-btn"
                             hx-post="/api/solver/stop"
                             hx-target="#solver-status"
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50">
+                            class="btn btn-secondary">
                             Stop
                         </button>
                     </div>
                 </form>
             </div>
             
-            <div id="results" class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Optimization Results</h3>
-                <div class="text-center text-gray-500 py-8">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div id="results" class="card">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 20px;">Optimization Results</h3>
+                <div class="empty-state" style="padding: 40px 0;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                     </svg>
-                    <p class="mt-2">Run an optimization to see results</p>
+                    <h3>No results yet</h3>
+                    <p>Run an optimization to see results</p>
                 </div>
             </div>
         </div>
         
-        <div class="lg:col-span-1">
-            <div id="solver-status" class="bg-white shadow rounded-lg p-6 sticky top-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Solver Status</h3>
+        <div>
+            <div id="solver-status" class="card" style="position: sticky; top: 24px;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 20px;">Solver Status</h3>
                 
-                <dl class="space-y-3">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
                     <div>
-                        <dt class="text-sm font-medium text-gray-500">Status</dt>
-                        <dd class="mt-1">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                Idle
-                            </span>
-                        </dd>
+                        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Status</div>
+                        <span class="badge" style="background: var(--bg-tertiary); color: var(--text-secondary);">Idle</span>
                     </div>
                     
                     <div>
-                        <dt class="text-sm font-medium text-gray-500">Score</dt>
-                        <dd class="mt-1 text-sm text-gray-900">-</dd>
+                        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Score</div>
+                        <div style="font-size: 14px;">-</div>
                     </div>
                     
                     <div>
-                        <dt class="text-sm font-medium text-gray-500">Time Elapsed</dt>
-                        <dd class="mt-1 text-sm text-gray-900">-</dd>
+                        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Time Elapsed</div>
+                        <div style="font-size: 14px;">-</div>
                     </div>
                     
                     <div>
-                        <dt class="text-sm font-medium text-gray-500">Iterations</dt>
-                        <dd class="mt-1 text-sm text-gray-900">-</dd>
+                        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Iterations</div>
+                        <div style="font-size: 14px;">-</div>
                     </div>
-                </dl>
+                </div>
                 
-                <div class="mt-6 pt-6 border-t border-gray-200">
-                    <h4 class="text-sm font-medium text-gray-900 mb-2">Constraints</h4>
-                    <ul class="text-sm text-gray-600 space-y-1">
-                        <li>✓ Vehicle capacity (6 passengers)</li>
-                        <li>✓ Time window compliance</li>
-                        <li>✓ Max 4h consecutive work</li>
-                        <li>✓ Min 30min break required</li>
-                        <li>✓ Max 10h daily work</li>
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                    <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Active Constraints</h4>
+                    <ul style="font-size: 13px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px; padding-left: 0; list-style: none;">
+                        <li style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="14" height="14" fill="var(--accent-early)" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            Vehicle capacity (6 passengers)
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="14" height="14" fill="var(--accent-early)" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            Time window compliance
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="14" height="14" fill="var(--accent-early)" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            Max 4h consecutive work
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="14" height="14" fill="var(--accent-early)" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            Min 30min break required
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="14" height="14" fill="var(--accent-early)" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            Max 10h daily work
+                        </li>
                     </ul>
                 </div>
             </div>

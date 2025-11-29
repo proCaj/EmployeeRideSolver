@@ -59,6 +59,7 @@ public class WebResource {
         
         return dashboard
             .data("title", "Dashboard")
+            .data("activeNav", "dashboard")
             .data("employeeCount", employeeCount)
             .data("customerCount", customerCount)
             .data("shiftCount", shiftCount);
@@ -71,6 +72,7 @@ public class WebResource {
         List<Employee> employeeList = Employee.listAll();
         return employees
             .data("title", "Employees")
+            .data("activeNav", "employees")
             .data("employees", employeeList);
     }
     
@@ -82,6 +84,7 @@ public class WebResource {
         employee.active = true;
         return employeeForm
             .data("title", "New Employee")
+            .data("activeNav", "employees")
             .data("employee", employee)
             .data("isEdit", false);
     }
@@ -93,6 +96,7 @@ public class WebResource {
         Employee employee = Employee.findById(id);
         return employeeForm
             .data("title", "Edit Employee")
+            .data("activeNav", "employees")
             .data("employee", employee)
             .data("isEdit", true);
     }
@@ -107,6 +111,7 @@ public class WebResource {
         
         return optimize
             .data("title", "Route Optimization")
+            .data("activeNav", "optimize")
             .data("customerCount", customerCount)
             .data("driverCount", driverCount)
             .data("employeeCount", employeeCount);
@@ -118,6 +123,7 @@ public class WebResource {
     public TemplateInstance routesPage() {
         return routes
             .data("title", "Routes")
+            .data("activeNav", "routes")
             .data("routes", List.of());
     }
     
@@ -128,6 +134,7 @@ public class WebResource {
         List<Customer> customerList = Customer.listAll();
         return customers
             .data("title", "Customers")
+            .data("activeNav", "customers")
             .data("customers", customerList);
     }
     
@@ -138,6 +145,7 @@ public class WebResource {
         Customer customer = new Customer();
         return customerForm
             .data("title", "New Customer")
+            .data("activeNav", "customers")
             .data("customer", customer)
             .data("isEdit", false);
     }
@@ -149,6 +157,7 @@ public class WebResource {
         Customer customer = Customer.findById(id);
         return customerForm
             .data("title", "Edit Customer")
+            .data("activeNav", "customers")
             .data("customer", customer)
             .data("isEdit", true);
     }
@@ -158,6 +167,8 @@ public class WebResource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance shiftsPage() {
         List<ShiftDemand> shiftList = ShiftDemand.listAll();
+        List<Employee> siteEmployees = Employee.list("employeeType = ?1 and active = true", 
+            com.vrp.entity.EmployeeType.SITE_EMPLOYEE);
         
         Map<DayOfWeek, List<ShiftDemand>> shiftsByDay = new LinkedHashMap<>();
         shiftsByDay.put(DayOfWeek.MONDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.MONDAY).collect(Collectors.toList()));
@@ -172,8 +183,10 @@ public class WebResource {
         
         return shifts
             .data("title", "Shifts")
+            .data("activeNav", "shifts")
             .data("shifts", shiftList)
-            .data("shiftsByDay", shiftsByDay);
+            .data("shiftsByDay", shiftsByDay)
+            .data("siteEmployees", siteEmployees);
     }
     
     @GET
@@ -187,6 +200,7 @@ public class WebResource {
         List<Customer> customerList = Customer.listAll();
         return shiftForm
             .data("title", "New Shift")
+            .data("activeNav", "shifts")
             .data("shift", shift)
             .data("customers", customerList)
             .data("employees", List.of())
@@ -202,6 +216,7 @@ public class WebResource {
         List<Employee> employeeList = Employee.listAll();
         return shiftForm
             .data("title", "Edit Shift")
+            .data("activeNav", "shifts")
             .data("shift", shift)
             .data("customers", customerList)
             .data("employees", employeeList)
@@ -216,6 +231,7 @@ public class WebResource {
         List<Employee> allEmployees = Employee.listAll();
         return shiftForm
             .data("title", "Shift Details")
+            .data("activeNav", "shifts")
             .data("shift", shift)
             .data("customers", Customer.listAll())
             .data("employees", allEmployees)

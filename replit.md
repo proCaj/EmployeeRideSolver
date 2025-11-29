@@ -30,6 +30,20 @@ A Java-based employee transportation routing optimization system using Quarkus 3
 6. Live optimization progress tracking
 
 ## Recent Changes
+- **November 29, 2025 - Dark Theme UI Overhaul:**
+  - Implemented complete dark theme redesign across all pages
+  - Created custom CSS color scheme with modern styling (DM Sans font family)
+  - Updated base template with sidebar navigation and proper navigation highlighting
+  - Redesigned Shifts page with collapsible day cards and employee assignment panel
+  - Implemented drag-and-drop employee assignment functionality on shifts page
+  - Added modal-based employee assignment as alternative to drag-and-drop
+  - Updated all form templates (employee, customer, shift) with consistent dark theme styling
+  - Fixed Qute template issues with JavaScript curly braces escaping
+  - Added responsive table styling for employee list
+  - Enhanced card-based layout for customer locations
+  - Improved optimization page with solver status panel
+  - All pages now use consistent CSS variables for theming
+
 - **October 22, 2025 - Driver/Employee Type Distinction & VRP Integration:**
   - Implemented EmployeeType enum (DRIVER vs SITE_EMPLOYEE) for proper role distinction
   - Updated Employee entity with employeeType field (EnumType.STRING, default SITE_EMPLOYEE)

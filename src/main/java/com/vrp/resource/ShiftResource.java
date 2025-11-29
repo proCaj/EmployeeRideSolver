@@ -179,6 +179,7 @@ public class ShiftResource {
     @POST
     @Path("/{id}/assign-employee")
     @Transactional
+    @Produces(MediaType.TEXT_HTML)
     public Response assignEmployee(@PathParam("id") Long shiftId, @QueryParam("employeeId") Long employeeId) {
         ShiftDemand shift = ShiftDemand.findById(shiftId);
         Employee employee = Employee.findById(employeeId);
@@ -188,12 +189,13 @@ public class ShiftResource {
         }
         
         employee.assignToShift(shift);
-        return Response.ok().build();
+        return Response.ok(buildEmployeesHtml(shift)).build();
     }
     
     @DELETE
     @Path("/{id}/unassign/{employeeId}")
     @Transactional
+    @Produces(MediaType.TEXT_HTML)
     public Response unassignEmployee(@PathParam("id") Long shiftId, @PathParam("employeeId") Long employeeId) {
         ShiftDemand shift = ShiftDemand.findById(shiftId);
         Employee employee = Employee.findById(employeeId);
@@ -203,6 +205,44 @@ public class ShiftResource {
         }
         
         employee.unassignFromShift(shift);
-        return Response.ok().build();
+        return Response.ok(buildEmployeesHtml(shift)).build();
+    }
+    
+    private String buildEmployeesHtml(ShiftDemand shift) {
+        StringBuilder html = new StringBuilder();
+        html.append("<div class=\"shift-employees\" id=\"shift-employees-").append(shift.id).append("\">");
+        html.append("<div class=\"assigned-employees-list\">");
+        
+        for (Employee emp : shift.assignedEmployees) {
+            String initials = getInitials(emp.name);
+            html.append("<div class=\"assigned-employee\" data-employee-id=\"").append(emp.id).append("\">");
+            html.append("<div class=\"mini-avatar\">").append(initials).append("</div>");
+            html.append("<span class=\"emp-name\">").append(emp.name).append("</span>");
+            html.append("<button class=\"remove-btn\" ");
+            html.append("hx-delete=\"/api/shifts/").append(shift.id).append("/unassign/").append(emp.id).append("\" ");
+            html.append("hx-target=\"#shift-employees-").append(shift.id).append("\" ");
+            html.append("hx-swap=\"outerHTML\" title=\"Remove\">");
+            html.append("<svg width=\"12\" height=\"12\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M6 18L18 6M6 6l12 12\"/></svg>");
+            html.append("</button></div>");
+        }
+        
+        html.append("<button class=\"add-employee-btn\" onclick=\"openAssignModal(").append(shift.id).append(")\">");
+        html.append("<svg width=\"12\" height=\"12\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 4v16m8-8H4\"/></svg>");
+        html.append("Add employee</button>");
+        html.append("</div>");
+        html.append("<div class=\"employee-count\"><span class=\"count\">").append(shift.assignedEmployees.size());
+        html.append("</span> / ").append(shift.requiredEmployees).append(" required</div>");
+        html.append("</div>");
+        
+        return html.toString();
+    }
+    
+    private String getInitials(String name) {
+        if (name == null || name.isEmpty()) return "?";
+        String[] parts = name.split(" ");
+        if (parts.length >= 2) {
+            return "" + parts[0].charAt(0) + parts[parts.length - 1].charAt(0);
+        }
+        return "" + name.charAt(0);
     }
 }

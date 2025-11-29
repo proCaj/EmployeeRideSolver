@@ -1,117 +1,74 @@
 {#include base}
 {#content}
-<div class="px-4 py-6 sm:px-0">
-    <h2 class="text-3xl font-bold text-gray-900 mb-6">Dashboard</h2>
-    
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Total Employees</dt>
-                            <dd class="text-3xl font-semibold text-gray-900">{employeeCount}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
+<header class="header">
+    <div class="header-left">
+        <h1>Dashboard</h1>
+        <p>Overview of your transportation management system</p>
+    </div>
+</header>
 
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Customer Locations</dt>
-                            <dd class="text-3xl font-semibold text-gray-900">{customerCount}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
+<div class="content-area">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{employeeCount}</div>
+            <div class="stat-label">Total Employees</div>
         </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Active Shifts</dt>
-                            <dd class="text-3xl font-semibold text-gray-900">{shiftCount}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value">{customerCount}</div>
+            <div class="stat-label">Customer Locations</div>
         </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Solver Status</dt>
-                            <dd class="text-lg font-semibold text-green-600">Ready</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value">{shiftCount}</div>
+            <div class="stat-label">Active Shifts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color: var(--accent-early);">Ready</div>
+            <div class="stat-label">Solver Status</div>
         </div>
     </div>
 
-    <div class="bg-white shadow rounded-lg p-6 mb-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <a href="/employees/new" class="inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700">
+    <div class="card" style="margin-bottom: 24px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Quick Actions</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <a href="/employees/new" class="btn btn-primary" style="justify-content: center;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Add Employee
             </a>
-            <a href="/customers/new" class="inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-secondary hover:bg-purple-700">
+            <a href="/customers/new" class="btn btn-secondary" style="justify-content: center;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Add Customer
             </a>
-            <a href="/optimize" class="inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+            <a href="/shifts/new" class="btn btn-secondary" style="justify-content: center;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add Shift
+            </a>
+            <a href="/optimize" class="btn btn-primary" style="justify-content: center; background: var(--accent-early);">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 Run Optimization
             </a>
         </div>
     </div>
 
-    <div class="bg-white shadow rounded-lg p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">System Information</h3>
-        <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+    <div class="card">
+        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">System Information</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
             <div>
-                <dt class="text-sm font-medium text-gray-500">Solver Engine</dt>
-                <dd class="mt-1 text-sm text-gray-900">Timefold Solver 1.17.0</dd>
+                <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Solver Engine</div>
+                <div style="font-size: 14px; color: var(--text-primary);">Timefold Solver 1.17.0</div>
             </div>
             <div>
-                <dt class="text-sm font-medium text-gray-500">Planning Model</dt>
-                <dd class="mt-1 text-sm text-gray-900">Chained Variable (VRP)</dd>
+                <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Planning Model</div>
+                <div style="font-size: 14px; color: var(--text-primary);">Chained Variable (VRP)</div>
             </div>
             <div>
-                <dt class="text-sm font-medium text-gray-500">Routing Engine</dt>
-                <dd class="mt-1 text-sm text-gray-900">GraphHopper 8.0</dd>
+                <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Routing Engine</div>
+                <div style="font-size: 14px; color: var(--text-primary);">GraphHopper 8.0</div>
             </div>
             <div>
-                <dt class="text-sm font-medium text-gray-500">Central Hub</dt>
-                <dd class="mt-1 text-sm text-gray-900">Hauptbahnhof Worms</dd>
+                <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Central Hub</div>
+                <div style="font-size: 14px; color: var(--text-primary);">Hauptbahnhof Worms</div>
             </div>
-        </dl>
+        </div>
     </div>
 </div>
 {/content}
