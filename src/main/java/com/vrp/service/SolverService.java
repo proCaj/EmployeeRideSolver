@@ -2,6 +2,8 @@ package com.vrp.service;
 
 import ai.timefold.solver.core.api.solver.SolverJob;
 import ai.timefold.solver.core.api.solver.SolverManager;
+import ai.timefold.solver.core.config.solver.SolverConfig;
+import ai.timefold.solver.core.config.solver.termination.TerminationConfig;
 import com.vrp.domain.Driver;
 import com.vrp.domain.Event;
 import com.vrp.domain.Location;
@@ -34,13 +36,28 @@ public class SolverService {
     EventGenerationService eventGenerationService;
     
     private final ConcurrentMap<UUID, VrpSolution> solutionMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<UUID, VrpSolution> bestSolutionMap = new ConcurrentHashMap<>();
     private final ConcurrentMap<UUID, SolverJob<VrpSolution, UUID>> jobMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<UUID, Long> startTimeMap = new ConcurrentHashMap<>();
+    private volatile UUID currentJobId = null;
     
     public UUID solve(List<Customer> customers, List<Employee> employees, 
                       List<ShiftDemand> shiftDemands, LocalDate weekStart) {
-        UUID problemId = UUID.randomUUID();
+        return solve(customers, employees, shiftDemands, weekStart, 30);
+    }
+    
+    public UUID solve(List<Customer> customers, List<Employee> employees, 
+                      List<ShiftDemand> shiftDemands, LocalDate weekStart, int maxRuntimeSeconds) {
         
-        LOG.info("Starting solve job " + problemId + " for week " + weekStart);
+        if (currentJobId != null) {
+            stopSolving(currentJobId);
+        }
+        
+        UUID problemId = UUID.randomUUID();
+        currentJobId = problemId;
+        startTimeMap.put(problemId, System.currentTimeMillis());
+        
+        LOG.info("Starting solve job " + problemId + " for week " + weekStart + " with max runtime " + maxRuntimeSeconds + "s");
         
         List<Employee> driverEmployees = employees.stream()
             .filter(e -> e.employeeType == EmployeeType.DRIVER && e.active)
@@ -51,8 +68,19 @@ public class SolverService {
             .collect(Collectors.toList());
         
         LOG.info("Found " + driverEmployees.size() + " active drivers and " + siteEmployees.size() + " active site employees");
+        LOG.info("Found " + shiftDemands.size() + " active shift demands");
+        LOG.info("Found " + customers.size() + " customers");
+        
+        if (driverEmployees.isEmpty()) {
+            LOG.warn("No active drivers found - optimization may not produce useful results");
+        }
+        
+        if (shiftDemands.isEmpty()) {
+            LOG.warn("No active shift demands found - nothing to optimize");
+        }
         
         List<Event> events = eventGenerationService.generateEventsForWeek(shiftDemands, weekStart);
+        LOG.info("Generated " + events.size() + " events for optimization");
         
         List<Driver> drivers = createDriversFromEmployees(driverEmployees);
         
@@ -69,8 +97,29 @@ public class SolverService {
             weekStart
         );
         
-        SolverJob<VrpSolution, UUID> solverJob = solverManager.solve(problemId, problem);
-        jobMap.put(problemId, solverJob);
+        try {
+            SolverJob<VrpSolution, UUID> solverJob = solverManager.solveBuilder()
+                .withProblemId(problemId)
+                .withProblem(problem)
+                .withBestSolutionConsumer(solution -> {
+                    bestSolutionMap.put(problemId, solution);
+                    LOG.info("New best solution for job " + problemId + " with score: " + solution.getScore());
+                })
+                .withFinalBestSolutionConsumer(solution -> {
+                    solutionMap.put(problemId, solution);
+                    bestSolutionMap.put(problemId, solution);
+                    LOG.info("Final solution for job " + problemId + " with score: " + solution.getScore());
+                })
+                .run();
+            
+            jobMap.put(problemId, solverJob);
+            LOG.info("Solver job " + problemId + " started successfully");
+            
+        } catch (Exception e) {
+            LOG.error("Failed to start solver job: " + e.getMessage(), e);
+            currentJobId = null;
+            throw new RuntimeException("Failed to start optimization: " + e.getMessage(), e);
+        }
         
         return problemId;
     }
@@ -92,6 +141,10 @@ public class SolverService {
         return solutionMap.get(problemId);
     }
     
+    public VrpSolution getBestSolution(UUID problemId) {
+        return bestSolutionMap.get(problemId);
+    }
+    
     public String getStatus(UUID problemId) {
         SolverJob<VrpSolution, UUID> solverJob = jobMap.get(problemId);
         if (solverJob == null) {
@@ -106,6 +159,17 @@ public class SolverService {
             solverJob.terminateEarly();
             LOG.info("Terminated solve job " + problemId);
         }
+        if (problemId.equals(currentJobId)) {
+            currentJobId = null;
+        }
+    }
+    
+    public UUID getCurrentJobId() {
+        return currentJobId;
+    }
+    
+    public long getStartTime(UUID problemId) {
+        return startTimeMap.getOrDefault(problemId, System.currentTimeMillis());
     }
     
     private List<Driver> createDriversFromEmployees(List<Employee> driverEmployees) {

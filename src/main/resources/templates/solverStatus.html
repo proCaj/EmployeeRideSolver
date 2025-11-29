@@ -1,0 +1,74 @@
+<h3 style="font-size: 16px; font-weight: 600; margin-bottom: 20px;">Solver Status</h3>
+
+<div style="display: flex; flex-direction: column; gap: 16px;">
+    <div>
+        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Status</div>
+        {#if statusClass == 'solving'}
+        <span class="badge" style="background: var(--accent-blue-bg); color: var(--accent-blue);">
+            <span class="spinner" style="display: inline-block; width: 10px; height: 10px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 6px;"></span>
+            {status}
+        </span>
+        {#else if statusClass == 'completed'}
+        <span class="badge" style="background: var(--accent-early-bg); color: var(--accent-early);">{status}</span>
+        {#else if statusClass == 'stopped'}
+        <span class="badge" style="background: var(--accent-red-bg); color: var(--accent-red);">{status}</span>
+        {#else}
+        <span class="badge" style="background: var(--bg-tertiary); color: var(--text-secondary);">{status}</span>
+        {/if}
+    </div>
+    
+    <div>
+        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Score</div>
+        <div style="font-size: 14px; font-family: 'JetBrains Mono', monospace;">{score}</div>
+    </div>
+    
+    <div>
+        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Time Elapsed</div>
+        <div style="font-size: 14px;">{timeElapsed}</div>
+    </div>
+    
+    <div>
+        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Iterations</div>
+        <div style="font-size: 14px;">{iterations}</div>
+    </div>
+</div>
+
+<div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+    <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Active Constraints</h4>
+    <ul style="font-size: 13px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px; padding-left: 0; list-style: none;">
+        <li style="display: flex; align-items: center; gap: 8px;">
+            <svg width="14" height="14" fill="var(--accent-early)" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            Vehicle capacity (6 passengers)
+        </li>
+        <li style="display: flex; align-items: center; gap: 8px;">
+            <svg width="14" height="14" fill="var(--accent-early)" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            Time window compliance
+        </li>
+        <li style="display: flex; align-items: center; gap: 8px;">
+            <svg width="14" height="14" fill="var(--accent-early)" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            Max 4h consecutive work
+        </li>
+        <li style="display: flex; align-items: center; gap: 8px;">
+            <svg width="14" height="14" fill="var(--accent-early)" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            Min 30min break required
+        </li>
+        <li style="display: flex; align-items: center; gap: 8px;">
+            <svg width="14" height="14" fill="var(--accent-early)" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            Max 10h daily work
+        </li>
+    </ul>
+</div>
+
+{#if statusClass == 'solving'}
+<script>
+    setTimeout(function() \{
+        htmx.ajax('GET', '/api/solver/status', \{target: '#solver-status', swap: 'innerHTML'\});
+    \}, 1000);
+</script>
+{/if}
+
+<style>
+    @keyframes spin \{
+        to \{ transform: rotate(360deg); \}
+    \}
+</style>
