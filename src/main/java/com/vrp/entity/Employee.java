@@ -51,8 +51,31 @@ public class Employee extends PanacheEntity {
     }
     
     public void assignToShift(ShiftDemand shift) {
+        String conflictMessage = checkShiftConflict(shift);
+        if (conflictMessage != null) {
+            throw new IllegalStateException(conflictMessage);
+        }
         assignments.add(shift);
         shift.assignedEmployees.add(this);
+    }
+    
+    public String checkShiftConflict(ShiftDemand newShift) {
+        for (ShiftDemand existingShift : assignments) {
+            if (existingShift.dayOfWeek == newShift.dayOfWeek) {
+                if (shiftsOverlap(existingShift, newShift)) {
+                    return "Employee " + name + " is already assigned to a shift at " + 
+                           existingShift.customer.name + " (" + existingShift.startTime + 
+                           " - " + existingShift.endTime + ") on " + existingShift.dayOfWeek + 
+                           " which overlaps with this shift";
+                }
+            }
+        }
+        return null;
+    }
+    
+    private boolean shiftsOverlap(ShiftDemand shift1, ShiftDemand shift2) {
+        return shift1.startTime.isBefore(shift2.endTime) && 
+               shift2.startTime.isBefore(shift1.endTime);
     }
     
     public void unassignFromShift(ShiftDemand shift) {

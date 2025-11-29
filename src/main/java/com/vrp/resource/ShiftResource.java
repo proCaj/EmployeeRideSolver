@@ -179,6 +179,7 @@ public class ShiftResource {
     @POST
     @Path("/{id}/assign-employee")
     @Transactional
+    @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.TEXT_HTML)
     public Response assignEmployee(@PathParam("id") Long shiftId, @QueryParam("employeeId") Long employeeId) {
         ShiftDemand shift = ShiftDemand.findById(shiftId);
@@ -188,13 +189,33 @@ public class ShiftResource {
             throw new NotFoundException("Shift or Employee not found");
         }
         
+        String conflict = employee.checkShiftConflict(shift);
+        if (conflict != null) {
+            return Response.status(Response.Status.CONFLICT)
+                .entity(buildConflictErrorHtml(conflict, shift))
+                .build();
+        }
+        
         employee.assignToShift(shift);
         return Response.ok(buildEmployeesHtml(shift)).build();
+    }
+    
+    private String buildConflictErrorHtml(String message, ShiftDemand shift) {
+        StringBuilder html = new StringBuilder();
+        html.append("<div style=\"padding: 12px; background: rgba(255, 69, 58, 0.15); border: 1px solid rgba(255, 69, 58, 0.3); border-radius: 8px; margin-bottom: 12px;\">");
+        html.append("<div style=\"display: flex; align-items: center; gap: 8px; color: #ff453a; font-size: 13px; font-weight: 500;\">");
+        html.append("<svg width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z\"/></svg>");
+        html.append("Assignment Conflict");
+        html.append("</div>");
+        html.append("<div style=\"color: #ff6961; font-size: 12px; margin-top: 4px;\">").append(message).append("</div>");
+        html.append("</div>");
+        return html.toString();
     }
     
     @DELETE
     @Path("/{id}/unassign/{employeeId}")
     @Transactional
+    @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.TEXT_HTML)
     public Response unassignEmployee(@PathParam("id") Long shiftId, @PathParam("employeeId") Long employeeId) {
         ShiftDemand shift = ShiftDemand.findById(shiftId);

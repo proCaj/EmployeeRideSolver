@@ -39,7 +39,7 @@
         <div style="display: flex; flex-wrap: wrap; gap: 8px;">
             {#for event in route.events}
             <span class="badge" style="background: var(--bg-secondary);">
-                {event.location?.name ?: 'Hub'}
+                {#if event.toLocation != null}{event.toLocation.name}{#else}Hub{/if}
             </span>
             {/for}
         </div>

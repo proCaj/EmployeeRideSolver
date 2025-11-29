@@ -125,6 +125,8 @@
             <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Employee Assignments</h3>
             <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">Assign employees who need transportation for this shift</p>
             
+            <div id="assignment-conflict-message"></div>
+            
             {#if employees.isEmpty()}
             <p style="font-size: 14px; color: var(--text-muted);">No employees available. <a href="/employees/new" style="color: var(--accent-blue);">Add employees</a> to assign them to shifts.</p>
             {#else}
@@ -142,20 +144,21 @@
                             {/if}
                         </div>
                     </div>
-                    <div>
+                    <div id="assignment-actions-{employee.id}">
                         {#if shift.assignedEmployees.contains(employee)}
                         <button 
                             hx-delete="/api/shifts/{shift.id}/unassign/{employee.id}"
-                            hx-swap="outerHTML"
-                            hx-target="closest div"
+                            hx-swap="none"
+                            hx-on::after-request="if(event.detail.xhr.status >= 200 && event.detail.xhr.status < 300) window.location.reload();"
                             class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;">
                             Unassign
                         </button>
                         {#else}
                         <button 
                             hx-post="/api/shifts/{shift.id}/assign-employee?employeeId={employee.id}"
-                            hx-swap="outerHTML"
-                            hx-target="closest div"
+                            hx-target="#assignment-conflict-message"
+                            hx-swap="innerHTML"
+                            hx-on::after-request="if(event.detail.xhr.status >= 200 && event.detail.xhr.status < 300) window.location.reload();"
                             class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">
                             Assign
                         </button>
