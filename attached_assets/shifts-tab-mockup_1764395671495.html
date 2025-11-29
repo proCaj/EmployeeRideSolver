@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shifts Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #141416;
+            --bg-tertiary: #1c1c1f;
+            --bg-card: #1a1a1d;
+            --border: #2a2a2e;
+            --border-hover: #3a3a3f;
+            --text-primary: #f5f5f7;
+            --text-secondary: #a1a1a6;
+            --text-muted: #6e6e73;
+            --accent-early: #34c759;
+            --accent-early-bg: rgba(52, 199, 89, 0.12);
+            --accent-late: #ff9f0a;
+            --accent-late-bg: rgba(255, 159, 10, 0.12);
+            --accent-night: #5e5ce6;
+            --accent-night-bg: rgba(94, 92, 230, 0.12);
+            --accent-blue: #0a84ff;
+            --accent-blue-bg: rgba(10, 132, 255, 0.1);
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            padding: 0 12px 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--accent-blue);
+        }
+
+        .nav-section {
+            margin-bottom: 32px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--accent-blue-bg);
+            color: var(--accent-blue);
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.8;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-secondary);
+        }
+
+        .header-left h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .header-left p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0977e5;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card);
+            border-color: var(--border-hover);
+        }
+
+        /* Week Navigation */
+        .week-nav {
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+
+        .week-nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .week-nav-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .week-display {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .week-display span {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 32px;
+            display: flex;
+            gap: 24px;
+        }
+
+        /* Days Container */
+        .days-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Day Card */
+        .day-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .day-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .day-card.expanded {
+            box-shadow: var(--shadow);
+        }
+
+        .day-header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .day-header:hover {
+            background: #222225;
+        }
+
+        .day-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .day-date {
+            text-align: center;
+            min-width: 48px;
+        }
+
+        .day-date .day-num {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .day-date .day-name {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .day-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .expand-icon {
+            width: 24px;
+            height: 24px;
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+
+        .day-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Shifts List */
+        .shifts-list {
+            display: none;
+            flex-direction: column;
+        }
+
+        .day-card.expanded .shifts-list {
+            display: flex;
+        }
+
+        .shift-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 100px 1fr 160px 120px 60px;
+            gap: 16px;
+            align-items: center;
+            transition: background 0.2s ease;
+        }
+
+        .shift-item:last-child {
+            border-bottom: none;
+        }
+
+        .shift-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .shift-item.drag-over {
+            background: var(--accent-blue-bg);
+            outline: 2px dashed var(--accent-blue);
+            outline-offset: -2px;
+        }
+
+        .shift-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .shift-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .shift-badge.early {
+            background: var(--accent-early-bg);
+            color: var(--accent-early);
+        }
+
+        .shift-badge.late {
+            background: var(--accent-late-bg);
+            color: var(--accent-late);
+        }
+
+        .shift-badge.night {
+            background: var(--accent-night-bg);
+            color: var(--accent-night);
+        }
+
+        .shift-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .shift-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .shift-customer {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .shift-address {
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .shift-employees {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .employee-avatars {
+            display: flex;
+        }
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--bg-card);
+            margin-left: -8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .avatar:first-child {
+            margin-left: 0;
+        }
+
+        .avatar.add {
+            background: var(--accent-blue-bg);
+            color: var(--accent-blue);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .avatar.add:hover {
+            background: var(--accent-blue);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .employee-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .employee-count span {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Full Names View */
+        .shift-employees.full-names {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .shift-employees.full-names .employee-avatars {
+            display: none;
+        }
+
+        .shift-employees.full-names .employee-count {
+            display: none;
+        }
+
+        .assigned-employees-list {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .shift-employees.full-names .assigned-employees-list {
+            display: flex;
+        }
+
+        .assigned-employee {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .assigned-employee:hover {
+            background: var(--bg-secondary);
+            border-color: var(--border);
+        }
+
+        .assigned-employee:active {
+            cursor: grabbing;
+        }
+
+        .assigned-employee.dragging {
+            opacity: 0.5;
+            background: var(--accent-blue-bg);
+            border-color: var(--accent-blue);
+        }
+
+        .assigned-employee .mini-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-blue), #5856d6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .assigned-employee .emp-name {
+            flex: 1;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .assigned-employee .remove-btn {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .assigned-employee:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .assigned-employee .remove-btn:hover {
+            background: rgba(255, 69, 58, 0.15);
+            color: #ff453a;
+        }
+
+        .add-employee-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            background: transparent;
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-employee-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            background: var(--accent-blue-bg);
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .view-toggle-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            background: transparent;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .view-toggle-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .view-toggle-btn.active {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .view-toggle-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .shift-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(255, 69, 58, 0.15);
+            color: #ff453a;
+        }
+
+        /* Add Shift Row */
+        .add-shift-row {
+            padding: 12px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .add-shift-btn {
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            border: 1px dashed var(--border);
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .add-shift-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            background: var(--accent-blue-bg);
+        }
+
+        /* Employee Panel */
+        .employee-panel {
+            width: 280px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            height: fit-content;
+            position: sticky;
+            top: 0;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: var(--bg-secondary);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-box svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+        }
+
+        .employee-list {
+            padding: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .employee-item {
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            margin-bottom: 4px;
+        }
+
+        .employee-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .employee-item:active {
+            cursor: grabbing;
+        }
+
+        .employee-item.dragging {
+            opacity: 0.5;
+            background: var(--accent-blue-bg);
+        }
+
+        .employee-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-blue), #5856d6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .employee-info {
+            flex: 1;
+        }
+
+        .employee-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .employee-role {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .drag-hint {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* Edit Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            width: 480px;
+            max-width: 90vw;
+            box-shadow: var(--shadow);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left: 3px solid var(--accent-early);
+        }
+
+        .toast-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--accent-early);
+        }
+
+        .toast-message {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-hover);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">Shift<span>Pro</span></div>
+            
+            <nav class="nav-section">
+                <div class="nav-label">Overview</div>
+                <div class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    Dashboard
+                </div>
+                <div class="nav-item active">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Shifts
+                </div>
+                <div class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    Employees
+                </div>
+            </nav>
+            
+            <nav class="nav-section">
+                <div class="nav-label">Management</div>
+                <div class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    Customers
+                </div>
+                <div class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Reports
+                </div>
+                <div class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Settings
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <h1>Shift Schedule</h1>
+                    <p>Manage and assign employee shifts</p>
+                </div>
+                <div class="header-actions">
+                    <div class="view-toggle">
+                        <button class="view-toggle-btn active" id="initialsViewBtn" onclick="setView('initials')">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            Initials
+                        </button>
+                        <button class="view-toggle-btn" id="namesViewBtn" onclick="setView('names')">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                            Full Names
+                        </button>
+                    </div>
+                    <button class="btn btn-secondary">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        Export
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal()">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        New Shift
+                    </button>
+                </div>
+            </header>
+
+            <div class="week-nav">
+                <button class="week-nav-btn">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <div class="week-display">
+                    Week 49 <span>• Dec 2 – Dec 8, 2024</span>
+                </div>
+                <button class="week-nav-btn">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+
+            <div class="content-area">
+                <!-- Days Container -->
+                <div class="days-container">
+                    <!-- Monday -->
+                    <div class="day-card expanded">
+                        <div class="day-header" onclick="toggleDay(this)">
+                            <div class="day-info">
+                                <div class="day-date">
+                                    <div class="day-num">2</div>
+                                    <div class="day-name">Mon</div>
+                                </div>
+                                <div class="day-stats">
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        <span class="stat-value">5</span> shifts
+                                    </div>
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        <span class="stat-value">12</span> assigned
+                                    </div>
+                                </div>
+                            </div>
+                            <svg class="expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div class="shifts-list">
+                            <div class="shift-item" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" data-shift-id="1">
+                                <div class="shift-type">
+                                    <span class="shift-badge early">Early</span>
+                                    <span class="shift-time">06:00–14:00</span>
+                                </div>
+                                <div class="shift-details">
+                                    <div class="shift-customer">BASF Logistics</div>
+                                    <div class="shift-address">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        Carl-Bosch-Str. 38, Ludwigshafen
+                                    </div>
+                                </div>
+                                <div class="shift-employees">
+                                    <div class="employee-avatars">
+                                        <div class="avatar" title="Max Krause">MK</div>
+                                        <div class="avatar" title="Thomas Schmidt">TS</div>
+                                        <div class="avatar" title="Lisa Weber">LW</div>
+                                        <div class="avatar add" onclick="openAssignModal(this)" title="Add employee">+</div>
+                                    </div>
+                                    <span class="employee-count"><span>3</span>/4</span>
+                                    <div class="assigned-employees-list">
+                                        <div class="assigned-employee" draggable="true" ondragstart="handleAssignedDragStart(event)" ondragend="handleAssignedDragEnd(event)" data-employee="Max Krause">
+                                            <div class="mini-avatar">MK</div>
+                                            <span class="emp-name">Max Krause</span>
+                                            <button class="remove-btn" onclick="removeEmployee(this)" title="Remove">
+                                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                        <div class="assigned-employee" draggable="true" ondragstart="handleAssignedDragStart(event)" ondragend="handleAssignedDragEnd(event)" data-employee="Thomas Schmidt">
+                                            <div class="mini-avatar">TS</div>
+                                            <span class="emp-name">Thomas Schmidt</span>
+                                            <button class="remove-btn" onclick="removeEmployee(this)" title="Remove">
+                                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                        <div class="assigned-employee" draggable="true" ondragstart="handleAssignedDragStart(event)" ondragend="handleAssignedDragEnd(event)" data-employee="Lisa Weber">
+                                            <div class="mini-avatar">LW</div>
+                                            <span class="emp-name">Lisa Weber</span>
+                                            <button class="remove-btn" onclick="removeEmployee(this)" title="Remove">
+                                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                        <button class="add-employee-btn" onclick="openAssignModal(this)">
+                                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                            Add employee
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="shift-actions">
+                                    <button class="action-btn" onclick="openModal()" title="Edit shift">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                    <button class="action-btn delete" title="Delete shift">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="shift-item" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" data-shift-id="2">
+                                <div class="shift-type">
+                                    <span class="shift-badge early">Early</span>
+                                    <span class="shift-time">07:00–15:00</span>
+                                </div>
+                                <div class="shift-details">
+                                    <div class="shift-customer">Daimler Truck AG</div>
+                                    <div class="shift-address">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        Mercedesstr. 120, Wörth
+                                    </div>
+                                </div>
+                                <div class="shift-employees">
+                                    <div class="employee-avatars">
+                                        <div class="avatar" title="Peter Hoffmann">PH</div>
+                                        <div class="avatar" title="Anna Klein">AK</div>
+                                        <div class="avatar add" onclick="openAssignModal(this)" title="Add employee">+</div>
+                                    </div>
+                                    <span class="employee-count"><span>2</span>/3</span>
+                                    <div class="assigned-employees-list">
+                                        <div class="assigned-employee" draggable="true" ondragstart="handleAssignedDragStart(event)" ondragend="handleAssignedDragEnd(event)" data-employee="Peter Hoffmann">
+                                            <div class="mini-avatar">PH</div>
+                                            <span class="emp-name">Peter Hoffmann</span>
+                                            <button class="remove-btn" onclick="removeEmployee(this)" title="Remove">
+                                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                        <div class="assigned-employee" draggable="true" ondragstart="handleAssignedDragStart(event)" ondragend="handleAssignedDragEnd(event)" data-employee="Anna Klein">
+                                            <div class="mini-avatar">AK</div>
+                                            <span class="emp-name">Anna Klein</span>
+                                            <button class="remove-btn" onclick="removeEmployee(this)" title="Remove">
+                                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                        <button class="add-employee-btn" onclick="openAssignModal(this)">
+                                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                            Add employee
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="shift-actions">
+                                    <button class="action-btn" onclick="openModal()" title="Edit shift">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                    <button class="action-btn delete" title="Delete shift">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="shift-item" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" data-shift-id="3">
+                                <div class="shift-type">
+                                    <span class="shift-badge late">Late</span>
+                                    <span class="shift-time">14:00–22:00</span>
+                                </div>
+                                <div class="shift-details">
+                                    <div class="shift-customer">BASF Logistics</div>
+                                    <div class="shift-address">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        Carl-Bosch-Str. 38, Ludwigshafen
+                                    </div>
+                                </div>
+                                <div class="shift-employees">
+                                    <div class="employee-avatars">
+                                        <div class="avatar" title="Robert Schulz">RS</div>
+                                        <div class="avatar" title="Julia Müller">JM</div>
+                                        <div class="avatar" title="Klaus Lang">KL</div>
+                                        <div class="avatar add" onclick="openAssignModal(this)" title="Add employee">+</div>
+                                    </div>
+                                    <span class="employee-count"><span>3</span>/3</span>
+                                    <div class="assigned-employees-list">
+                                        <div class="assigned-employee" draggable="true" ondragstart="handleAssignedDragStart(event)" ondragend="handleAssignedDragEnd(event)" data-employee="Robert Schulz">
+                                            <div class="mini-avatar">RS</div>
+                                            <span class="emp-name">Robert Schulz</span>
+                                            <button class="remove-btn" onclick="removeEmployee(this)" title="Remove">
+                                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                        <div class="assigned-employee" draggable="true" ondragstart="handleAssignedDragStart(event)" ondragend="handleAssignedDragEnd(event)" data-employee="Julia Müller">
+                                            <div class="mini-avatar">JM</div>
+                                            <span class="emp-name">Julia Müller</span>
+                                            <button class="remove-btn" onclick="removeEmployee(this)" title="Remove">
+                                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                        <div class="assigned-employee" draggable="true" ondragstart="handleAssignedDragStart(event)" ondragend="handleAssignedDragEnd(event)" data-employee="Klaus Lang">
+                                            <div class="mini-avatar">KL</div>
+                                            <span class="emp-name">Klaus Lang</span>
+                                            <button class="remove-btn" onclick="removeEmployee(this)" title="Remove">
+                                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                        <button class="add-employee-btn" onclick="openAssignModal(this)">
+                                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                            Add employee
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="shift-actions">
+                                    <button class="action-btn" onclick="openModal()" title="Edit shift">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                    <button class="action-btn delete" title="Delete shift">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="shift-item" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" data-shift-id="4">
+                                <div class="shift-type">
+                                    <span class="shift-badge late">Late</span>
+                                    <span class="shift-time">15:00–23:00</span>
+                                </div>
+                                <div class="shift-details">
+                                    <div class="shift-customer">John Deere GmbH</div>
+                                    <div class="shift-address">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        Kaiserslauterer Str. 2, Mannheim
+                                    </div>
+                                </div>
+                                <div class="shift-employees">
+                                    <div class="employee-avatars">
+                                        <div class="avatar" title="Bernd Wagner">BW</div>
+                                        <div class="avatar add" onclick="openAssignModal(this)" title="Add employee">+</div>
+                                    </div>
+                                    <span class="employee-count"><span>1</span>/2</span>
+                                    <div class="assigned-employees-list">
+                                        <div class="assigned-employee" draggable="true" ondragstart="handleAssignedDragStart(event)" ondragend="handleAssignedDragEnd(event)" data-employee="Bernd Wagner">
+                                            <div class="mini-avatar">BW</div>
+                                            <span class="emp-name">Bernd Wagner</span>
+                                            <button class="remove-btn" onclick="removeEmployee(this)" title="Remove">
+                                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                        <button class="add-employee-btn" onclick="openAssignModal(this)">
+                                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                            Add employee
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="shift-actions">
+                                    <button class="action-btn" onclick="openModal()" title="Edit shift">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                    <button class="action-btn delete" title="Delete shift">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="shift-item" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" data-shift-id="5">
+                                <div class="shift-type">
+                                    <span class="shift-badge night">Night</span>
+                                    <span class="shift-time">22:00–06:00</span>
+                                </div>
+                                <div class="shift-details">
+                                    <div class="shift-customer">BASF Logistics</div>
+                                    <div class="shift-address">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        Carl-Bosch-Str. 38, Ludwigshafen
+                                    </div>
+                                </div>
+                                <div class="shift-employees">
+                                    <div class="employee-avatars">
+                                        <div class="avatar" title="Frank Neumann">FN</div>
+                                        <div class="avatar" title="Christina Huber">CH</div>
+                                        <div class="avatar add" onclick="openAssignModal(this)" title="Add employee">+</div>
+                                    </div>
+                                    <span class="employee-count"><span>2</span>/3</span>
+                                    <div class="assigned-employees-list">
+                                        <div class="assigned-employee" draggable="true" ondragstart="handleAssignedDragStart(event)" ondragend="handleAssignedDragEnd(event)" data-employee="Frank Neumann">
+                                            <div class="mini-avatar">FN</div>
+                                            <span class="emp-name">Frank Neumann</span>
+                                            <button class="remove-btn" onclick="removeEmployee(this)" title="Remove">
+                                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                        <div class="assigned-employee" draggable="true" ondragstart="handleAssignedDragStart(event)" ondragend="handleAssignedDragEnd(event)" data-employee="Christina Huber">
+                                            <div class="mini-avatar">CH</div>
+                                            <span class="emp-name">Christina Huber</span>
+                                            <button class="remove-btn" onclick="removeEmployee(this)" title="Remove">
+                                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                        <button class="add-employee-btn" onclick="openAssignModal(this)">
+                                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                            Add employee
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="shift-actions">
+                                    <button class="action-btn" onclick="openModal()" title="Edit shift">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                    <button class="action-btn delete" title="Delete shift">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="add-shift-row">
+                                <button class="add-shift-btn" onclick="openModal()">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    Add shift
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tuesday -->
+                    <div class="day-card">
+                        <div class="day-header" onclick="toggleDay(this)">
+                            <div class="day-info">
+                                <div class="day-date">
+                                    <div class="day-num">3</div>
+                                    <div class="day-name">Tue</div>
+                                </div>
+                                <div class="day-stats">
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        <span class="stat-value">4</span> shifts
+                                    </div>
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        <span class="stat-value">10</span> assigned
+                                    </div>
+                                </div>
+                            </div>
+                            <svg class="expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div class="shifts-list"></div>
+                    </div>
+
+                    <!-- Wednesday -->
+                    <div class="day-card">
+                        <div class="day-header" onclick="toggleDay(this)">
+                            <div class="day-info">
+                                <div class="day-date">
+                                    <div class="day-num">4</div>
+                                    <div class="day-name">Wed</div>
+                                </div>
+                                <div class="day-stats">
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        <span class="stat-value">6</span> shifts
+                                    </div>
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        <span class="stat-value">15</span> assigned
+                                    </div>
+                                </div>
+                            </div>
+                            <svg class="expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div class="shifts-list"></div>
+                    </div>
+
+                    <!-- Thursday -->
+                    <div class="day-card">
+                        <div class="day-header" onclick="toggleDay(this)">
+                            <div class="day-info">
+                                <div class="day-date">
+                                    <div class="day-num">5</div>
+                                    <div class="day-name">Thu</div>
+                                </div>
+                                <div class="day-stats">
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        <span class="stat-value">5</span> shifts
+                                    </div>
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        <span class="stat-value">11</span> assigned
+                                    </div>
+                                </div>
+                            </div>
+                            <svg class="expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div class="shifts-list"></div>
+                    </div>
+
+                    <!-- Friday -->
+                    <div class="day-card">
+                        <div class="day-header" onclick="toggleDay(this)">
+                            <div class="day-info">
+                                <div class="day-date">
+                                    <div class="day-num">6</div>
+                                    <div class="day-name">Fri</div>
+                                </div>
+                                <div class="day-stats">
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        <span class="stat-value">4</span> shifts
+                                    </div>
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        <span class="stat-value">9</span> assigned
+                                    </div>
+                                </div>
+                            </div>
+                            <svg class="expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div class="shifts-list"></div>
+                    </div>
+
+                    <!-- Saturday -->
+                    <div class="day-card">
+                        <div class="day-header" onclick="toggleDay(this)">
+                            <div class="day-info">
+                                <div class="day-date">
+                                    <div class="day-num">7</div>
+                                    <div class="day-name">Sat</div>
+                                </div>
+                                <div class="day-stats">
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        <span class="stat-value">2</span> shifts
+                                    </div>
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        <span class="stat-value">4</span> assigned
+                                    </div>
+                                </div>
+                            </div>
+                            <svg class="expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div class="shifts-list"></div>
+                    </div>
+
+                    <!-- Sunday -->
+                    <div class="day-card">
+                        <div class="day-header" onclick="toggleDay(this)">
+                            <div class="day-info">
+                                <div class="day-date">
+                                    <div class="day-num">8</div>
+                                    <div class="day-name">Sun</div>
+                                </div>
+                                <div class="day-stats">
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        <span class="stat-value">1</span> shift
+                                    </div>
+                                    <div class="stat">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        <span class="stat-value">2</span> assigned
+                                    </div>
+                                </div>
+                            </div>
+                            <svg class="expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div class="shifts-list"></div>
+                    </div>
+                </div>
+
+                <!-- Employee Panel -->
+                <aside class="employee-panel">
+                    <div class="panel-header">
+                        <h3>Available Employees</h3>
+                        <div class="search-box">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <input type="text" placeholder="Search employees..." id="employeeSearch" oninput="filterEmployees()">
+                        </div>
+                    </div>
+                    <div class="employee-list" id="employeeList">
+                        <div class="employee-item" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)" data-employee="Max Krause">
+                            <div class="employee-avatar">MK</div>
+                            <div class="employee-info">
+                                <div class="employee-name">Max Krause</div>
+                                <div class="employee-role">Forklift Operator</div>
+                            </div>
+                        </div>
+                        <div class="employee-item" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)" data-employee="Thomas Schmidt">
+                            <div class="employee-avatar">TS</div>
+                            <div class="employee-info">
+                                <div class="employee-name">Thomas Schmidt</div>
+                                <div class="employee-role">Warehouse Lead</div>
+                            </div>
+                        </div>
+                        <div class="employee-item" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)" data-employee="Lisa Weber">
+                            <div class="employee-avatar">LW</div>
+                            <div class="employee-info">
+                                <div class="employee-name">Lisa Weber</div>
+                                <div class="employee-role">Logistics Coord.</div>
+                            </div>
+                        </div>
+                        <div class="employee-item" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)" data-employee="Peter Hoffmann">
+                            <div class="employee-avatar">PH</div>
+                            <div class="employee-info">
+                                <div class="employee-name">Peter Hoffmann</div>
+                                <div class="employee-role">Driver</div>
+                            </div>
+                        </div>
+                        <div class="employee-item" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)" data-employee="Anna Klein">
+                            <div class="employee-avatar">AK</div>
+                            <div class="employee-info">
+                                <div class="employee-name">Anna Klein</div>
+                                <div class="employee-role">Shift Supervisor</div>
+                            </div>
+                        </div>
+                        <div class="employee-item" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)" data-employee="Robert Schulz">
+                            <div class="employee-avatar">RS</div>
+                            <div class="employee-info">
+                                <div class="employee-name">Robert Schulz</div>
+                                <div class="employee-role">Forklift Operator</div>
+                            </div>
+                        </div>
+                        <div class="employee-item" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)" data-employee="Julia Müller">
+                            <div class="employee-avatar">JM</div>
+                            <div class="employee-info">
+                                <div class="employee-name">Julia Müller</div>
+                                <div class="employee-role">Packer</div>
+                            </div>
+                        </div>
+                        <div class="employee-item" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)" data-employee="Klaus Lang">
+                            <div class="employee-avatar">KL</div>
+                            <div class="employee-info">
+                                <div class="employee-name">Klaus Lang</div>
+                                <div class="employee-role">Warehouse Worker</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="drag-hint">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+                        Drag to assign to shift
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Shift Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Edit Shift</h2>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Shift Type</label>
+                        <select>
+                            <option value="early">Early Shift</option>
+                            <option value="late">Late Shift</option>
+                            <option value="night">Night Shift</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Customer</label>
+                        <select>
+                            <option>BASF Logistics</option>
+                            <option>Daimler Truck AG</option>
+                            <option>John Deere GmbH</option>
+                            <option>Bosch GmbH</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Start Time</label>
+                        <input type="time" value="06:00">
+                    </div>
+                    <div class="form-group">
+                        <label>End Time</label>
+                        <input type="time" value="14:00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" value="Carl-Bosch-Str. 38, Ludwigshafen">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Required Employees</label>
+                        <input type="number" value="4" min="1" max="20">
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" value="2024-12-02">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveShift()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <svg class="toast-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span class="toast-message" id="toastMessage">Employee assigned successfully</span>
+    </div>
+
+    <script>
+        // Current view mode
+        let currentView = 'initials';
+
+        // Toggle day expansion
+        function toggleDay(header) {
+            const card = header.closest('.day-card');
+            card.classList.toggle('expanded');
+        }
+
+        // View toggle
+        function setView(view) {
+            currentView = view;
+            
+            // Update toggle buttons
+            document.getElementById('initialsViewBtn').classList.toggle('active', view === 'initials');
+            document.getElementById('namesViewBtn').classList.toggle('active', view === 'names');
+            
+            // Update all shift employee sections
+            document.querySelectorAll('.shift-employees').forEach(el => {
+                el.classList.toggle('full-names', view === 'names');
+            });
+        }
+
+        // Modal functions
+        function openModal() {
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function openAssignModal(element) {
+            // In a real app, this would open an assignment modal
+            showToast('Click an employee from the panel or drag & drop');
+        }
+
+        function saveShift() {
+            closeModal();
+            showToast('Shift updated successfully');
+        }
+
+        // Remove employee from shift
+        function removeEmployee(btn) {
+            const assignedEmployee = btn.closest('.assigned-employee');
+            const shiftItem = btn.closest('.shift-item');
+            const employeeName = assignedEmployee.dataset.employee;
+            const initials = employeeName.split(' ').map(n => n[0]).join('');
+            
+            // Remove from full names list
+            assignedEmployee.remove();
+            
+            // Remove from avatars list
+            const avatars = shiftItem.querySelector('.employee-avatars');
+            const avatarToRemove = Array.from(avatars.querySelectorAll('.avatar:not(.add)')).find(
+                av => av.textContent === initials
+            );
+            if (avatarToRemove) {
+                avatarToRemove.remove();
+            }
+            
+            // Update count
+            updateShiftCount(shiftItem);
+            
+            showToast(`${employeeName} removed from shift`);
+        }
+
+        // Update shift employee count
+        function updateShiftCount(shiftItem) {
+            const countEl = shiftItem.querySelector('.employee-count span');
+            const currentCount = shiftItem.querySelectorAll('.assigned-employee').length;
+            countEl.textContent = currentCount;
+        }
+
+        // Toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Employee search/filter
+        function filterEmployees() {
+            const searchTerm = document.getElementById('employeeSearch').value.toLowerCase();
+            const employees = document.querySelectorAll('.employee-list > .employee-item');
+            
+            employees.forEach(emp => {
+                const name = emp.querySelector('.employee-name').textContent.toLowerCase();
+                const role = emp.querySelector('.employee-role').textContent.toLowerCase();
+                if (name.includes(searchTerm) || role.includes(searchTerm)) {
+                    emp.style.display = 'flex';
+                } else {
+                    emp.style.display = 'none';
+                }
+            });
+        }
+
+        // Drag and drop functionality for sidebar employees
+        let draggedEmployee = null;
+        let draggedFromShift = false;
+        let sourceShiftItem = null;
+
+        function handleDragStart(e) {
+            draggedEmployee = e.target.closest('.employee-item');
+            draggedEmployee.classList.add('dragging');
+            draggedFromShift = false;
+            sourceShiftItem = null;
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/plain', draggedEmployee.dataset.employee);
+            e.dataTransfer.setData('application/x-source', 'sidebar');
+        }
+
+        function handleDragEnd(e) {
+            if (draggedEmployee) {
+                draggedEmployee.classList.remove('dragging');
+                draggedEmployee = null;
+            }
+            draggedFromShift = false;
+            sourceShiftItem = null;
+            document.querySelectorAll('.shift-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        // Drag and drop for assigned employees (moving between shifts)
+        function handleAssignedDragStart(e) {
+            const assignedEmployee = e.target.closest('.assigned-employee');
+            assignedEmployee.classList.add('dragging');
+            draggedFromShift = true;
+            sourceShiftItem = e.target.closest('.shift-item');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', assignedEmployee.dataset.employee);
+            e.dataTransfer.setData('application/x-source', 'shift');
+        }
+
+        function handleAssignedDragEnd(e) {
+            const assignedEmployee = e.target.closest('.assigned-employee');
+            if (assignedEmployee) {
+                assignedEmployee.classList.remove('dragging');
+            }
+            draggedFromShift = false;
+            sourceShiftItem = null;
+            document.querySelectorAll('.shift-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const shiftItem = e.currentTarget;
+            
+            // Don't highlight if dragging to same shift
+            if (draggedFromShift && sourceShiftItem === shiftItem) {
+                return;
+            }
+            
+            e.dataTransfer.dropEffect = draggedFromShift ? 'move' : 'copy';
+            shiftItem.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetShiftItem = e.currentTarget;
+            targetShiftItem.classList.remove('drag-over');
+            
+            const employeeName = e.dataTransfer.getData('text/plain');
+            const source = e.dataTransfer.getData('application/x-source');
+            
+            if (!employeeName) return;
+            
+            // Don't drop on same shift
+            if (source === 'shift' && sourceShiftItem === targetShiftItem) {
+                return;
+            }
+            
+            // Check if employee already exists in target shift
+            const existingEmployee = targetShiftItem.querySelector(`.assigned-employee[data-employee="${employeeName}"]`);
+            if (existingEmployee) {
+                showToast(`${employeeName} is already assigned to this shift`);
+                return;
+            }
+            
+            // If moving from another shift, remove from source
+            if (source === 'shift' && sourceShiftItem) {
+                const sourceEmployee = sourceShiftItem.querySelector(`.assigned-employee[data-employee="${employeeName}"]`);
+                if (sourceEmployee) {
+                    sourceEmployee.remove();
+                }
+                
+                // Remove avatar from source
+                const initials = employeeName.split(' ').map(n => n[0]).join('');
+                const sourceAvatars = sourceShiftItem.querySelector('.employee-avatars');
+                const avatarToRemove = Array.from(sourceAvatars.querySelectorAll('.avatar:not(.add)')).find(
+                    av => av.textContent === initials
+                );
+                if (avatarToRemove) {
+                    avatarToRemove.remove();
+                }
+                
+                // Update source count
+                updateShiftCount(sourceShiftItem);
+            }
+            
+            // Add to target shift
+            addEmployeeToShift(targetShiftItem, employeeName);
+            
+            const action = source === 'shift' ? 'moved to' : 'assigned to';
+            showToast(`${employeeName} ${action} shift`);
+        }
+
+        function addEmployeeToShift(shiftItem, employeeName) {
+            const initials = employeeName.split(' ').map(n => n[0]).join('');
+            
+            // Add avatar
+            const avatars = shiftItem.querySelector('.employee-avatars');
+            const addBtn = avatars.querySelector('.avatar.add');
+            
+            const newAvatar = document.createElement('div');
+            newAvatar.className = 'avatar';
+            newAvatar.textContent = initials;
+            newAvatar.title = employeeName;
+            
+            avatars.insertBefore(newAvatar, addBtn);
+            
+            // Add to full names list
+            const employeesList = shiftItem.querySelector('.assigned-employees-list');
+            const addEmployeeBtn = employeesList.querySelector('.add-employee-btn');
+            
+            const newAssigned = document.createElement('div');
+            newAssigned.className = 'assigned-employee';
+            newAssigned.draggable = true;
+            newAssigned.dataset.employee = employeeName;
+            newAssigned.ondragstart = handleAssignedDragStart;
+            newAssigned.ondragend = handleAssignedDragEnd;
+            newAssigned.innerHTML = `
+                <div class="mini-avatar">${initials}</div>
+                <span class="emp-name">${employeeName}</span>
+                <button class="remove-btn" onclick="removeEmployee(this)" title="Remove">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            `;
+            
+            employeesList.insertBefore(newAssigned, addEmployeeBtn);
+            
+            // Update count
+            updateShiftCount(shiftItem);
+        }
+
+        // Close modal on outside click
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
