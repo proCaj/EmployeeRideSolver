@@ -30,13 +30,24 @@ A Java-based employee transportation routing optimization system using Quarkus 3
 6. Live optimization progress tracking
 
 ## Recent Changes
+- **November 29, 2025 - Event Batching & Map Integration:**
+  - Implemented passenger batching: Events now group employees going to same shift/customer/day
+  - Reduced events from 68 to 40 (batched) and total distance from 614 km to 334 km (45% improvement)
+  - Refactored Event domain: replaced single assignedEmployee with List<Employee> passengers
+  - Added getPassengerCount() and getPassengerNames() methods for display
+  - Added Leaflet.js interactive map to routes page with OpenStreetMap tiles
+  - Map displays hub (green) and customer (blue) location markers for the Worms area
+  - Connected routes page to solver results via WebResource.routes() method
+  - Templates show passenger counts (+N/-N badges) and batched employee names
+  - Added vehicle capacity constraint checking passengerCount vs driver.maxCapacity
+
 - **November 29, 2025 - Bug Fixes & Validation:**
   - Fixed HTTP 415 Unsupported Media Type error on employee unassignment endpoints by adding @Consumes(MediaType.WILDCARD)
   - Implemented concurrent shift assignment validation: checkShiftConflict() prevents employees from being assigned to overlapping shifts on the same day
   - Returns HTTP 409 with styled error message showing conflicting shift details
   - Fixed HTMX reload logic using explicit status code check (event.detail.xhr.status >= 200 && < 300) to preserve conflict messages
   - Fixed location display in optimization results using event.toLocation property
-  - Solver successfully optimizes: 2 drivers, 68 events, ~614 km total distance
+  - Solver successfully optimizes: 2 drivers, 40 batched events, ~334 km total distance
 
 - **November 29, 2025 - Dark Theme UI Overhaul:**
   - Implemented complete dark theme redesign across all pages
