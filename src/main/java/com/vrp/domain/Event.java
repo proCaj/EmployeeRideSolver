@@ -3,11 +3,15 @@ package com.vrp.domain;
 import ai.timefold.solver.core.api.domain.entity.PlanningEntity;
 import ai.timefold.solver.core.api.domain.variable.*;
 import com.vrp.entity.Employee;
+import com.vrp.entity.ShiftDemand;
 import com.vrp.listener.ArrivalTimeUpdatingVariableListener;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @PlanningEntity
 public class Event implements Standstill {
@@ -21,7 +25,8 @@ public class Event implements Standstill {
     private long distance;
     private boolean isPickup;
     private Event pairedEvent;
-    private Employee assignedEmployee;
+    private List<Employee> passengers;
+    private ShiftDemand shiftDemand;
     private String dayType;
     private Duration earlyArrivalMin;
     private Duration earlyArrivalMax;
@@ -38,11 +43,12 @@ public class Event implements Standstill {
     private Instant arrivalTime;
     
     public Event() {
+        this.passengers = new ArrayList<>();
     }
     
     public Event(String id, Location fromLocation, Location toLocation,
                  Instant minStartTime, Instant maxEndTime, Duration duration, long distance,
-                 boolean isPickup, Employee assignedEmployee, String dayType,
+                 boolean isPickup, List<Employee> passengers, ShiftDemand shiftDemand, String dayType,
                  Duration earlyArrivalMin, Duration earlyArrivalMax) {
         this.id = id;
         this.fromLocation = fromLocation;
@@ -52,7 +58,8 @@ public class Event implements Standstill {
         this.duration = duration;
         this.distance = distance;
         this.isPickup = isPickup;
-        this.assignedEmployee = assignedEmployee;
+        this.passengers = passengers != null ? new ArrayList<>(passengers) : new ArrayList<>();
+        this.shiftDemand = shiftDemand;
         this.dayType = dayType;
         this.earlyArrivalMin = earlyArrivalMin;
         this.earlyArrivalMax = earlyArrivalMax;
@@ -81,6 +88,37 @@ public class Event implements Standstill {
             return Duration.ZERO;
         }
         return Duration.between(arrivalTime, minStartTime);
+    }
+    
+    public int getPassengerCount() {
+        return passengers != null ? passengers.size() : 0;
+    }
+    
+    public int getPassengerDelta() {
+        return isPickup ? getPassengerCount() : -getPassengerCount();
+    }
+    
+    public String getPassengerNames() {
+        if (passengers == null || passengers.isEmpty()) {
+            return "";
+        }
+        return passengers.stream()
+            .map(e -> e.name)
+            .collect(Collectors.joining(", "));
+    }
+    
+    public Employee getAssignedEmployee() {
+        return passengers != null && !passengers.isEmpty() ? passengers.get(0) : null;
+    }
+    
+    public void setAssignedEmployee(Employee employee) {
+        if (this.passengers == null) {
+            this.passengers = new ArrayList<>();
+        }
+        this.passengers.clear();
+        if (employee != null) {
+            this.passengers.add(employee);
+        }
     }
     
     public String getId() {
@@ -155,12 +193,20 @@ public class Event implements Standstill {
         this.pairedEvent = pairedEvent;
     }
     
-    public Employee getAssignedEmployee() {
-        return assignedEmployee;
+    public List<Employee> getPassengers() {
+        return passengers;
     }
     
-    public void setAssignedEmployee(Employee assignedEmployee) {
-        this.assignedEmployee = assignedEmployee;
+    public void setPassengers(List<Employee> passengers) {
+        this.passengers = passengers != null ? new ArrayList<>(passengers) : new ArrayList<>();
+    }
+    
+    public ShiftDemand getShiftDemand() {
+        return shiftDemand;
+    }
+    
+    public void setShiftDemand(ShiftDemand shiftDemand) {
+        this.shiftDemand = shiftDemand;
     }
     
     public String getDayType() {
@@ -223,6 +269,7 @@ public class Event implements Standstill {
     @Override
     public String toString() {
         return "Event{" + id + ", " + (isPickup ? "Pickup" : "Dropoff") + 
-               ", from=" + fromLocation.name() + ", to=" + toLocation.name() + "}";
+               ", from=" + fromLocation.name() + ", to=" + toLocation.name() + 
+               ", passengers=" + getPassengerCount() + "}";
     }
 }

@@ -1,8 +1,12 @@
 package com.vrp.resource;
 
+import com.vrp.domain.Driver;
+import com.vrp.domain.Event;
+import com.vrp.domain.VrpSolution;
 import com.vrp.entity.Customer;
 import com.vrp.entity.Employee;
 import com.vrp.entity.ShiftDemand;
+import com.vrp.service.SolverService;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.inject.Inject;
@@ -12,9 +16,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.time.DayOfWeek;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Path("/")
@@ -49,6 +51,9 @@ public class WebResource {
     
     @Inject
     Template routes;
+    
+    @Inject
+    SolverService solverService;
 
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -121,10 +126,62 @@ public class WebResource {
     @Path("/routes")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance routesPage() {
+        UUID currentJobId = solverService.getCurrentJobId();
+        List<Map<String, Object>> routeList = new ArrayList<>();
+        
+        if (currentJobId != null) {
+            VrpSolution solution = solverService.getBestSolution(currentJobId);
+            
+            if (solution != null && solution.getDrivers() != null) {
+                Map<Driver, List<Event>> eventsByDriver = new HashMap<>();
+                for (Event event : solution.getEvents()) {
+                    if (event.getDriver() != null) {
+                        eventsByDriver.computeIfAbsent(event.getDriver(), k -> new ArrayList<>()).add(event);
+                    }
+                }
+                
+                int routeNumber = 1;
+                for (Driver driver : solution.getDrivers()) {
+                    List<Event> events = eventsByDriver.get(driver);
+                    if (events == null || events.isEmpty()) continue;
+                    
+                    events.sort((e1, e2) -> {
+                        if (e1.getArrivalTime() == null) return 1;
+                        if (e2.getArrivalTime() == null) return -1;
+                        return e1.getArrivalTime().compareTo(e2.getArrivalTime());
+                    });
+                    
+                    long totalDistance = 0;
+                    for (Event event : events) {
+                        totalDistance += event.getDistance();
+                    }
+                    
+                    Map<String, Object> route = new HashMap<>();
+                    route.put("driver", driver);
+                    route.put("routeNumber", routeNumber++);
+                    route.put("events", events);
+                    route.put("totalDistance", String.format("%.1f", totalDistance / 1000.0));
+                    route.put("totalDuration", formatDuration(events));
+                    
+                    routeList.add(route);
+                }
+            }
+        }
+        
         return routes
             .data("title", "Routes")
             .data("activeNav", "routes")
-            .data("routes", List.of());
+            .data("routes", routeList);
+    }
+    
+    private String formatDuration(List<Event> events) {
+        if (events.isEmpty()) return "-";
+        Event first = events.get(0);
+        Event last = events.get(events.size() - 1);
+        if (first.getArrivalTime() == null || last.getDepartureTime() == null) return "-";
+        long minutes = java.time.Duration.between(first.getArrivalTime(), last.getDepartureTime()).toMinutes();
+        if (minutes < 60) return minutes + " min";
+        return (minutes / 60) + "h " + (minutes % 60) + "m";
     }
     
     @GET

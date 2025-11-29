@@ -11,10 +11,15 @@
 </header>
 
 <div class="content-area">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <div id="route-map" style="height: 400px; border-radius: 8px; margin-bottom: 20px; background: var(--bg-tertiary);"></div>
+    
     {#if routes and routes.size > 0}
     <div style="display: flex; flex-direction: column; gap: 20px;">
         {#for route in routes}
-        <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="card route-card" data-driver-id="{route.driver.id}" style="padding: 0; overflow: hidden; cursor: pointer;">
             <div style="padding: 20px; background: linear-gradient(135deg, rgba(10, 132, 255, 0.1) 0%, rgba(175, 82, 222, 0.1) 100%); border-bottom: 1px solid var(--border);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
@@ -26,7 +31,7 @@
                         </p>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 16px; font-weight: 600;">{route.totalDistance / 1000} km</div>
+                        <div style="font-size: 16px; font-weight: 600;">{route.totalDistance} km</div>
                         <div style="font-size: 13px; color: var(--text-muted);">{route.totalDuration}</div>
                     </div>
                 </div>
@@ -36,23 +41,17 @@
                     {#for event in route.events}
                     <div style="display: flex; align-items: flex-start; gap: 16px;">
                         <div style="flex-shrink: 0;">
-                            <span style="width: 32px; height: 32px; border-radius: 50%; background: {event.isPickup ? 'var(--accent-early)' : 'var(--accent-blue)'}; display: flex; align-items: center; justify-content: center;">
-                                <svg width="14" height="14" fill="white" stroke="white" viewBox="0 0 20 20">
-                                    {#if event.isPickup}
-                                    <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/>
-                                    {#else}
-                                    <path d="M4 9a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z"/>
-                                    {/if}
-                                </svg>
+                            <span style="width: 32px; height: 32px; border-radius: 50%; background: {event.pickup ? 'var(--accent-early)' : 'var(--accent-blue)'}; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: white;">
+                                {event.pickup ? '+' : '-'}{event.passengerCount}
                             </span>
                         </div>
                         <div style="flex: 1; min-width: 0;">
                             <div style="font-size: 14px; font-weight: 500;">
-                                {event.isPickup ? 'Pick up' : 'Drop off'} at 
+                                {event.pickup ? 'Pick up' : 'Drop off'} at 
                                 <span style="color: var(--accent-blue);">{event.toLocation.name}</span>
                             </div>
                             <div style="font-size: 13px; color: var(--text-muted);">
-                                Employee: {event.assignedEmployee.name}
+                                {event.passengerNames}
                             </div>
                         </div>
                         <div style="font-size: 13px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
@@ -65,6 +64,52 @@
         </div>
         {/for}
     </div>
+    
+    <script>
+    (function() \{
+        var map = L.map('route-map').setView([49.63, 8.36], 11);
+        
+        L.tileLayer('https://\{s\}.tile.openstreetmap.org/\{z\}/\{x\}/\{y\}.png', \{
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        \}).addTo(map);
+        
+        var hubMarker = L.marker([49.6341, 8.3507], \{
+            icon: L.divIcon(\{
+                className: 'hub-marker',
+                html: '<div style="background: #0a84ff; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            \})
+        \}).addTo(map);
+        hubMarker.bindPopup('<b>Hauptbahnhof Worms</b><br>Central Hub');
+        
+        var customerLocations = [
+            \{ name: 'Otto Cosmetic GmbH', lat: 49.6985, lng: 8.4511 \},
+            \{ name: 'Deichmann Logistiklager', lat: 49.5933, lng: 8.4325 \},
+            \{ name: 'CHEP Servicecenter', lat: 49.7833, lng: 8.4667 \}
+        ];
+        
+        customerLocations.forEach(function(loc) \{
+            var marker = L.marker([loc.lat, loc.lng], \{
+                icon: L.divIcon(\{
+                    className: 'customer-marker',
+                    html: '<div style="background: #30d158; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [12, 12],
+                    iconAnchor: [6, 6]
+                \})
+            \}).addTo(map);
+            marker.bindPopup('<b>' + loc.name + '</b>');
+        \});
+        
+        var driverColors = ['#0a84ff', '#ff9500', '#af52de', '#ff3b30', '#34c759'];
+        var routeCards = document.querySelectorAll('.route-card');
+        
+        routeCards.forEach(function(card, index) \{
+            var color = driverColors[index % driverColors.length];
+            card.style.borderLeft = '4px solid ' + color;
+        \});
+    \})();
+    </script>
     {#else}
     <div class="card">
         <div class="empty-state">

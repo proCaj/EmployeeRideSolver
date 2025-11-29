@@ -16,6 +16,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
             timeWindowConstraint(constraintFactory),
             pairingConstraint(constraintFactory),
             driverAssignmentRequired(constraintFactory),
+            vehicleCapacityConstraint(constraintFactory),
             minimizeTotalDistance(constraintFactory),
             minimizeWaitingTime(constraintFactory)
         };
@@ -26,6 +27,15 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .filter(event -> event.getDriver() == null)
             .penalizeLong(HardMediumSoftLongScore.ONE_HARD, event -> 1000L)
             .asConstraint("Driver assignment required");
+    }
+    
+    Constraint vehicleCapacityConstraint(ConstraintFactory constraintFactory) {
+        return constraintFactory.forEach(Event.class)
+            .filter(event -> event.getDriver() != null && event.isPickup())
+            .filter(event -> event.getPassengerCount() > event.getDriver().getMaxCapacity())
+            .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
+                event -> (event.getPassengerCount() - event.getDriver().getMaxCapacity()) * 1000L)
+            .asConstraint("Vehicle capacity constraint");
     }
     
     Constraint timeWindowConstraint(ConstraintFactory constraintFactory) {

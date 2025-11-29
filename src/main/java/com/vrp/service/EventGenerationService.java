@@ -40,6 +40,7 @@ public class EventGenerationService {
         
         for (ShiftDemand shift : shiftDemands) {
             if (!shift.active) continue;
+            if (shift.assignedEmployees == null || shift.assignedEmployees.isEmpty()) continue;
             
             LocalDate shiftDate = weekStart.with(shift.dayOfWeek);
             if (shiftDate.isBefore(weekStart)) {
@@ -52,25 +53,25 @@ public class EventGenerationService {
                 shift.customer.longitude
             );
             
-            for (Employee employee : shift.assignedEmployees) {
-                Event pickupEvent = createPickupEvent(shift, employee, shiftDate, customerLocation, hopper);
-                events.add(pickupEvent);
-                
-                if (shift.requiresReturnTrip) {
-                    Event dropoffEvent = createDropoffEvent(shift, employee, shiftDate, customerLocation, hopper);
-                    pickupEvent.setPairedEvent(dropoffEvent);
-                    dropoffEvent.setPairedEvent(pickupEvent);
-                    events.add(dropoffEvent);
-                }
+            List<Employee> passengers = new ArrayList<>(shift.assignedEmployees);
+            
+            Event pickupEvent = createBatchedPickupEvent(shift, passengers, shiftDate, customerLocation, hopper);
+            events.add(pickupEvent);
+            
+            if (shift.requiresReturnTrip) {
+                Event dropoffEvent = createBatchedDropoffEvent(shift, passengers, shiftDate, customerLocation, hopper);
+                pickupEvent.setPairedEvent(dropoffEvent);
+                dropoffEvent.setPairedEvent(pickupEvent);
+                events.add(dropoffEvent);
             }
         }
         
-        LOG.info("Generated " + events.size() + " events for week starting " + weekStart);
+        LOG.info("Generated " + events.size() + " batched events for week starting " + weekStart);
         return events;
     }
     
-    private Event createPickupEvent(ShiftDemand shift, Employee employee, LocalDate shiftDate,
-                                     Location customerLocation, GraphHopper hopper) {
+    private Event createBatchedPickupEvent(ShiftDemand shift, List<Employee> passengers, LocalDate shiftDate,
+                                            Location customerLocation, GraphHopper hopper) {
         LocalDateTime shiftStartDateTime = LocalDateTime.of(shiftDate, shift.startTime);
         Instant shiftStartInstant = shiftStartDateTime.atZone(ZoneId.systemDefault()).toInstant();
         
@@ -80,10 +81,11 @@ public class EventGenerationService {
         Duration travelTime = Location.HUB.getTravelTime(customerLocation, hopper);
         long distance = Location.HUB.getDistanceTo(customerLocation, hopper);
         
-        Duration serviceTime = Duration.ofMinutes(2);
-        Duration totalDuration = travelTime.plus(serviceTime);
+        Duration serviceTimePerPassenger = Duration.ofMinutes(2);
+        Duration totalServiceTime = serviceTimePerPassenger.multipliedBy(passengers.size());
+        Duration totalDuration = travelTime.plus(totalServiceTime);
         
-        String eventId = "pickup-" + shift.id + "-" + employee.id + "-" + shiftDate + "-" + UUID.randomUUID().toString().substring(0, 8);
+        String eventId = "pickup-" + shift.id + "-" + shiftDate + "-" + UUID.randomUUID().toString().substring(0, 8);
         
         return new Event(
             eventId,
@@ -94,15 +96,16 @@ public class EventGenerationService {
             totalDuration,
             distance,
             true,
-            employee,
+            passengers,
+            shift,
             shiftDate.getDayOfWeek().getValue() <= 5 ? "weekday" : "weekend",
             shift.getEarlyArrivalBufferMin(),
             shift.getEarlyArrivalBufferMax()
         );
     }
     
-    private Event createDropoffEvent(ShiftDemand shift, Employee employee, LocalDate shiftDate,
-                                      Location customerLocation, GraphHopper hopper) {
+    private Event createBatchedDropoffEvent(ShiftDemand shift, List<Employee> passengers, LocalDate shiftDate,
+                                             Location customerLocation, GraphHopper hopper) {
         LocalDateTime shiftEndDateTime = LocalDateTime.of(shiftDate, shift.endTime);
         Instant shiftEndInstant = shiftEndDateTime.atZone(ZoneId.systemDefault()).toInstant();
         
@@ -112,10 +115,11 @@ public class EventGenerationService {
         Duration travelTime = customerLocation.getTravelTime(Location.HUB, hopper);
         long distance = customerLocation.getDistanceTo(Location.HUB, hopper);
         
-        Duration serviceTime = Duration.ofMinutes(2);
-        Duration totalDuration = travelTime.plus(serviceTime);
+        Duration serviceTimePerPassenger = Duration.ofMinutes(2);
+        Duration totalServiceTime = serviceTimePerPassenger.multipliedBy(passengers.size());
+        Duration totalDuration = travelTime.plus(totalServiceTime);
         
-        String eventId = "dropoff-" + shift.id + "-" + employee.id + "-" + shiftDate + "-" + UUID.randomUUID().toString().substring(0, 8);
+        String eventId = "dropoff-" + shift.id + "-" + shiftDate + "-" + UUID.randomUUID().toString().substring(0, 8);
         
         return new Event(
             eventId,
@@ -126,7 +130,8 @@ public class EventGenerationService {
             totalDuration,
             distance,
             false,
-            employee,
+            passengers,
+            shift,
             shiftDate.getDayOfWeek().getValue() <= 5 ? "weekday" : "weekend",
             Duration.ZERO,
             Duration.ZERO
