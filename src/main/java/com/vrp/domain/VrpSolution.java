@@ -24,7 +24,8 @@ public class VrpSolution {
     @ProblemFactCollectionProperty
     private List<Employee> employees;
     
-    @PlanningEntityCollectionProperty
+    @ProblemFactCollectionProperty
+    @ValueRangeProvider(id = "driverRange")
     private List<Driver> drivers;
     
     @PlanningEntityCollectionProperty
@@ -52,11 +53,6 @@ public class VrpSolution {
         this.drivers = drivers;
         this.events = events;
         this.planningStartDate = planningStartDate;
-    }
-    
-    @ValueRangeProvider(id = "driverRange")
-    public List<Driver> getDriverRange() {
-        return drivers;
     }
     
     @ValueRangeProvider(id = "eventRange")

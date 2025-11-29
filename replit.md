@@ -98,3 +98,24 @@ The system distinguishes between two employee types:
 4. Timefold solver assigns events to drivers while respecting constraints
 5. Solution accessible via GET /api/solve/{jobId}/solution
 6. Routes displayable on `/routes` page with driver timelines
+
+### Timefold Chained VRP Domain Model
+The system uses Timefold's chained planning variable pattern:
+
+1. **Driver (Problem Fact)** - The anchor point for each route chain
+   - Implements `Standstill` interface to participate in the chain
+   - NOT a planning entity - marked with `@ProblemFactCollectionProperty` in VrpSolution
+   - Provides starting location (home location) for route planning
+
+2. **Event (Planning Entity)** - The pickup/dropoff events that form chains
+   - Only planning entity with `@PlanningVariable(graphType = CHAINED)`
+   - `previousStandstill` points to either Driver (anchor) or previous Event
+   - `@AnchorShadowVariable` tracks which Driver owns this event
+   - Arrival times calculated by `ArrivalTimeUpdatingVariableListener`
+
+3. **Chain Structure**
+   - Driver → Event₁ → Event₂ → ... → Eventₙ → null
+   - Each Event's `previousStandstill` creates the linked chain
+   - Shadow variable `driver` allows constraints to access route owner
+
+**Key Technical Note:** Driver must NOT be a @PlanningEntity since it has no planning variables. The Timefold Quarkus processor validates this at build time.

@@ -7,9 +7,12 @@ import com.vrp.domain.Event;
 import com.vrp.domain.Standstill;
 import com.vrp.domain.VrpSolution;
 
+import java.time.Duration;
 import java.time.Instant;
 
 public class ArrivalTimeUpdatingVariableListener implements VariableListener<VrpSolution, Event> {
+    
+    private static final int AVERAGE_SPEED_MPS = 15;
     
     @Override
     public void beforeEntityAdded(ScoreDirector<VrpSolution> scoreDirector, Event event) {
@@ -41,7 +44,9 @@ public class ArrivalTimeUpdatingVariableListener implements VariableListener<Vrp
         Standstill previousStandstill = sourceEvent.getPreviousStandstill();
         
         Instant arrivalTime;
-        if (previousStandstill instanceof Driver) {
+        if (previousStandstill == null) {
+            arrivalTime = null;
+        } else if (previousStandstill instanceof Driver) {
             arrivalTime = sourceEvent.getMinStartTime();
         } else if (previousStandstill instanceof Event) {
             Event previousEvent = (Event) previousStandstill;
@@ -49,8 +54,8 @@ public class ArrivalTimeUpdatingVariableListener implements VariableListener<Vrp
                 arrivalTime = null;
             } else {
                 Instant departureTime = previousEvent.getDepartureTime();
-                arrivalTime = departureTime.plus(previousEvent.getLocation()
-                    .getTravelTime(sourceEvent.getFromLocation(), null));
+                Duration travelTime = calculateTravelTime(previousEvent, sourceEvent);
+                arrivalTime = departureTime.plus(travelTime);
             }
         } else {
             arrivalTime = null;
@@ -60,23 +65,24 @@ public class ArrivalTimeUpdatingVariableListener implements VariableListener<Vrp
         sourceEvent.setArrivalTime(arrivalTime);
         scoreDirector.afterVariableChanged(sourceEvent, "arrivalTime");
         
-        Event shadowEvent = findNextEvent(sourceEvent);
-        while (shadowEvent != null) {
-            updateArrivalTime(scoreDirector, shadowEvent);
-            shadowEvent = findNextEvent(shadowEvent);
+        Event nextEvent = findNextEvent(scoreDirector.getWorkingSolution(), sourceEvent);
+        if (nextEvent != null) {
+            updateArrivalTime(scoreDirector, nextEvent);
         }
     }
     
-    private Event findNextEvent(Event currentEvent) {
-        Driver driver = currentEvent.getDriver();
-        if (driver == null || driver.getAssignedEvents() == null) {
-            return null;
-        }
-        for (Event event : driver.getAssignedEvents()) {
+    private Event findNextEvent(VrpSolution solution, Event currentEvent) {
+        for (Event event : solution.getEvents()) {
             if (event.getPreviousStandstill() == currentEvent) {
                 return event;
             }
         }
         return null;
+    }
+    
+    private Duration calculateTravelTime(Event from, Event to) {
+        long distance = from.getLocation().getHaversineDistance(to.getFromLocation());
+        long travelTimeSeconds = distance / AVERAGE_SPEED_MPS;
+        return Duration.ofSeconds(travelTimeSeconds);
     }
 }

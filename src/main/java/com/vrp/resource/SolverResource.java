@@ -163,24 +163,36 @@ public class SolverResource {
             return solverResults.data(data);
         }
         
+        Map<Driver, List<Event>> eventsByDriver = new HashMap<>();
+        for (Event event : solution.getEvents()) {
+            if (event.getDriver() != null) {
+                eventsByDriver.computeIfAbsent(event.getDriver(), k -> new ArrayList<>()).add(event);
+            }
+        }
+        
         List<Map<String, Object>> driverRoutes = new ArrayList<>();
         int totalStops = 0;
         long totalDistance = 0;
         
         for (Driver driver : solution.getDrivers()) {
-            List<Event> events = driver.getAssignedEvents();
+            List<Event> events = eventsByDriver.get(driver);
             if (events == null || events.isEmpty()) continue;
+            
+            long driverDistance = 0;
+            for (Event event : events) {
+                driverDistance += event.getDistance();
+            }
             
             Map<String, Object> route = new HashMap<>();
             String driverName = driver.getEmployee() != null ? driver.getEmployee().name : driver.getId();
             route.put("driverName", driverName);
             route.put("stopCount", events.size());
-            route.put("distance", String.format("%.1f km", driver.getTotalDistanceMeters() / 1000.0));
+            route.put("distance", String.format("%.1f km", driverDistance / 1000.0));
             route.put("events", events);
             
             driverRoutes.add(route);
             totalStops += events.size();
-            totalDistance += driver.getTotalDistanceMeters();
+            totalDistance += driverDistance;
         }
         
         data.put("hasResults", !driverRoutes.isEmpty());

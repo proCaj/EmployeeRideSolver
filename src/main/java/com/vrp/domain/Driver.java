@@ -1,16 +1,10 @@
 package com.vrp.domain;
 
-import ai.timefold.solver.core.api.domain.entity.PlanningEntity;
-import ai.timefold.solver.core.api.domain.variable.*;
 import com.vrp.entity.Employee;
-import com.vrp.listener.*;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
-@PlanningEntity
 public class Driver implements Standstill {
     
     private String id;
@@ -22,37 +16,6 @@ public class Driver implements Standstill {
     private Duration maxDailyHours = Duration.ofHours(10);
     private Duration maxWeeklyHours = Duration.ofHours(40);
     private Employee employee;
-    
-    @InverseRelationShadowVariable(sourceVariableName = "previousStandstill")
-    private List<Event> assignedEvents = new ArrayList<>();
-    
-    @ShadowVariable(variableListenerClass = RouteSplitterListener.class, 
-                     sourceVariableName = "assignedEvents")
-    private List<Route> routes = new ArrayList<>();
-    
-    @ShadowVariable(variableListenerClass = HoursTrackingListener.class, 
-                     sourceVariableName = "routes")
-    private Duration totalDailyHours = Duration.ZERO;
-    
-    @ShadowVariable(variableListenerClass = HoursTrackingListener.class, 
-                     sourceVariableName = "routes")
-    private Duration totalWeeklyHours = Duration.ZERO;
-    
-    @ShadowVariable(variableListenerClass = TotalMetricsListener.class, 
-                     sourceVariableName = "routes")
-    private Long totalDistanceMeters;
-    
-    @ShadowVariable(variableListenerClass = TotalMetricsListener.class, 
-                     sourceVariableName = "routes")
-    private Duration totalTravelTime = Duration.ZERO;
-    
-    @ShadowVariable(variableListenerClass = TotalMetricsListener.class, 
-                     sourceVariableName = "routes")
-    private Duration consecutiveWorkingHours = Duration.ZERO;
-    
-    @ShadowVariable(variableListenerClass = TotalMetricsListener.class, 
-                     sourceVariableName = "routes")
-    private Duration totalWaitingTime = Duration.ZERO;
     
     public Driver() {
     }
@@ -76,23 +39,6 @@ public class Driver implements Standstill {
     @Override
     public Driver getDriver() {
         return this;
-    }
-    
-    public int getTotalLoad() {
-        if (assignedEvents == null || assignedEvents.isEmpty()) {
-            return 0;
-        }
-        int maxLoad = 0;
-        int currentLoad = 0;
-        for (Event event : assignedEvents) {
-            if (event.isPickup()) {
-                currentLoad++;
-            } else {
-                currentLoad--;
-            }
-            maxLoad = Math.max(maxLoad, currentLoad);
-        }
-        return maxLoad;
     }
     
     public String getId() {
@@ -167,74 +113,6 @@ public class Driver implements Standstill {
         this.employee = employee;
     }
     
-    public List<Event> getEvents() {
-        return assignedEvents;
-    }
-    
-    public List<Event> getAssignedEvents() {
-        return assignedEvents;
-    }
-    
-    public void setAssignedEvents(List<Event> assignedEvents) {
-        this.assignedEvents = assignedEvents;
-    }
-    
-    public List<Route> getRoutes() {
-        return routes;
-    }
-    
-    public void setRoutes(List<Route> routes) {
-        this.routes = routes;
-    }
-    
-    public Duration getTotalDailyHours() {
-        return totalDailyHours;
-    }
-    
-    public void setTotalDailyHours(Duration totalDailyHours) {
-        this.totalDailyHours = totalDailyHours;
-    }
-    
-    public Duration getTotalWeeklyHours() {
-        return totalWeeklyHours;
-    }
-    
-    public void setTotalWeeklyHours(Duration totalWeeklyHours) {
-        this.totalWeeklyHours = totalWeeklyHours;
-    }
-    
-    public Long getTotalDistanceMeters() {
-        return totalDistanceMeters != null ? totalDistanceMeters : 0L;
-    }
-    
-    public void setTotalDistanceMeters(Long totalDistanceMeters) {
-        this.totalDistanceMeters = totalDistanceMeters;
-    }
-    
-    public Duration getTotalTravelTime() {
-        return totalTravelTime;
-    }
-    
-    public void setTotalTravelTime(Duration totalTravelTime) {
-        this.totalTravelTime = totalTravelTime;
-    }
-    
-    public Duration getConsecutiveWorkingHours() {
-        return consecutiveWorkingHours;
-    }
-    
-    public void setConsecutiveWorkingHours(Duration consecutiveWorkingHours) {
-        this.consecutiveWorkingHours = consecutiveWorkingHours;
-    }
-    
-    public Duration getTotalWaitingTime() {
-        return totalWaitingTime;
-    }
-    
-    public void setTotalWaitingTime(Duration totalWaitingTime) {
-        this.totalWaitingTime = totalWaitingTime;
-    }
-    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -250,7 +128,6 @@ public class Driver implements Standstill {
     
     @Override
     public String toString() {
-        return "Driver{" + id + ", home=" + homeLocation.name() + 
-               ", events=" + (assignedEvents != null ? assignedEvents.size() : 0) + "}";
+        return "Driver{" + id + ", home=" + homeLocation.name() + "}";
     }
 }
