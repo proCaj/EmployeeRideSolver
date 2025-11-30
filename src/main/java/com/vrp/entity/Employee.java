@@ -1,5 +1,6 @@
 package com.vrp.entity;
 
+import com.vrp.domain.Location;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
 import org.hibernate.proxy.HibernateProxy;
@@ -31,7 +32,19 @@ public class Employee extends PanacheEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "employee_type", nullable = false)
     public EmployeeType employeeType = EmployeeType.SITE_EMPLOYEE;
-    
+
+    @Column(name = "home_latitude")
+    public Double homeLatitude;
+
+    @Column(name = "home_longitude")
+    public Double homeLongitude;
+
+    @Column(name = "pickup_latitude")
+    public Double pickupLatitude;
+
+    @Column(name = "pickup_longitude")
+    public Double pickupLongitude;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "employee_shift_assignments",
@@ -82,7 +95,21 @@ public class Employee extends PanacheEntity {
         assignments.remove(shift);
         shift.assignedEmployees.remove(this);
     }
-    
+
+    public Location getHomeLocation(Location defaultHub) {
+        if (homeLatitude != null && homeLongitude != null) {
+            return new Location("Home-" + id, homeLatitude, homeLongitude);
+        }
+        return defaultHub;
+    }
+
+    public Location getPickupLocation(Location defaultHub) {
+        if (pickupLatitude != null && pickupLongitude != null) {
+            return new Location("Pickup-" + id, pickupLatitude, pickupLongitude);
+        }
+        return defaultHub;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

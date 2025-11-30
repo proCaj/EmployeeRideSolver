@@ -38,10 +38,14 @@ public class Event implements Standstill {
     @AnchorShadowVariable(sourceVariableName = "previousStandstill")
     private Driver driver;
     
-    @ShadowVariable(variableListenerClass = ArrivalTimeUpdatingVariableListener.class, 
+    @ShadowVariable(variableListenerClass = ArrivalTimeUpdatingVariableListener.class,
                      sourceVariableName = "previousStandstill")
     private Instant arrivalTime;
-    
+
+    @ShadowVariable(variableListenerClass = com.vrp.listener.PassengerCountUpdatingVariableListener.class,
+                     sourceVariableName = "previousStandstill")
+    private Integer cumulativePassengerCount;
+
     public Event() {
         this.passengers = new ArrayList<>();
     }
@@ -252,7 +256,15 @@ public class Event implements Standstill {
     public void setArrivalTime(Instant arrivalTime) {
         this.arrivalTime = arrivalTime;
     }
-    
+
+    public Integer getCumulativePassengerCount() {
+        return cumulativePassengerCount;
+    }
+
+    public void setCumulativePassengerCount(Integer cumulativePassengerCount) {
+        this.cumulativePassengerCount = cumulativePassengerCount;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

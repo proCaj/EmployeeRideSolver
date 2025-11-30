@@ -15,9 +15,13 @@ import java.time.LocalTime;
 
 @ApplicationScoped
 public class DataBootstrap {
-    
+
     private static final Logger LOG = Logger.getLogger(DataBootstrap.class);
-    
+
+    // Hub coordinates (Hauptbahnhof Worms)
+    private static final double HUB_LAT = 49.6341;
+    private static final double HUB_LON = 8.3507;
+
     @Transactional
     public void loadDemoData(@Observes StartupEvent event) {
         if (Customer.count() > 0) {
@@ -63,27 +67,45 @@ public class DataBootstrap {
         agrarhandel.persist();
         
         Employee achim = new Employee("Achim Müller", "achim@example.com", "+49 151 1234 5601", EmployeeType.SITE_EMPLOYEE);
+        // Site employees default to hub pickup location (null means use hub)
+        achim.pickupLatitude = null;
+        achim.pickupLongitude = null;
         achim.persist();
-        
+
         Employee bernd = new Employee("Bernd Schmidt", "bernd@example.com", "+49 151 1234 5602", EmployeeType.SITE_EMPLOYEE);
+        bernd.pickupLatitude = null;
+        bernd.pickupLongitude = null;
         bernd.persist();
-        
+
         Employee christian = new Employee("Christian Weber", "christian@example.com", "+49 151 1234 5603", EmployeeType.SITE_EMPLOYEE);
+        christian.pickupLatitude = null;
+        christian.pickupLongitude = null;
         christian.persist();
-        
+
         Employee dirk = new Employee("Dirk Fischer", "dirk@example.com", "+49 151 1234 5604", EmployeeType.SITE_EMPLOYEE);
+        dirk.pickupLatitude = null;
+        dirk.pickupLongitude = null;
         dirk.persist();
-        
+
         Employee emre = new Employee("Emre Yilmaz", "emre@example.com", "+49 151 1234 5605", EmployeeType.SITE_EMPLOYEE);
+        emre.pickupLatitude = null;
+        emre.pickupLongitude = null;
         emre.persist();
-        
+
         Employee frank = new Employee("Frank Becker", "frank@example.com", "+49 151 1234 5606", EmployeeType.SITE_EMPLOYEE);
+        frank.pickupLatitude = null;
+        frank.pickupLongitude = null;
         frank.persist();
-        
+
         Employee thomas = new Employee("Thomas Koch", "thomas@example.com", "+49 151 1234 5607", EmployeeType.DRIVER);
+        // Drivers default to hub as home location
+        thomas.homeLatitude = HUB_LAT;
+        thomas.homeLongitude = HUB_LON;
         thomas.persist();
-        
+
         Employee sarah = new Employee("Sarah Meyer", "sarah@example.com", "+49 151 1234 5608", EmployeeType.DRIVER);
+        sarah.homeLatitude = HUB_LAT;
+        sarah.homeLongitude = HUB_LON;
         sarah.persist();
         
         for (DayOfWeek day : new DayOfWeek[]{DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY}) {

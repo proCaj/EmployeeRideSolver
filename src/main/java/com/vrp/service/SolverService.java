@@ -78,10 +78,10 @@ public class SolverService {
         if (shiftDemands.isEmpty()) {
             LOG.warn("No active shift demands found - nothing to optimize");
         }
-        
-        List<Event> events = eventGenerationService.generateEventsForWeek(shiftDemands, weekStart);
+
+        List<Event> events = eventGenerationService.generateEventsForWeek(shiftDemands, weekStart, Location.HUB);
         LOG.info("Generated " + events.size() + " events for optimization");
-        
+
         List<Driver> drivers = createDriversFromEmployees(driverEmployees);
         
         List<Location> locations = new ArrayList<>();
@@ -175,10 +175,11 @@ public class SolverService {
     private List<Driver> createDriversFromEmployees(List<Employee> driverEmployees) {
         List<Driver> drivers = new ArrayList<>();
         for (Employee employee : driverEmployees) {
-            Driver driver = new Driver("DRIVER-" + employee.id, Location.HUB, employee);
+            Location homeLocation = employee.getHomeLocation(Location.HUB);
+            Driver driver = new Driver("DRIVER-" + employee.id, homeLocation, employee);
             driver.setMaxCapacity(6);
             drivers.add(driver);
-            LOG.info("Created driver from employee: " + employee.name + " (ID: " + employee.id + ")");
+            LOG.info("Created driver from employee: " + employee.name + " (ID: " + employee.id + ") with home location: " + homeLocation.name());
         }
         LOG.info("Created " + drivers.size() + " driver(s) for optimization");
         return drivers;

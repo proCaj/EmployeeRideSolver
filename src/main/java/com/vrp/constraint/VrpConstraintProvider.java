@@ -7,6 +7,9 @@ import com.vrp.domain.Event;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class VrpConstraintProvider implements ConstraintProvider {
     
@@ -17,6 +20,8 @@ public class VrpConstraintProvider implements ConstraintProvider {
             pairingConstraint(constraintFactory),
             driverAssignmentRequired(constraintFactory),
             vehicleCapacityConstraint(constraintFactory),
+            returnToHomeDistance(constraintFactory),
+            excessiveIdleTime(constraintFactory),
             minimizeTotalDistance(constraintFactory),
             minimizeWaitingTime(constraintFactory)
         };
@@ -31,10 +36,11 @@ public class VrpConstraintProvider implements ConstraintProvider {
     
     Constraint vehicleCapacityConstraint(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Event.class)
-            .filter(event -> event.getDriver() != null && event.isPickup())
-            .filter(event -> event.getPassengerCount() > event.getDriver().getMaxCapacity())
+            .filter(event -> event.getCumulativePassengerCount() != null
+                          && event.getDriver() != null
+                          && event.getCumulativePassengerCount() > event.getDriver().getMaxCapacity())
             .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
-                event -> (event.getPassengerCount() - event.getDriver().getMaxCapacity()) * 1000L)
+                event -> (long) (event.getCumulativePassengerCount() - event.getDriver().getMaxCapacity()) * 1000L)
             .asConstraint("Vehicle capacity constraint");
     }
     
@@ -102,5 +108,53 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .penalizeLong(HardMediumSoftLongScore.ONE_SOFT,
                 event -> event.getWaitingTime().toMinutes())
             .asConstraint("Minimize waiting time");
+    }
+
+    Constraint returnToHomeDistance(ConstraintFactory constraintFactory) {
+        return constraintFactory.forEach(Driver.class)
+            .join(Event.class,
+                  Joiners.equal(driver -> driver, Event::getDriver))
+            .groupBy((driver, event) -> driver,
+                     ConstraintCollectors.toList((driver, event) -> event))
+            .penalizeLong(HardMediumSoftLongScore.ONE_SOFT,
+                     (driver, events) -> {
+                         Event lastEvent = findLastEvent(events);
+                         if (lastEvent == null) return 0L;
+                         return lastEvent.getLocation().getHaversineDistance(driver.getLocation());
+                     })
+            .asConstraint("Return to home distance");
+    }
+
+    Constraint excessiveIdleTime(ConstraintFactory constraintFactory) {
+        return constraintFactory.forEach(Event.class)
+            .filter(event -> event.getPreviousStandstill() instanceof Event)
+            .filter(event -> {
+                Event previous = (Event) event.getPreviousStandstill();
+                if (previous.getDepartureTime() == null || event.getArrivalTime() == null) {
+                    return false;
+                }
+                Duration idle = Duration.between(previous.getDepartureTime(), event.getArrivalTime());
+                return idle.toMinutes() > 240; // More than 4 hours
+            })
+            .penalizeLong(HardMediumSoftLongScore.ONE_SOFT,
+                     event -> {
+                         Event previous = (Event) event.getPreviousStandstill();
+                         Duration idle = Duration.between(previous.getDepartureTime(), event.getArrivalTime());
+                         return idle.toMinutes() - 240; // Penalize minutes over 4 hours
+                     })
+            .asConstraint("Excessive idle time");
+    }
+
+    private Event findLastEvent(List<Event> events) {
+        Set<Event> hasSuccessor = events.stream()
+            .map(Event::getPreviousStandstill)
+            .filter(s -> s instanceof Event)
+            .map(s -> (Event) s)
+            .collect(Collectors.toSet());
+
+        return events.stream()
+            .filter(e -> !hasSuccessor.contains(e))
+            .findFirst()
+            .orElse(null);
     }
 }
