@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mvn clean compile:*)"
+      "Bash(mvn clean compile:*)",
+      "Bash(powershell -Command \"$env:Path -split '';'' | Where-Object { $_-like ''*jbang*'' }\")",
+      "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\proko\\\\.jbang\\\\bin'' | Select-Object Name\")",
+      "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\proko\\\\src\\\\EmployeeRideSolver\\\\mvn-wrapper-temp'' -Recurse | Select-Object FullName\")",
+      "Bash(powershell -Command:*)"
     ],
     "deny": [],
     "ask": []
