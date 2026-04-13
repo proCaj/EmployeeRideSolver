@@ -2,14 +2,14 @@
 
 ## 1. Problem Statement
 
-The current VRP solver produces inefficient routes that do not match the quality of manually planned routes. The primary issue is that **employee batching is not implemented**, resulting in individual trips for each employee instead of grouped transportation.
+The VRP solver produces routes for employee transportation using a 2-pass pipeline that batches employees and optimizes route assignments. The system groups employees traveling to the same destination at the same time into shared events, then uses Timefold Solver to assign events to drivers with minimal total distance.
 
-### Current Behavior (Broken)
+### Current Behavior
 
-- **No batching**: Each employee receives individual pickup/dropoff events
-- **Excessive events**: 5 Chep employees × 5 days × 2 trips = 50 events (just for one customer)
-- **Inefficient driver utilization**: 3 drivers producing 1,735 km total weekly distance
-- **Split assignments**: Employees going to the same location at the same time are transported separately
+- **2-pass pipeline**: Pass 1 groups employees by (customer, shift, day, pickup location); Pass 2 merges events across customers when pickup times fall within the configurable time window
+- **Batched events**: Employees sharing the same customer/shift/day/pickup are combined into single events with multiple passengers
+- **Cross-customer merging**: Events for different customers at the same pickup location within the time window are merged (e.g., Chep + Sanner at City-Fahrschule at 04:30)
+- **Solver-assigned routes**: Timefold Solver assigns batched events to drivers, optimizing for total distance while respecting hard constraints (capacity, pairing, time windows)
 
 ### Expected Behavior (Manual Plan KW 51)
 
@@ -66,8 +66,8 @@ The current VRP solver produces inefficient routes that do not match the quality
 - `passengerCount` reflecting total passengers
 - Adjusted boarding time (2 min per passenger)
 
-**FR-3**: The system SHOULD further optimize by combining pickups for different customers when:
-- Pickup times are within a configurable window (e.g., 15 minutes)
+**FR-3**: The system MUST combine pickups for different customers when:
+- Pickup times are within a configurable time window (`FR3_TIME_WINDOW` constant, default 30 minutes)
 - Pickup locations are the same
 - Example: 04:30 Chep (4) + Sanner (1) combined at City-Fahrschule
 
@@ -95,6 +95,14 @@ The current VRP solver produces inefficient routes that do not match the quality
 **FR-9**: Paired pickup/dropoff events MUST use the same driver
 
 **FR-10**: Pickup events MUST occur before their paired dropoff events
+
+### 3.4 ArbZG Working Hours Constraints
+
+**FR-11**: Max 10h daily per driver — driving time is grouped by `shiftDate`. Night shifts that span midnight count toward the shift start day (i.e., a shift starting 22:00 on Monday and ending 06:00 on Tuesday is attributed to Monday).
+
+**FR-12**: Max 40h weekly per driver — total driving time across all days in a calendar week (Monday–Sunday) must not exceed 40 hours.
+
+**FR-13**: Max 4h consecutive driving without 30min break — if a driver's continuous driving block exceeds 4 hours, a 30-minute break must be inserted before additional driving can be assigned.
 
 ---
 
@@ -141,8 +149,8 @@ The current VRP solver produces inefficient routes that do not match the quality
 
 ### 5.1 Quantitative Metrics
 
-| Metric | Current (Broken) | Target |
-|--------|------------------|--------|
+| Metric | Baseline (Unbatched) | Target |
+|--------|----------------------|--------|
 | Total weekly distance | ~1,735 km | < 800 km |
 | Number of drivers needed | 3 | 2 (with 3rd as backup) |
 | Events per week | ~170 (unbatched) | ~50 (batched) |
@@ -161,40 +169,45 @@ The current VRP solver produces inefficient routes that do not match the quality
 
 ### 6.1 Code Location
 
-The batching logic should be implemented in:
+The batching logic is implemented in:
 ```
 src/main/java/com/vrp/service/EventGenerationService.java
 ```
 
-Current code (line 57-58) explicitly disables batching:
-```java
-// Generate individual events per employee (no batching)
-for (Employee employee : shift.assignedEmployees) {
-```
+### 6.2 Implementation Details
 
-### 6.2 Required Changes
+**FR-1 (Event Batching)**: Employees are grouped by the composite key (customer, shift, day, pickup location). Each group produces a single pickup Event and a single dropoff Event with all grouped employees in the `passengers` list. Travel time is adjusted with 2 minutes boarding per passenger.
 
-1. **Group employees** by (customer, shift, day, pickup location)
-2. **Create single Event** with multiple passengers for each group
-3. **Adjust travel time** calculation for boarding multiple passengers
-4. **Update event ID** scheme to reflect grouped nature
+**FR-3 (Cross-Customer Merging)**: After initial grouping, a second pass merges events for different customers when their pickup times fall within the `FR3_TIME_WINDOW` constant (default 30 minutes) and they share the same pickup location. Merged events combine their passenger lists and take the earlier pickup time. This enables the Chep + Sanner combination at City-Fahrschule.
 
-### 6.3 Batching Algorithm Pseudocode
+### 6.3 Two-Pass Batching Algorithm
 
 ```
-for each shift in shiftDemands:
-    group employees by pickup_location
-    for each (location, employees) group:
-        create ONE pickup event with all employees as passengers
-        create ONE dropoff event with all employees as passengers
+# Pass 1: Group employees by shared trip attributes
+for each shiftDemand:
+    group employees by (customer, shift, day, pickup_location)
+    for each group:
+        create pickup Event with all employees as passengers
+        create dropoff Event with all employees as passengers
         link pickup and dropoff as paired events
+
+# Pass 2: Merge events across customers within time window
+sort all pickup events by pickup_location, then by pickup_time
+for each pickup_location:
+    events_at_location = events filtered by location, sorted by time
+    for each event in events_at_location:
+        find subsequent events within FR3_TIME_WINDOW at same location
+        if found and combined passengerCount <= vehicle capacity:
+            merge events: combine passengers, keep earlier time
+            update paired dropoff events accordingly
 ```
 
 ### 6.4 Edge Cases
 
 - Single employee at unique pickup location → still create event (no batching possible)
 - Mixed pickup locations for same shift → separate batched events per location
-- Night shifts spanning midnight → handle date boundary correctly
+- Night shifts spanning midnight → attributed to `shiftDate` (shift start day) for daily hour tracking (FR-11, FR-12); a shift starting 22:00 Monday and ending 06:00 Tuesday counts toward Monday's 10h daily limit
+- Merged events exceeding vehicle capacity → do not merge; keep as separate events assigned to different drivers
 
 ---
 
@@ -216,13 +229,12 @@ for each shift in shiftDemands:
 | Event | Type | Customer | Passengers | Location |
 |-------|------|----------|------------|----------|
 | 1 | Pickup | Chep | Naruto (1) | Pfeddersheim |
-| 2 | Pickup | Chep | Sasuke, Sakura, Hinata, Shikamaru (4) | City-Fahrschule |
-| 3 | Pickup | Sanner | Kakashi (1) | City-Fahrschule |
-| 4 | Pickup | Orion | Ino, Choji (2) | City-Fahrschule |
-| 5 | Pickup | Barbe Night End | Rock Lee, Neji (2) | Barbe |
-| 6 | Pickup | Barbe Late | Gaara (1) | City-Fahrschule |
-| 7 | Dropoff | Chep | Naruto (1) | Pfeddersheim |
-| 8 | Dropoff | Chep | Sasuke, Sakura, Hinata, Shikamaru (4) | City-Fahrschule |
+| 2 | Pickup | Chep + Sanner | Sasuke, Sakura, Hinata, Shikamaru, Kakashi (5) | City-Fahrschule |
+| 3 | Pickup | Orion | Ino, Choji (2) | City-Fahrschule |
+| 4 | Pickup | Barbe Night End | Rock Lee, Neji (2) | Barbe |
+| 5 | Pickup | Barbe Late | Gaara (1) | City-Fahrschule |
+| 6 | Dropoff | Chep | Naruto (1) | Pfeddersheim |
+| 7 | Dropoff | Chep + Sanner | Sasuke, Sakura, Hinata, Shikamaru, Kakashi (5) | City-Fahrschule |
 | ... | ... | ... | ... | ... |
 
 ---

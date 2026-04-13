@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Employee Transportation VRP Solver - A Java-based optimization system for routing drivers to transport employees between a central hub (Hauptbahnhof Worms) and customer locations. Uses Timefold Solver for VRP optimization with real-world routing via GraphHopper and OSM data.
+Employee Transportation VRP Solver - A Java-based optimization system for routing drivers to transport employees between a central hub (City-Fahrschule) and customer locations. Uses Timefold Solver for VRP optimization with real-world routing via GraphHopper and OSM data.
 
 **Technology Stack:**
 - Quarkus 3.17.3 (Java 17)
@@ -53,6 +53,7 @@ The system uses `EmployeeType` enum to distinguish roles:
    - Converted to `Driver` domain objects in `SolverService.createDriversFromEmployees()`
    - Used as vehicles/anchors in the Timefold chained planning graph
    - Default capacity: 6 passengers
+   - ArbZG working hour limits configured on Driver: maxDailyHours (10h), maxWeeklyHours (40h), maxConsecutiveHours (4h), minBreak (30min), maxBreak (4h)
 
 2. **SITE_EMPLOYEE** - Employees who need transportation
    - Generate pickup/dropoff `Event` objects based on shift assignments
@@ -78,26 +79,41 @@ Driver (anchor) → Event₁ → Event₂ → ... → Eventₙ → null
 - `Event` - Planning entity with `@PlanningVariable(graphType = CHAINED)` on `previousStandstill`
 - `Event.driver` - `@AnchorShadowVariable` automatically tracks which Driver owns this event
 - `Event.arrivalTime` - `@ShadowVariable` updated by `ArrivalTimeUpdatingVariableListener`
+- `Event.cumulativePassengerCount` - `@ShadowVariable` updated by `PassengerCountUpdatingVariableListener`
 
 **Variable listener chain propagation:**
 The `ArrivalTimeUpdatingVariableListener` recursively updates arrival times:
 - When an Event's `previousStandstill` changes, its `arrivalTime` is recalculated
+- Uses GraphHopper (stored in `VrpSolution.graphHopper`) for real routing travel times between events; falls back to Haversine distance / 15 m/s average speed when GraphHopper is unavailable
 - The listener then finds the next Event in the chain and updates it
 - This cascades through the entire route chain
 
-### Event Generation and Batching
+The `PassengerCountUpdatingVariableListener` maintains cumulative passenger counts:
+- Computes `previousEvent.cumulativePassengerCount + thisEvent.passengerDelta`
+- Cascades through the chain so capacity constraints can check cumulative + peak load
 
-`EventGenerationService.generateEventsForWeek()`:
-- Groups employees by (customer, shift, day) for batching
-- Creates paired pickup/dropoff Events with `List<Employee> passengers`
-- Calculates distances using GraphHopper
-- Sets time windows from `ShiftDemand` configuration
+### Event Generation (2-Pass Pipeline)
 
-**Event batching logic:**
-- Multiple employees going to same customer/shift/day → single Event with multiple passengers
-- Reduces events dramatically (e.g., 68 unbatched → 40 batched)
-- `Event.getPassengerCount()` returns size of passengers list
-- Vehicle capacity constraint checks `passengerCount <= driver.maxCapacity`
+`EventGenerationService.generateEventsForWeek()` uses a two-pass pipeline:
+
+**Pass 1 (FR-1): Same-shift batching by pickup location**
+- Groups employees by pickup location coordinates within the same shift
+- Each group becomes a single batched Event with `List<Employee> passengers`
+- Creates paired pickup/dropoff events for shifts requiring return trips
+- All events receive `shiftDate` (LocalDate) for ArbZG compliance — night shifts spanning midnight count toward the day the shift started
+- Boarding time: 2 min per passenger; alighting time: 1 min per passenger
+
+**Pass 2 (FR-3): Cross-customer merging within 30-min window**
+- Merges pickup events at the same pickup location whose `minStartTime` differs by <= 30 minutes (`FR3_TIME_WINDOW`)
+- Creates multi-stop Events with ordered `List<Stop>` (pickup → customer sites sorted by distance from pickup, nearest first)
+- Re-links paired dropoff events to the merged pickup
+- The merged event's `maxEndTime` is the tightest deadline across all customers
+
+**Multi-stop Event model:**
+- An Event contains `List<Stop>`, each Stop has a `Location`, boarding passengers, alighting count, and per-stop `maxEndTime`
+- `fromLocation` / `toLocation` are derived from first/last stop for backward compatibility
+- `getPeakPassengerCount()` returns the maximum concurrent load across all stops (used by capacity constraint)
+- `getPassengerDelta()` returns net passenger change (0 for self-contained multi-stop events where all passengers board and alight within the event)
 
 ### Constraint Provider
 
@@ -105,21 +121,26 @@ The `ArrivalTimeUpdatingVariableListener` recursively updates arrival times:
 
 **Hard constraints:**
 - `driverAssignmentRequired` - Every event must have a driver
-- `vehicleCapacityConstraint` - Passenger count cannot exceed driver capacity
-- `timeWindowConstraint` - Events must complete before `maxEndTime`
+- `vehicleCapacityConstraint` - Checks both cumulative passenger count across the driver's chain AND peak concurrent load within multi-stop events; penalizes whichever exceeds driver `maxCapacity` more
+- `timeWindowConstraint` - Event-level time window (completion before `maxEndTime`) AND per-stop time windows for multi-stop events (each stop checked against its `maxEndTime`)
 - `pairingConstraint` - Pickup/dropoff pairs must use same driver, pickup before dropoff
+- `maxDailyWorkingHours` - Per driver per shiftDate, maximum 10 hours of working time per ArbZG; night shifts count toward the day the shift started
+- `maxWeeklyWorkingHours` - Per driver across all shiftDates in the week, maximum 40 hours
+- `maxConsecutiveDrivingHours` - Per driver per shiftDate, maximum 4 hours continuous driving without a break >= 30 min; gaps < 30 min count as continuous driving; gaps between different shiftDates always reset the counter
 
 **Soft constraints (optimization goals):**
 - `minimizeTotalDistance` - Primary optimization goal
-- `minimizeWaitingTime` - Reduce driver idle time
+- `minimizeWaitingTime` - Reduce driver idle time before minStartTime
+- `returnToHomeDistance` - Penalize distance from last event's location back to driver's home
+- `excessiveIdleTime` - Penalize idle time > 4 hours between consecutive events
 
 ### Solver Flow
 
 1. User navigates to `/optimize` page and clicks "Start Optimization"
 2. `POST /api/solve` → `SolverService.solve()`
 3. Filters active DRIVER employees → creates `Driver` domain objects
-4. `EventGenerationService` generates batched pickup/dropoff Events
-5. Creates `VrpSolution` with drivers, events, locations
+4. `EventGenerationService` generates batched pickup/dropoff Events (2-pass pipeline)
+5. Creates `VrpSolution` with drivers, events, locations, and GraphHopper instance
 6. `SolverManager.solveBuilder()` runs async optimization (default 120s timeout)
 7. Best solutions stored in `bestSolutionMap` via consumer callbacks
 8. `GET /api/solve/{jobId}/solution` retrieves results
@@ -153,17 +174,20 @@ Resources support both JSON and form-encoded data:
 - Loads OSM data from `rheinland-pfalz-latest.osm.pbf` (245MB file in repo root)
 - Caches routing graph in `./graphhopper-cache` directory
 - Provides real-world distance/time calculations between coordinates
-- Used in event generation for accurate distance metrics
+- Used in event generation for distance/duration calculations and in `ArrivalTimeUpdatingVariableListener` for real routing during solving
+- GraphHopper instance stored in `VrpSolution` (shallow-copied by Timefold's SolutionCloner, NOT a @ProblemFactProperty)
 
 ## File Structure
 
 **Domain (Timefold planning entities):**
 - `src/main/java/com/vrp/domain/` - Planning entities and problem facts
-  - `VrpSolution.java` - `@PlanningSolution` with drivers, events, locations
-  - `Event.java` - `@PlanningEntity` with chained `previousStandstill` variable
-  - `Driver.java` - Problem fact (NOT planning entity), implements `Standstill`
+  - `VrpSolution.java` - `@PlanningSolution` with drivers, events, locations, customers, employees, GraphHopper instance
+  - `Event.java` - `@PlanningEntity` with chained `previousStandstill` variable, multi-stop `List<Stop>`, `shiftDate`, `cumulativePassengerCount` shadow variable
+  - `Stop.java` - Single stop within an Event's route: location, boarding passengers, alighting count, boarding duration (2 min/passenger), travel time from previous stop, per-stop `maxEndTime`
+  - `Driver.java` - Problem fact (NOT planning entity), implements `Standstill`; ArbZG fields: maxDailyHours, maxWeeklyHours, maxConsecutiveHours, minBreak, maxBreak
   - `Standstill.java` - Interface for chain participants
-  - `Location.java` - Geographic coordinates with distance calculations
+  - `Location.java` - Geographic coordinates with Haversine distance and GraphHopper routing
+  - `Route.java` - Simple container for a list of Events with duration
 
 **Persistence (JPA entities):**
 - `src/main/java/com/vrp/entity/` - Database entities
@@ -173,15 +197,17 @@ Resources support both JSON and form-encoded data:
 
 **Business Logic:**
 - `src/main/java/com/vrp/service/SolverService.java` - Optimization job management
-- `src/main/java/com/vrp/service/EventGenerationService.java` - Event creation and batching
+- `src/main/java/com/vrp/service/EventGenerationService.java` - 2-pass event generation pipeline (FR-1 same-shift batching + FR-3 cross-customer 30-min window merging into multi-stop events)
 - `src/main/java/com/vrp/service/GraphHopperService.java` - Real-world routing
 - `src/main/java/com/vrp/service/DataBootstrap.java` - Seed data for development
+- `src/main/java/com/vrp/service/SolutionDiagnosticService.java` - Diagnoses why events remain unassigned
 
 **Constraints:**
-- `src/main/java/com/vrp/constraint/VrpConstraintProvider.java` - Hard/soft constraints
+- `src/main/java/com/vrp/constraint/VrpConstraintProvider.java` - 7 hard + 4 soft constraints including ArbZG working hour limits
 
 **Variable Listeners:**
-- `src/main/java/com/vrp/listener/ArrivalTimeUpdatingVariableListener.java` - Shadow variable updates
+- `src/main/java/com/vrp/listener/ArrivalTimeUpdatingVariableListener.java` - Shadow variable updates using GraphHopper for real routing (falls back to Haversine/15 m/s)
+- `src/main/java/com/vrp/listener/PassengerCountUpdatingVariableListener.java` - Maintains cumulative passenger count across the driver's chain
 
 **REST Endpoints:**
 - `src/main/java/com/vrp/resource/` - REST API and web page controllers
@@ -228,9 +254,17 @@ Resources support both JSON and form-encoded data:
 ## Optimization Problem Structure
 
 **Optimization goals (priority order):**
-1. Minimize total distance driven (highest priority - fuel and vehicle wear)
-2. Maximize consecutive working hours for drivers (soft constraint)
-3. Minimize employee travel time (lower priority)
+1. Satisfy all hard constraints (driver assignment, capacity, time windows, pairing, ArbZG limits)
+2. Minimize total distance driven (highest soft priority - fuel and vehicle wear)
+3. Minimize driver waiting time
+4. Return drivers close to home at end of route
+5. Avoid excessive idle time (> 4 hours between events)
+
+**ArbZG (Arbeitszeitgesetz) Compliance:**
+- `maxDailyWorkingHours` (10h/day): Sum of event durations (arrivalTime → departureTime) per driver per shiftDate. Night shifts spanning midnight count toward the day the shift started per shiftDate.
+- `maxWeeklyWorkingHours` (40h/week): Sum of all event durations per driver across the entire planning week.
+- `maxConsecutiveDrivingHours` (4h continuous): Consecutive events with gaps < 30 min count as continuous driving. A gap >= 30 min resets the counter. Only events on the same shiftDate are considered consecutive.
+- These are hard constraints — violations produce hard score penalties proportional to the excess.
 
 **Route flexibility:**
 - Routes don't require strict pickup → dropoff → pickup → return sequences
@@ -239,9 +273,15 @@ Resources support both JSON and form-encoded data:
 
 **Driver patterns:**
 - Single route: Home → pickups/dropoffs → Home
-- Break between routes: 30 min minimum, 4 hours maximum
+- Break between routes: 30 min minimum (resets consecutive driving), 4 hours maximum
 - Ideal: 4 hours driving → 30 min break → 4 hours driving
 - Customer demand rarely allows perfect patterns
+
+**Multi-stop events (FR-3):**
+- Multiple customer deliveries in one trip: PickupLocation → CustomerA (nearest) → CustomerB → ...
+- All passengers board at the pickup stop, alight at their respective customer stops
+- Capacity checked at peak concurrent load (not just per-event count)
+- Per-stop time windows ensure each customer's shift start deadline is met
 
 **Shift handling:**
 - Customers can have up to 3 shifts per day
