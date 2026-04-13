@@ -19,10 +19,9 @@ public record Location(
 
     public static final Location HUB = new Location("City-Fahrschule", 49.6295, 8.3640);
 
-    public record LocationPair(Location from, Location to) {}
     public record TravelData(long distanceMeters, Duration travelTime) {}
 
-    private static final ConcurrentHashMap<LocationPair, TravelData> routingCache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Location, ConcurrentHashMap<Location, TravelData>> routingCache = new ConcurrentHashMap<>();
 
     @JsonCreator
     public Location {
@@ -31,8 +30,9 @@ public record Location(
 
     public TravelData getRouting(Location other, GraphHopper graphHopper) {
         if (this.equals(other)) return new TravelData(0L, Duration.ZERO);
-        LocationPair key = new LocationPair(this, other);
-        return routingCache.computeIfAbsent(key, k -> computeRouting(other, graphHopper));
+        return routingCache
+            .computeIfAbsent(this, k -> new ConcurrentHashMap<>())
+            .computeIfAbsent(other, k -> computeRouting(other, graphHopper));
     }
 
     private TravelData computeRouting(Location other, GraphHopper graphHopper) {

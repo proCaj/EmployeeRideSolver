@@ -9,10 +9,9 @@ import com.vrp.domain.Stop;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class VrpConstraintProvider implements ConstraintProvider {
     
@@ -54,10 +53,10 @@ public class VrpConstraintProvider implements ConstraintProvider {
                     int maxCapacity = event.getDriver().getMaxCapacity();
 
                     // Check cumulative passenger count across the driver's chain
+                    Integer cumCount = event.getCumulativePassengerCount();
                     long chainPenalty = 0;
-                    if (event.getCumulativePassengerCount() != null
-                        && event.getCumulativePassengerCount() > maxCapacity) {
-                        chainPenalty = (long) (event.getCumulativePassengerCount() - maxCapacity) * 1000L;
+                    if (cumCount != null && cumCount > maxCapacity) {
+                        chainPenalty = (long) (cumCount - maxCapacity) * 1000L;
                     }
 
                     // FR-3: Check peak concurrent load within this event's multi-stop route.
@@ -109,7 +108,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
                             if (stop.getBoardingDuration() != null) {
                                 currentTime = currentTime.plus(stop.getBoardingDuration());
                             }
-                            currentTime = currentTime.plus(Duration.ofMinutes(stop.getAlightingCount()));
+                            currentTime = currentTime.plusSeconds(stop.getAlightingCount() * 60L);
 
                             // Check deadline
                             if (stop.getMaxEndTime() != null && currentTime.isAfter(stop.getMaxEndTime())) {
@@ -176,12 +175,13 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
                 (driver, date, events) -> {
                     if (date == null || events.isEmpty()) return 0L;
-                    long totalWorkingMinutes = events.stream()
-                        .mapToLong(e -> {
-                            if (e.getArrivalTime() == null || e.getDepartureTime() == null) return 0;
-                            return Duration.between(e.getArrivalTime(), e.getDepartureTime()).toMinutes();
-                        })
-                        .sum();
+                    long totalWorkingMinutes = 0;
+                    for (Event e : events) {
+                        Instant arrival = e.getArrivalTime();
+                        Instant departure = e.getDepartureTime();
+                        if (arrival == null || departure == null) continue;
+                        totalWorkingMinutes += (departure.getEpochSecond() - arrival.getEpochSecond()) / 60;
+                    }
                     long overMinutes = totalWorkingMinutes - driver.getMaxDailyHours().toMinutes();
                     return overMinutes > 0 ? overMinutes * 100L : 0L;
                 })
@@ -203,12 +203,13 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
                 (driver, events) -> {
                     if (events.isEmpty()) return 0L;
-                    long totalWorkingMinutes = events.stream()
-                        .mapToLong(e -> {
-                            if (e.getArrivalTime() == null || e.getDepartureTime() == null) return 0;
-                            return Duration.between(e.getArrivalTime(), e.getDepartureTime()).toMinutes();
-                        })
-                        .sum();
+                    long totalWorkingMinutes = 0;
+                    for (Event e : events) {
+                        Instant arrival = e.getArrivalTime();
+                        Instant departure = e.getDepartureTime();
+                        if (arrival == null || departure == null) continue;
+                        totalWorkingMinutes += (departure.getEpochSecond() - arrival.getEpochSecond()) / 60;
+                    }
                     long overMinutes = totalWorkingMinutes - driver.getMaxWeeklyHours().toMinutes();
                     return overMinutes > 0 ? overMinutes * 100L : 0L;
                 })
@@ -302,17 +303,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
      * Falls back to deriving from minStartTime if shiftDate is null (legacy compatibility).
      */
     private static LocalDate getEventDate(Event event) {
-        if (event.getShiftDate() != null) {
-            return event.getShiftDate();
-        }
-        if (event.getMinStartTime() != null) {
-            return event.getMinStartTime().atZone(ZoneId.systemDefault()).toLocalDate();
-        }
-        if (event.getArrivalTime() != null) {
-            return event.getArrivalTime().atZone(ZoneId.systemDefault()).toLocalDate();
-        }
-        // Fallback: epoch date (should never happen with well-formed events)
-        return LocalDate.EPOCH;
+        return event.getShiftDate(); // always set by EventGenerationService
     }
 
     private Event findLastEvent(List<Event> events) {
@@ -332,26 +323,26 @@ public class VrpConstraintProvider implements ConstraintProvider {
      * Calculates the penalty for consecutive driving hours violations.
      */
     private long calculateConsecutiveDrivingPenalty(Driver driver, List<Event> events) {
-        List<Event> sorted = events.stream()
-            .filter(e -> e.getArrivalTime() != null && e.getDepartureTime() != null)
-            .sorted(Comparator.comparing(Event::getArrivalTime))
-            .collect(Collectors.toList());
+        int count = 0;
+        Event[] arr = new Event[events.size()];
+        for (Event e : events) {
+            if (e.getArrivalTime() != null && e.getDepartureTime() != null) {
+                arr[count++] = e;
+            }
+        }
+        if (count < 2) return 0L;
+        Arrays.sort(arr, 0, count, Comparator.comparing(Event::getArrivalTime));
 
-        if (sorted.size() < 2) return 0L;
-
-        Instant spanStart = sorted.get(0).getArrivalTime();
+        Instant spanStart = arr[0].getArrivalTime();
         long maxOverMinutes = 0;
-        for (int i = 1; i < sorted.size(); i++) {
-            Event prev = sorted.get(i - 1);
-            Event curr = sorted.get(i);
+        for (int i = 1; i < count; i++) {
+            Event prev = arr[i - 1];
+            Event curr = arr[i];
             Duration gap = Duration.between(prev.getDepartureTime(), curr.getArrivalTime());
-
-            // Only check consecutive driving within the same day
             if (!getEventDate(prev).equals(getEventDate(curr))) {
                 spanStart = curr.getArrivalTime();
                 continue;
             }
-
             if (gap.compareTo(driver.getMinBreak()) >= 0) {
                 spanStart = curr.getArrivalTime();
             } else {

@@ -9,7 +9,7 @@ public class Driver implements Standstill {
     
     private String id;
     private Location homeLocation;
-    private long maxCapacity = 6;
+    private int maxCapacity = 6;
     private Duration maxConsecutiveHours = Duration.ofHours(4);
     private Duration minBreak = Duration.ofMinutes(30);
     private Duration maxBreak = Duration.ofHours(4);
@@ -57,11 +57,11 @@ public class Driver implements Standstill {
         this.homeLocation = homeLocation;
     }
     
-    public long getMaxCapacity() {
+    public int getMaxCapacity() {
         return maxCapacity;
     }
-    
-    public void setMaxCapacity(long maxCapacity) {
+
+    public void setMaxCapacity(int maxCapacity) {
         this.maxCapacity = maxCapacity;
     }
     

@@ -85,12 +85,14 @@ public class Event implements Standstill {
 
     private int cachedPassengerDelta;
     private int cachedPeakPassengerCount;
+    private Instant departureTime;
 
     public Event() {
         this.passengers = new ArrayList<>();
         this.stops = new ArrayList<>();
         this.cachedPassengerDelta = 0;
         this.cachedPeakPassengerCount = 0;
+        this.departureTime = null;
     }
     
     /**
@@ -168,11 +170,7 @@ public class Event implements Standstill {
     }
     
     public Instant getDepartureTime() {
-        if (arrivalTime == null) {
-            return null;
-        }
-        Instant effectiveStart = arrivalTime.isBefore(minStartTime) ? minStartTime : arrivalTime;
-        return effectiveStart.plus(duration);
+        return departureTime;
     }
     
     public Duration getWaitingTime() {
@@ -340,7 +338,15 @@ public class Event implements Standstill {
     public void setDriver(Driver driver) { this.driver = driver; }
 
     public Instant getArrivalTime() { return arrivalTime; }
-    public void setArrivalTime(Instant arrivalTime) { this.arrivalTime = arrivalTime; }
+    public void setArrivalTime(Instant arrivalTime) {
+        this.arrivalTime = arrivalTime;
+        if (arrivalTime == null || duration == null) {
+            this.departureTime = null;
+        } else {
+            Instant effectiveStart = arrivalTime.isBefore(minStartTime) ? minStartTime : arrivalTime;
+            this.departureTime = effectiveStart.plus(duration);
+        }
+    }
 
     public Integer getCumulativePassengerCount() { return cumulativePassengerCount; }
     public void setCumulativePassengerCount(Integer cumulativePassengerCount) { this.cumulativePassengerCount = cumulativePassengerCount; }
