@@ -3,6 +3,7 @@ package com.vrp.domain;
 import ai.timefold.solver.core.api.domain.solution.*;
 import ai.timefold.solver.core.api.domain.valuerange.ValueRangeProvider;
 import ai.timefold.solver.core.api.score.buildin.hardmediumsoftlong.HardMediumSoftLongScore;
+import com.graphhopper.GraphHopper;
 import com.vrp.entity.Customer;
 import com.vrp.entity.Employee;
 
@@ -34,6 +35,18 @@ public class VrpSolution {
     @ProblemFactProperty
     private LocalDate planningStartDate;
     
+    /**
+     * GraphHopper instance stored in the solution so that VariableListeners
+     * (like ArrivalTimeUpdatingVariableListener) can access real routing data
+     * during solving. Null if GraphHopper is not available (falls back to
+     * Haversine distance / average speed).
+     * 
+     * NOT a @ProblemFactProperty -- this is a runtime service reference,
+     * not a planning problem fact. Timefold's default SolutionCloner
+     * will shallow-copy this reference, which is the desired behavior.
+     */
+    private GraphHopper graphHopper;
+    
     @PlanningScore
     private HardMediumSoftLongScore score;
     
@@ -53,6 +66,18 @@ public class VrpSolution {
         this.drivers = drivers;
         this.events = events;
         this.planningStartDate = planningStartDate;
+    }
+    
+    public VrpSolution(List<Location> locations, List<Customer> customers, List<Employee> employees,
+                       List<Driver> drivers, List<Event> events, LocalDate planningStartDate,
+                       GraphHopper graphHopper) {
+        this.locations = locations;
+        this.customers = customers;
+        this.employees = employees;
+        this.drivers = drivers;
+        this.events = events;
+        this.planningStartDate = planningStartDate;
+        this.graphHopper = graphHopper;
     }
     
     @ValueRangeProvider(id = "eventRange")
@@ -114,6 +139,14 @@ public class VrpSolution {
     
     public void setPlanningStartDate(LocalDate planningStartDate) {
         this.planningStartDate = planningStartDate;
+    }
+    
+    public GraphHopper getGraphHopper() {
+        return graphHopper;
+    }
+    
+    public void setGraphHopper(GraphHopper graphHopper) {
+        this.graphHopper = graphHopper;
     }
     
     public HardMediumSoftLongScore getScore() {

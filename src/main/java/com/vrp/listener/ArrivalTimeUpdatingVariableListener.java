@@ -2,17 +2,24 @@ package com.vrp.listener;
 
 import ai.timefold.solver.core.api.domain.variable.VariableListener;
 import ai.timefold.solver.core.api.score.director.ScoreDirector;
+import com.graphhopper.GraphHopper;
 import com.vrp.domain.Driver;
 import com.vrp.domain.Event;
+import com.vrp.domain.Location;
 import com.vrp.domain.Standstill;
 import com.vrp.domain.VrpSolution;
 
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * Updates the arrivalTime shadow variable when previousStandstill changes.
+ * Uses GraphHopper for real routing distances when available (stored in VrpSolution).
+ * Falls back to Haversine distance / 15 m/s average speed when GraphHopper is not available.
+ */
 public class ArrivalTimeUpdatingVariableListener implements VariableListener<VrpSolution, Event> {
     
-    private static final int AVERAGE_SPEED_MPS = 15;
+    private static final int AVERAGE_SPEED_MPS = 15; // ~54 km/h fallback
     
     @Override
     public void beforeEntityAdded(ScoreDirector<VrpSolution> scoreDirector, Event event) {
@@ -54,7 +61,10 @@ public class ArrivalTimeUpdatingVariableListener implements VariableListener<Vrp
                 arrivalTime = null;
             } else {
                 Instant departureTime = previousEvent.getDepartureTime();
-                Duration travelTime = calculateTravelTime(previousEvent, sourceEvent);
+                Duration travelTime = calculateTravelTime(
+                    previousEvent.getLocation(), sourceEvent.getFromLocation(),
+                    scoreDirector.getWorkingSolution().getGraphHopper()
+                );
                 arrivalTime = departureTime.plus(travelTime);
             }
         } else {
@@ -80,8 +90,30 @@ public class ArrivalTimeUpdatingVariableListener implements VariableListener<Vrp
         return null;
     }
     
-    private Duration calculateTravelTime(Event from, Event to) {
-        long distance = from.getLocation().getHaversineDistance(to.getFromLocation());
+    /**
+     * Calculates travel time between two locations.
+     * Uses GraphHopper for real routing when available, falls back to
+     * Haversine distance / average speed otherwise.
+     */
+    private Duration calculateTravelTime(Location from, Location to, GraphHopper graphHopper) {
+        if (from.equals(to)) {
+            return Duration.ZERO;
+        }
+        
+        // Try GraphHopper first for real routing
+        if (graphHopper != null) {
+            try {
+                Duration ghTime = from.getTravelTime(to, graphHopper);
+                if (ghTime != null && !ghTime.isZero()) {
+                    return ghTime;
+                }
+            } catch (Exception e) {
+                // Fall through to Haversine fallback
+            }
+        }
+        
+        // Haversine fallback: distance / average speed
+        long distance = from.getHaversineDistance(to);
         long travelTimeSeconds = distance / AVERAGE_SPEED_MPS;
         return Duration.ofSeconds(travelTimeSeconds);
     }

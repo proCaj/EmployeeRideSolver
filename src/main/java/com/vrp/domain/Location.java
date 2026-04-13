@@ -16,7 +16,7 @@ public record Location(
     @JsonProperty("longitude") double longitude
 ) {
     
-    public static final Location HUB = new Location("Hauptbahnhof Worms", 49.634, 8.359);
+    public static final Location HUB = new Location("City-Fahrschule", 49.6295, 8.3640);
     
     @JsonCreator
     public Location {
@@ -26,6 +26,10 @@ public record Location(
     public long getDistanceTo(Location other, GraphHopper graphHopper) {
         if (this.equals(other)) {
             return 0L;
+        }
+        
+        if (graphHopper == null) {
+            return getHaversineDistance(other);
         }
         
         try {
@@ -47,6 +51,11 @@ public record Location(
     public Duration getTravelTime(Location other, GraphHopper graphHopper) {
         if (this.equals(other)) {
             return Duration.ZERO;
+        }
+        
+        if (graphHopper == null) {
+            long distance = getHaversineDistance(other);
+            return Duration.ofSeconds(distance / 15);
         }
         
         try {

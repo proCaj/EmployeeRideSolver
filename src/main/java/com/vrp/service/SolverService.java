@@ -16,6 +16,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
+import com.graphhopper.GraphHopper;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +36,9 @@ public class SolverService {
     
     @Inject
     EventGenerationService eventGenerationService;
+    
+    @Inject
+    GraphHopperService graphHopperService;
     
     private final ConcurrentMap<UUID, VrpSolution> solutionMap = new ConcurrentHashMap<>();
     private final ConcurrentMap<UUID, VrpSolution> bestSolutionMap = new ConcurrentHashMap<>();
@@ -94,7 +99,8 @@ public class SolverService {
             employees,
             drivers,
             events,
-            weekStart
+            weekStart,
+            getGraphHopperInstance()
         );
         
         try {
@@ -183,5 +189,16 @@ public class SolverService {
         }
         LOG.info("Created " + drivers.size() + " driver(s) for optimization");
         return drivers;
+    }
+    
+    private GraphHopper getGraphHopperInstance() {
+        try {
+            if (graphHopperService.isInitialized()) {
+                return graphHopperService.getGraphHopper();
+            }
+        } catch (Exception e) {
+            LOG.warn("GraphHopper not available for solver: " + e.getMessage());
+        }
+        return null;
     }
 }

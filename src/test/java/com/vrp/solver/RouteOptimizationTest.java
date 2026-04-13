@@ -749,9 +749,12 @@ class RouteOptimizationTest {
         Duration boarding = Duration.ofMinutes(2L * passengers.size());
         Duration totalDuration = travelTime.plus(boarding);
 
-        return new Event(id, from, to, minStart, maxEnd, totalDuration, distance,
+        Event event = new Event(id, from, to, minStart, maxEnd, totalDuration, distance,
                 true, passengers, null, "weekday",
                 Duration.ofMinutes(30), Duration.ofMinutes(45));
+        // Derive shiftDate from minStart (tests are single-day, so this works)
+        event.setShiftDate(minStart.atZone(ZONE).toLocalDate());
+        return event;
     }
 
     static Event createDropoffEvent(String id, Location from, Location to,
@@ -761,9 +764,12 @@ class RouteOptimizationTest {
         Duration boarding = Duration.ofMinutes(2L * passengers.size());
         Duration totalDuration = travelTime.plus(boarding);
 
-        return new Event(id, from, to, minStart, maxEnd, totalDuration, distance,
+        Event event = new Event(id, from, to, minStart, maxEnd, totalDuration, distance,
                 false, passengers, null, "weekday",
                 Duration.ZERO, Duration.ZERO);
+        // Derive shiftDate from minStart (tests are single-day, so this works)
+        event.setShiftDate(minStart.atZone(ZONE).toLocalDate());
+        return event;
     }
 
     /**
