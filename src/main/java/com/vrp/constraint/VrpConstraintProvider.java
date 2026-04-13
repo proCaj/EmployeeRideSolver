@@ -12,7 +12,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class VrpConstraintProvider implements ConstraintProvider {
@@ -174,18 +173,9 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .groupBy((driver, event) -> driver,
                      (driver, event) -> event.getShiftDate(),
                      ConstraintCollectors.toList((driver, event) -> event))
-            .filter((driver, date, events) -> {
-                if (date == null || events.isEmpty()) return false;
-                long totalWorkingMinutes = events.stream()
-                    .mapToLong(e -> {
-                        if (e.getArrivalTime() == null || e.getDepartureTime() == null) return 0;
-                        return Duration.between(e.getArrivalTime(), e.getDepartureTime()).toMinutes();
-                    })
-                    .sum();
-                return totalWorkingMinutes > driver.getMaxDailyHours().toMinutes();
-            })
             .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
                 (driver, date, events) -> {
+                    if (date == null || events.isEmpty()) return 0L;
                     long totalWorkingMinutes = events.stream()
                         .mapToLong(e -> {
                             if (e.getArrivalTime() == null || e.getDepartureTime() == null) return 0;
@@ -193,7 +183,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
                         })
                         .sum();
                     long overMinutes = totalWorkingMinutes - driver.getMaxDailyHours().toMinutes();
-                    return overMinutes * 100L;
+                    return overMinutes > 0 ? overMinutes * 100L : 0L;
                 })
             .asConstraint("Max daily working hours");
     }
@@ -210,18 +200,9 @@ public class VrpConstraintProvider implements ConstraintProvider {
                   Joiners.equal(driver -> driver, Event::getDriver))
             .groupBy((driver, event) -> driver,
                      ConstraintCollectors.toList((driver, event) -> event))
-            .filter((driver, events) -> {
-                if (events.isEmpty()) return false;
-                long totalWorkingMinutes = events.stream()
-                    .mapToLong(e -> {
-                        if (e.getArrivalTime() == null || e.getDepartureTime() == null) return 0;
-                        return Duration.between(e.getArrivalTime(), e.getDepartureTime()).toMinutes();
-                    })
-                    .sum();
-                return totalWorkingMinutes > driver.getMaxWeeklyHours().toMinutes();
-            })
             .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
                 (driver, events) -> {
+                    if (events.isEmpty()) return 0L;
                     long totalWorkingMinutes = events.stream()
                         .mapToLong(e -> {
                             if (e.getArrivalTime() == null || e.getDepartureTime() == null) return 0;
@@ -229,7 +210,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
                         })
                         .sum();
                     long overMinutes = totalWorkingMinutes - driver.getMaxWeeklyHours().toMinutes();
-                    return overMinutes * 100L;
+                    return overMinutes > 0 ? overMinutes * 100L : 0L;
                 })
             .asConstraint("Max weekly working hours");
     }
@@ -251,10 +232,6 @@ public class VrpConstraintProvider implements ConstraintProvider {
                   Joiners.equal(driver -> driver, Event::getDriver))
             .groupBy((driver, event) -> driver,
                      ConstraintCollectors.toList((driver, event) -> event))
-            .filter((driver, events) -> {
-                if (events.size() < 2) return false;
-                return hasConsecutiveDrivingViolation(driver, events);
-            })
             .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
                 (driver, events) -> calculateConsecutiveDrivingPenalty(driver, events))
             .asConstraint("Max consecutive driving hours");
@@ -339,51 +316,16 @@ public class VrpConstraintProvider implements ConstraintProvider {
     }
 
     private Event findLastEvent(List<Event> events) {
-        Set<Event> hasSuccessor = events.stream()
-            .map(Event::getPreviousStandstill)
-            .filter(s -> s instanceof Event)
-            .map(s -> (Event) s)
-            .collect(Collectors.toSet());
-
-        return events.stream()
-            .filter(e -> !hasSuccessor.contains(e))
-            .findFirst()
-            .orElse(null);
-    }
-
-    /**
-     * Checks if a driver's events contain a consecutive driving span exceeding
-     * maxConsecutiveHours without a break >= minBreak.
-     */
-    private boolean hasConsecutiveDrivingViolation(Driver driver, List<Event> events) {
-        List<Event> sorted = events.stream()
-            .filter(e -> e.getArrivalTime() != null && e.getDepartureTime() != null)
-            .sorted(Comparator.comparing(Event::getArrivalTime))
-            .collect(Collectors.toList());
-        if (sorted.size() < 2) return false;
-
-        Instant spanStart = sorted.get(0).getArrivalTime();
-        for (int i = 1; i < sorted.size(); i++) {
-            Event prev = sorted.get(i - 1);
-            Event curr = sorted.get(i);
-            Duration gap = Duration.between(prev.getDepartureTime(), curr.getArrivalTime());
-
-            // Only check consecutive driving within the same day
-            if (!getEventDate(prev).equals(getEventDate(curr))) {
-                spanStart = curr.getArrivalTime();
-                continue;
-            }
-
-            if (gap.compareTo(driver.getMinBreak()) >= 0) {
-                spanStart = curr.getArrivalTime();
-            } else {
-                Duration consecutiveSpan = Duration.between(spanStart, curr.getDepartureTime());
-                if (consecutiveSpan.toMinutes() > driver.getMaxConsecutiveHours().toMinutes()) {
-                    return true;
-                }
+        Event latest = null;
+        Instant latestDeparture = null;
+        for (Event e : events) {
+            Instant dep = e.getDepartureTime();
+            if (dep != null && (latestDeparture == null || dep.isAfter(latestDeparture))) {
+                latestDeparture = dep;
+                latest = e;
             }
         }
-        return false;
+        return latest;
     }
 
     /**

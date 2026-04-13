@@ -2,6 +2,7 @@ package com.vrp.domain;
 
 import ai.timefold.solver.core.api.domain.entity.PlanningEntity;
 import ai.timefold.solver.core.api.domain.variable.*;
+import ai.timefold.solver.core.api.domain.variable.InverseRelationShadowVariable;
 import com.vrp.entity.Employee;
 import com.vrp.entity.ShiftDemand;
 import com.vrp.listener.ArrivalTimeUpdatingVariableListener;
@@ -79,9 +80,17 @@ public class Event implements Standstill {
                      sourceVariableName = "previousStandstill")
     private Integer cumulativePassengerCount;
 
+    @InverseRelationShadowVariable(sourceVariableName = "previousStandstill")
+    private Event nextEvent;
+
+    private int cachedPassengerDelta;
+    private int cachedPeakPassengerCount;
+
     public Event() {
         this.passengers = new ArrayList<>();
         this.stops = new ArrayList<>();
+        this.cachedPassengerDelta = 0;
+        this.cachedPeakPassengerCount = 0;
     }
     
     /**
@@ -105,6 +114,8 @@ public class Event implements Standstill {
         this.earlyArrivalMin = earlyArrivalMin;
         this.earlyArrivalMax = earlyArrivalMax;
         this.stops = new ArrayList<>();
+        this.cachedPassengerDelta = computePassengerDelta();
+        this.cachedPeakPassengerCount = computePeakPassengerCount();
     }
 
     /**
@@ -140,6 +151,9 @@ public class Event implements Standstill {
         this.passengers = this.stops.stream()
             .flatMap(s -> s.getBoardingPassengers().stream())
             .collect(Collectors.toCollection(ArrayList::new));
+
+        this.cachedPassengerDelta = computePassengerDelta();
+        this.cachedPeakPassengerCount = computePeakPassengerCount();
     }
     
     @Override
@@ -178,7 +192,9 @@ public class Event implements Standstill {
      * the event, netDelta is 0 (they board and alight within the same event).
      * The peak concurrent load is tracked separately via getPeakPassengerCount().
      */
-    public int getPassengerDelta() {
+    public int getPassengerDelta() { return cachedPassengerDelta; }
+
+    private int computePassengerDelta() {
         if (stops != null && !stops.isEmpty()) {
             return stops.stream()
                 .mapToInt(Stop::getNetPassengerChange)
@@ -216,7 +232,9 @@ public class Event implements Standstill {
      * For multi-stop events, this is the peak load on the vehicle.
      * Used by the capacity constraint.
      */
-    public int getPeakPassengerCount() {
+    public int getPeakPassengerCount() { return cachedPeakPassengerCount; }
+
+    private int computePeakPassengerCount() {
         if (stops == null || stops.isEmpty()) {
             return getPassengerCount();
         }
@@ -274,6 +292,8 @@ public class Event implements Standstill {
             this.fromLocation = this.stops.get(0).getLocation();
             this.toLocation = this.stops.get(this.stops.size() - 1).getLocation();
         }
+        this.cachedPassengerDelta = computePassengerDelta();
+        this.cachedPeakPassengerCount = computePeakPassengerCount();
     }
 
     public Instant getMinStartTime() { return minStartTime; }
@@ -324,6 +344,9 @@ public class Event implements Standstill {
 
     public Integer getCumulativePassengerCount() { return cumulativePassengerCount; }
     public void setCumulativePassengerCount(Integer cumulativePassengerCount) { this.cumulativePassengerCount = cumulativePassengerCount; }
+
+    public Event getNextEvent() { return nextEvent; }
+    public void setNextEvent(Event nextEvent) { this.nextEvent = nextEvent; }
 
     @Override
     public boolean equals(Object o) {

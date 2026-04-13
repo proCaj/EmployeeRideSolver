@@ -9,71 +9,59 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.Duration;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 public record Location(
     @JsonProperty("name") String name,
     @JsonProperty("latitude") double latitude,
     @JsonProperty("longitude") double longitude
 ) {
-    
+
     public static final Location HUB = new Location("City-Fahrschule", 49.6295, 8.3640);
-    
+
+    public record LocationPair(Location from, Location to) {}
+    public record TravelData(long distanceMeters, Duration travelTime) {}
+
+    private static final ConcurrentHashMap<LocationPair, TravelData> routingCache = new ConcurrentHashMap<>();
+
     @JsonCreator
     public Location {
         Objects.requireNonNull(name, "Location name cannot be null");
     }
-    
-    public long getDistanceTo(Location other, GraphHopper graphHopper) {
-        if (this.equals(other)) {
-            return 0L;
-        }
-        
-        if (graphHopper == null) {
-            return getHaversineDistance(other);
-        }
-        
-        try {
-            GHRequest request = new GHRequest(this.latitude, this.longitude, other.latitude, other.longitude)
-                .setProfile("car");
-            GHResponse response = graphHopper.route(request);
-            
-            if (response.hasErrors()) {
-                return getHaversineDistance(other);
-            }
-            
-            ResponsePath path = response.getBest();
-            return Math.round(path.getDistance());
-        } catch (Exception e) {
-            return getHaversineDistance(other);
-        }
+
+    public TravelData getRouting(Location other, GraphHopper graphHopper) {
+        if (this.equals(other)) return new TravelData(0L, Duration.ZERO);
+        LocationPair key = new LocationPair(this, other);
+        return routingCache.computeIfAbsent(key, k -> computeRouting(other, graphHopper));
     }
-    
-    public Duration getTravelTime(Location other, GraphHopper graphHopper) {
-        if (this.equals(other)) {
-            return Duration.ZERO;
-        }
-        
+
+    private TravelData computeRouting(Location other, GraphHopper graphHopper) {
         if (graphHopper == null) {
             long distance = getHaversineDistance(other);
-            return Duration.ofSeconds(distance / 15);
+            return new TravelData(distance, Duration.ofSeconds(distance / 15));
         }
-        
         try {
             GHRequest request = new GHRequest(this.latitude, this.longitude, other.latitude, other.longitude)
                 .setProfile("car");
             GHResponse response = graphHopper.route(request);
-            
             if (response.hasErrors()) {
                 long distance = getHaversineDistance(other);
-                return Duration.ofSeconds(distance / 15);
+                return new TravelData(distance, Duration.ofSeconds(distance / 15));
             }
-            
             ResponsePath path = response.getBest();
-            return Duration.ofMillis(path.getTime());
+            return new TravelData(Math.round(path.getDistance()), Duration.ofMillis(path.getTime()));
         } catch (Exception e) {
             long distance = getHaversineDistance(other);
-            return Duration.ofSeconds(distance / 15);
+            return new TravelData(distance, Duration.ofSeconds(distance / 15));
         }
+    }
+
+    public long getDistanceTo(Location other, GraphHopper graphHopper) {
+        return getRouting(other, graphHopper).distanceMeters();
+    }
+
+    public Duration getTravelTime(Location other, GraphHopper graphHopper) {
+        return getRouting(other, graphHopper).travelTime();
     }
     
     public long getHaversineDistance(Location other) {
