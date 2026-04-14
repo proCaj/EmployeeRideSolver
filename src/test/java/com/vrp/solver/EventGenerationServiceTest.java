@@ -301,7 +301,7 @@ class EventGenerationServiceTest {
 
     private Customer createCustomer(String name, Location loc) {
         Customer c = new Customer();
-        c.id = name.hashCode();
+        c.id = (long) name.hashCode();
         c.name = name;
         c.latitude = loc.latitude();
         c.longitude = loc.longitude();
@@ -329,7 +329,7 @@ class EventGenerationServiceTest {
         s.assignedEmployees = new HashSet<>(employees);
         s.active = true;
         s.requiresReturnTrip = true;
-        s.id = (customer.name + "-" + day).hashCode();
+        s.id = (long) (customer.name + "-" + day).hashCode();
         return s;
     }
 }
