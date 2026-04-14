@@ -11,11 +11,18 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-public record Location(
-    @JsonProperty("name") String name,
-    @JsonProperty("latitude") double latitude,
-    @JsonProperty("longitude") double longitude
-) {
+/**
+ * Represents a geographic location.
+ * Equality is based on coordinates only (latitude, longitude), NOT the name.
+ * This ensures that locations like "City-Fahrschule" and "Pickup-1" at the same
+ * coordinates are treated as the same location for solver chaining, routing cache,
+ * and constraint calculations. The name is purely a display label.
+ */
+public class Location {
+
+    private final String name;
+    private final double latitude;
+    private final double longitude;
 
     public static final Location HUB = new Location("City-Fahrschule", 49.6295, 8.3640);
 
@@ -24,9 +31,18 @@ public record Location(
     private static final ConcurrentHashMap<Location, ConcurrentHashMap<Location, TravelData>> routingCache = new ConcurrentHashMap<>();
 
     @JsonCreator
-    public Location {
-        Objects.requireNonNull(name, "Location name cannot be null");
+    public Location(
+            @JsonProperty("name") String name,
+            @JsonProperty("latitude") double latitude,
+            @JsonProperty("longitude") double longitude) {
+        this.name = Objects.requireNonNull(name, "Location name cannot be null");
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
+
+    public String name() { return name; }
+    public double latitude() { return latitude; }
+    public double longitude() { return longitude; }
 
     public TravelData getRouting(Location other, GraphHopper graphHopper) {
         if (this.equals(other)) return new TravelData(0L, Duration.ZERO);
@@ -79,7 +95,32 @@ public record Location(
         
         return Math.round(EARTH_RADIUS_METERS * c);
     }
-    
+
+    /**
+     * Equality based on coordinates only. Two locations at the same
+     * lat/lon are considered equal regardless of their display name.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Location location = (Location) o;
+        // Use epsilon comparison for doubles to handle floating point rounding
+        return Math.abs(latitude - location.latitude) < 1e-9 &&
+               Math.abs(longitude - location.longitude) < 1e-9;
+    }
+
+    /**
+     * Hash code based on coordinates only (consistent with equals).
+     */
+    @Override
+    public int hashCode() {
+        // Round to 6 decimal places (~0.1m precision) for stable hashing
+        long latBits = Double.doubleToLongBits(Math.round(latitude * 1e6) / 1e6);
+        long lonBits = Double.doubleToLongBits(Math.round(longitude * 1e6) / 1e6);
+        return (int) (31 * latBits + lonBits);
+    }
+
     @Override
     public String toString() {
         return name + " (" + String.format("%.4f", latitude) + ", " + String.format("%.4f", longitude) + ")";
