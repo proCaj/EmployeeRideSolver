@@ -38,14 +38,14 @@ public class VrpConstraintProvider implements ConstraintProvider {
     // Hard Constraints
     // ============================================================
     
-    Constraint driverAssignmentRequired(ConstraintFactory constraintFactory) {
+    public Constraint driverAssignmentRequired(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Event.class)
             .filter(event -> event.getDriver() == null)
             .penalizeLong(HardMediumSoftLongScore.ONE_HARD, event -> 1000L)
             .asConstraint("Driver assignment required");
     }
     
-    Constraint vehicleCapacityConstraint(ConstraintFactory constraintFactory) {
+    public Constraint vehicleCapacityConstraint(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Event.class)
             .filter(event -> event.getDriver() != null)
             .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
@@ -78,7 +78,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .asConstraint("Vehicle capacity constraint");
     }
     
-    Constraint timeWindowConstraint(ConstraintFactory constraintFactory) {
+    public Constraint timeWindowConstraint(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Event.class)
             .filter(event -> event.getDriver() != null)
             .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
@@ -122,7 +122,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .asConstraint("Time window constraint");
     }
     
-    Constraint pairingConstraint(ConstraintFactory constraintFactory) {
+    public Constraint pairingConstraint(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Event.class)
             .filter(event -> event.getPairedEvent() != null && !event.isPickup())
             .filter(dropoff -> {
@@ -165,7 +165,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
      * 
      * Maximum: 10 hours per day.
      */
-    Constraint maxDailyWorkingHours(ConstraintFactory constraintFactory) {
+    public Constraint maxDailyWorkingHours(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Driver.class)
             .join(Event.class,
                   Joiners.equal(driver -> driver, Event::getDriver))
@@ -194,7 +194,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
      * Sums actual event durations across the entire week for each driver.
      * Maximum: 40 hours per week.
      */
-    Constraint maxWeeklyWorkingHours(ConstraintFactory constraintFactory) {
+    public Constraint maxWeeklyWorkingHours(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Driver.class)
             .join(Event.class,
                   Joiners.equal(driver -> driver, Event::getDriver))
@@ -227,7 +227,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
      * Consecutive driving only applies within the same shift date.
      * Events on different work days (per shiftDate) never count as consecutive.
      */
-    Constraint maxConsecutiveDrivingHours(ConstraintFactory constraintFactory) {
+    public Constraint maxConsecutiveDrivingHours(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Driver.class)
             .join(Event.class,
                   Joiners.equal(driver -> driver, Event::getDriver))
@@ -242,7 +242,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
     // Soft Constraints (Optimization Goals)
     // ============================================================
     
-    Constraint minimizeTotalDistance(ConstraintFactory constraintFactory) {
+    public Constraint minimizeTotalDistance(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Event.class)
             .filter(event -> event.getDriver() != null)
             .penalizeLong(HardMediumSoftLongScore.ONE_SOFT,
@@ -250,7 +250,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .asConstraint("Minimize total distance");
     }
     
-    Constraint minimizeWaitingTime(ConstraintFactory constraintFactory) {
+    public Constraint minimizeWaitingTime(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Event.class)
             .filter(event -> event.getDriver() != null && event.getWaitingTime() != null)
             .penalizeLong(HardMediumSoftLongScore.ONE_SOFT,
@@ -258,7 +258,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .asConstraint("Minimize waiting time");
     }
 
-    Constraint returnToHomeDistance(ConstraintFactory constraintFactory) {
+    public Constraint returnToHomeDistance(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Driver.class)
             .join(Event.class,
                   Joiners.equal(driver -> driver, Event::getDriver))
@@ -273,7 +273,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .asConstraint("Return to home distance");
     }
 
-    Constraint excessiveIdleTime(ConstraintFactory constraintFactory) {
+    public Constraint excessiveIdleTime(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Event.class)
             .filter(event -> event.getPreviousStandstill() instanceof Event)
             .filter(event -> {
