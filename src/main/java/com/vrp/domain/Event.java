@@ -342,9 +342,12 @@ public class Event implements Standstill {
         this.arrivalTime = arrivalTime;
         if (arrivalTime == null || duration == null) {
             this.departureTime = null;
-        } else {
+        } else if (minStartTime != null) {
             Instant effectiveStart = arrivalTime.isBefore(minStartTime) ? minStartTime : arrivalTime;
             this.departureTime = effectiveStart.plus(duration);
+        } else {
+            // No minStartTime constraint — depart immediately after arrival + duration
+            this.departureTime = arrivalTime.plus(duration);
         }
     }
 
