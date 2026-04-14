@@ -2,7 +2,6 @@ package com.vrp.listener;
 
 import ai.timefold.solver.core.api.domain.variable.VariableListener;
 import ai.timefold.solver.core.api.score.director.ScoreDirector;
-import com.vrp.domain.Driver;
 import com.vrp.domain.Event;
 import com.vrp.domain.Standstill;
 import com.vrp.domain.VrpSolution;
@@ -52,25 +51,17 @@ public class PassengerCountUpdatingVariableListener
 
         int newCount = previousCount + event.getPassengerDelta();
 
-        if (!Integer.valueOf(newCount).equals(event.getCumulativePassengerCount())) {
+        Integer currentCount = event.getCumulativePassengerCount();
+        if (currentCount == null || currentCount.intValue() != newCount) {
             scoreDirector.beforeVariableChanged(event, "cumulativePassengerCount");
             event.setCumulativePassengerCount(newCount);
             scoreDirector.afterVariableChanged(event, "cumulativePassengerCount");
         }
 
         // Propagate to next event in chain
-        Event nextEvent = findNextEvent(scoreDirector.getWorkingSolution(), event);
+        Event nextEvent = event.getNextEvent();
         if (nextEvent != null) {
             updatePassengerCount(scoreDirector, nextEvent);
         }
-    }
-
-    private Event findNextEvent(VrpSolution solution, Event current) {
-        for (Event event : solution.getEvents()) {
-            if (event.getPreviousStandstill() == current) {
-                return event;
-            }
-        }
-        return null;
     }
 }

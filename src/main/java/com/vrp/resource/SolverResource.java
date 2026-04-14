@@ -144,6 +144,80 @@ public class SolverResource {
     }
     
     @GET
+    @Path("/debug")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response debugInfo() {
+        Map<String, Object> data = new HashMap<>();
+        
+        UUID currentJobId = solverService.getCurrentJobId();
+        data.put("currentJobId", currentJobId != null ? currentJobId.toString() : null);
+        
+        long customerCount = Customer.count();
+        long employeeCount = Employee.count();
+        long shiftCount = ShiftDemand.count();
+        long activeShiftCount = ShiftDemand.find("active = true").count();
+        
+        data.put("customerCount", customerCount);
+        data.put("employeeCount", employeeCount);
+        data.put("shiftCount", shiftCount);
+        data.put("activeShiftCount", activeShiftCount);
+        
+        List<ShiftDemand> activeShifts = ShiftDemand.find("active = true").list();
+        List<Map<String, Object>> shiftInfo = new ArrayList<>();
+        for (ShiftDemand s : activeShifts) {
+            Map<String, Object> info = new HashMap<>();
+            info.put("id", s.id);
+            info.put("customer", s.customer != null ? s.customer.name : "NULL");
+            info.put("dayOfWeek", s.dayOfWeek != null ? s.dayOfWeek.toString() : "NULL");
+            info.put("startTime", s.startTime != null ? s.startTime.toString() : "NULL");
+            info.put("endTime", s.endTime != null ? s.endTime.toString() : "NULL");
+            info.put("assignedCount", s.assignedEmployees != null ? s.assignedEmployees.size() : -1);
+            info.put("active", s.active);
+            info.put("requiresReturnTrip", s.requiresReturnTrip);
+            shiftInfo.add(info);
+        }
+        data.put("shifts", shiftInfo);
+        
+        if (currentJobId != null) {
+            VrpSolution bestSolution = solverService.getBestSolution(currentJobId);
+            if (bestSolution != null) {
+                data.put("bestSolutionScore", bestSolution.getScore() != null ? bestSolution.getScore().toString() : "NULL");
+                data.put("bestSolutionEventCount", bestSolution.getEvents() != null ? bestSolution.getEvents().size() : "NULL");
+                data.put("bestSolutionDriverCount", bestSolution.getDrivers() != null ? bestSolution.getDrivers().size() : "NULL");
+                
+                if (bestSolution.getEvents() != null) {
+                    List<Map<String, Object>> eventDetails = new ArrayList<>();
+                    for (Event e : bestSolution.getEvents()) {
+                        Map<String, Object> ed = new HashMap<>();
+                        ed.put("id", e.getId());
+                        ed.put("pickup", e.isPickup());
+                        ed.put("driver", e.getDriver() != null ? e.getDriver().getId() : "NULL");
+                        ed.put("arrivalTime", e.getArrivalTime() != null ? e.getArrivalTime().toString() : "NULL");
+                        ed.put("departureTime", e.getDepartureTime() != null ? e.getDepartureTime().toString() : "NULL");
+                        ed.put("shiftDate", e.getShiftDate() != null ? e.getShiftDate().toString() : "NULL");
+                        ed.put("passengers", e.getPassengerCount());
+                        ed.put("delta", e.getPassengerDelta());
+                        ed.put("peak", e.getPeakPassengerCount());
+                        ed.put("cumPassengers", e.getCumulativePassengerCount());
+                        ed.put("duration", e.getDuration() != null ? e.getDuration().toString() : "NULL");
+                        ed.put("minStartTime", e.getMinStartTime() != null ? e.getMinStartTime().toString() : "NULL");
+                        ed.put("maxEndTime", e.getMaxEndTime() != null ? e.getMaxEndTime().toString() : "NULL");
+                        eventDetails.add(ed);
+                    }
+                    data.put("events", eventDetails);
+                }
+            } else {
+                data.put("bestSolutionScore", "NO_SOLUTION");
+            }
+            
+            String status = solverService.getStatus(currentJobId);
+            data.put("solverStatus", status);
+        }
+        
+        return Response.ok(data).build();
+    }
+
+    @GET
     @Path("/results")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance getResults() {

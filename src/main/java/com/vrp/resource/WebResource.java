@@ -227,14 +227,8 @@ public class WebResource {
         List<Employee> siteEmployees = Employee.list("employeeType = ?1 and active = true", 
             com.vrp.entity.EmployeeType.SITE_EMPLOYEE);
         
-        Map<DayOfWeek, List<ShiftDemand>> shiftsByDay = new LinkedHashMap<>();
-        shiftsByDay.put(DayOfWeek.MONDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.MONDAY).collect(Collectors.toList()));
-        shiftsByDay.put(DayOfWeek.TUESDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.TUESDAY).collect(Collectors.toList()));
-        shiftsByDay.put(DayOfWeek.WEDNESDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.WEDNESDAY).collect(Collectors.toList()));
-        shiftsByDay.put(DayOfWeek.THURSDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.THURSDAY).collect(Collectors.toList()));
-        shiftsByDay.put(DayOfWeek.FRIDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.FRIDAY).collect(Collectors.toList()));
-        shiftsByDay.put(DayOfWeek.SATURDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.SATURDAY).collect(Collectors.toList()));
-        shiftsByDay.put(DayOfWeek.SUNDAY, shiftList.stream().filter(s -> s.dayOfWeek == DayOfWeek.SUNDAY).collect(Collectors.toList()));
+        Map<DayOfWeek, List<ShiftDemand>> shiftsByDay = shiftList.stream()
+            .collect(Collectors.groupingBy(s -> s.dayOfWeek, LinkedHashMap::new, Collectors.toList()));
         
         shiftsByDay.entrySet().removeIf(entry -> entry.getValue().isEmpty());
         

@@ -2,6 +2,7 @@ package com.vrp.domain;
 
 import ai.timefold.solver.core.api.domain.entity.PlanningEntity;
 import ai.timefold.solver.core.api.domain.variable.*;
+import ai.timefold.solver.core.api.domain.variable.InverseRelationShadowVariable;
 import com.vrp.entity.Employee;
 import com.vrp.entity.ShiftDemand;
 import com.vrp.listener.ArrivalTimeUpdatingVariableListener;
@@ -79,9 +80,19 @@ public class Event implements Standstill {
                      sourceVariableName = "previousStandstill")
     private Integer cumulativePassengerCount;
 
+    @InverseRelationShadowVariable(sourceVariableName = "previousStandstill")
+    private Event nextEvent;
+
+    private int cachedPassengerDelta;
+    private int cachedPeakPassengerCount;
+    private Instant departureTime;
+
     public Event() {
         this.passengers = new ArrayList<>();
         this.stops = new ArrayList<>();
+        this.cachedPassengerDelta = 0;
+        this.cachedPeakPassengerCount = 0;
+        this.departureTime = null;
     }
     
     /**
@@ -105,6 +116,8 @@ public class Event implements Standstill {
         this.earlyArrivalMin = earlyArrivalMin;
         this.earlyArrivalMax = earlyArrivalMax;
         this.stops = new ArrayList<>();
+        this.cachedPassengerDelta = computePassengerDelta();
+        this.cachedPeakPassengerCount = computePeakPassengerCount();
     }
 
     /**
@@ -140,6 +153,9 @@ public class Event implements Standstill {
         this.passengers = this.stops.stream()
             .flatMap(s -> s.getBoardingPassengers().stream())
             .collect(Collectors.toCollection(ArrayList::new));
+
+        this.cachedPassengerDelta = computePassengerDelta();
+        this.cachedPeakPassengerCount = computePeakPassengerCount();
     }
     
     @Override
@@ -154,11 +170,7 @@ public class Event implements Standstill {
     }
     
     public Instant getDepartureTime() {
-        if (arrivalTime == null) {
-            return null;
-        }
-        Instant effectiveStart = arrivalTime.isBefore(minStartTime) ? minStartTime : arrivalTime;
-        return effectiveStart.plus(duration);
+        return departureTime;
     }
     
     public Duration getWaitingTime() {
@@ -178,7 +190,9 @@ public class Event implements Standstill {
      * the event, netDelta is 0 (they board and alight within the same event).
      * The peak concurrent load is tracked separately via getPeakPassengerCount().
      */
-    public int getPassengerDelta() {
+    public int getPassengerDelta() { return cachedPassengerDelta; }
+
+    private int computePassengerDelta() {
         if (stops != null && !stops.isEmpty()) {
             return stops.stream()
                 .mapToInt(Stop::getNetPassengerChange)
@@ -216,7 +230,9 @@ public class Event implements Standstill {
      * For multi-stop events, this is the peak load on the vehicle.
      * Used by the capacity constraint.
      */
-    public int getPeakPassengerCount() {
+    public int getPeakPassengerCount() { return cachedPeakPassengerCount; }
+
+    private int computePeakPassengerCount() {
         if (stops == null || stops.isEmpty()) {
             return getPassengerCount();
         }
@@ -274,6 +290,8 @@ public class Event implements Standstill {
             this.fromLocation = this.stops.get(0).getLocation();
             this.toLocation = this.stops.get(this.stops.size() - 1).getLocation();
         }
+        this.cachedPassengerDelta = computePassengerDelta();
+        this.cachedPeakPassengerCount = computePeakPassengerCount();
     }
 
     public Instant getMinStartTime() { return minStartTime; }
@@ -320,10 +338,24 @@ public class Event implements Standstill {
     public void setDriver(Driver driver) { this.driver = driver; }
 
     public Instant getArrivalTime() { return arrivalTime; }
-    public void setArrivalTime(Instant arrivalTime) { this.arrivalTime = arrivalTime; }
+    public void setArrivalTime(Instant arrivalTime) {
+        this.arrivalTime = arrivalTime;
+        if (arrivalTime == null || duration == null) {
+            this.departureTime = null;
+        } else if (minStartTime != null) {
+            Instant effectiveStart = arrivalTime.isBefore(minStartTime) ? minStartTime : arrivalTime;
+            this.departureTime = effectiveStart.plus(duration);
+        } else {
+            // No minStartTime constraint — depart immediately after arrival + duration
+            this.departureTime = arrivalTime.plus(duration);
+        }
+    }
 
     public Integer getCumulativePassengerCount() { return cumulativePassengerCount; }
     public void setCumulativePassengerCount(Integer cumulativePassengerCount) { this.cumulativePassengerCount = cumulativePassengerCount; }
+
+    public Event getNextEvent() { return nextEvent; }
+    public void setNextEvent(Event nextEvent) { this.nextEvent = nextEvent; }
 
     @Override
     public boolean equals(Object o) {
