@@ -1,0 +1,69 @@
+@startuml KW51_VehicleLoad
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+
+title KW 51 - Vehicle Passenger Load Over Time (Mon-Thu)
+
+participant "Thomas\n(Driver 1)" as T
+participant "Sarah\n(Driver 2)" as S
+
+== Early Morning (04:00 - 07:15) ==
+
+note over T : **04:00** Load: 0 #E0E0E0
+note over S : **04:00** Load: 0 #E0E0E0
+
+T -> T : **04:12** Load: 0 (driving) #FFA726
+T -> T : **04:20** Load: **1** #A5D6A7
+T -> T : **04:30** Load: **6 MAX** #F44336
+note over T : <b>6/6 AT CAPACITY</b> #F44336
+T -> T : **05:09** Load: **1** #A5D6A7
+T -> T : **05:37** Load: 0 #E0E0E0
+T -> T : **06:11** Load: **2** #A5D6A7
+T -> T : **06:45** Load: 0 #E0E0E0
+T -> T : **07:09** Load: **2** #A5D6A7
+T -> T : **07:13** Load: 0 #E0E0E0
+note over T : **07:15** Load: 0 (idle) #E0E0E0
+
+== Afternoon (14:00 - 17:08) ==
+
+T -> T : **14:00** Load: 0 (driving) #FFA726
+S -> S : **14:00** Load: **1** #A5D6A7
+S -> S : **14:29** Load: 0 #E0E0E0
+
+T -> T : **14:29** Load: **5** #81C784
+T -> T : **15:00** Load: 0 #E0E0E0
+T -> T : **15:34** Load: **1** #A5D6A7
+T -> T : **16:08** Load: 0 #E0E0E0
+T -> T : **16:38** Load: **2** #A5D6A7
+T -> T : **17:08** Load: 0 (done) #E0E0E0
+
+== Evening (21:30 - 22:52) ==
+
+note over T : Done for the day
+
+S -> S : **21:30** Load: **2** #A5D6A7
+S -> S : **21:34** Load: 0 #E0E0E0
+S -> S : **21:36** Load: **1** #A5D6A7
+S -> S : **21:40** Load: 0 #E0E0E0
+S -> S : **22:16** Load: **1** #A5D6A7
+S -> S : **22:52** Load: 0 (done) #E0E0E0
+
+== Legend ==
+
+legend right
+  |= Color |= Load Level |
+  |<#F44336>  | 6/6 AT CAPACITY |
+  |<#81C784>  | 5/6 Heavy |
+  |<#A5D6A7>  | 1-2/6 Light |
+  |<#E0E0E0>  | 0/6 Empty |
+endlegend
+
+note over T, S
+  Peak: Thomas at 6/6 (04:30-05:09) during FR-3 merge
+  Thomas avg: 2.8 pax/segment (38% utilization)
+  Sarah avg: 1.3 pax/segment (21% utilization)
+  Fleet avg: 2.3 pax/segment (38% utilization)
+end note
+
+@enduml

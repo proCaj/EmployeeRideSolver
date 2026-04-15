@@ -1,0 +1,77 @@
+@startuml KW51_Weekend_Gantt
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+
+title KW 51 Weekend - Location Over Time\nSat 20.12 + Sun 21.12.2025
+
+== Saturday Early ==
+
+participant "Early\nDriver" as E
+participant "Late\nDriver" as L
+
+E -> E : **05:10** Drive HUB to BENEO\n34 min #FFA726
+E -> E : **05:44** Pickup BENEO (1 pax)\n2 min #66BB6A
+E -> E : **05:46** Drive BENEO to HUB\n34 min #FFA726
+E -> E : **06:20** Drop HUB (1 pax)\n1 min #42A5F5
+E -> E : **06:21** Drive HUB to BARBE\n2 min #FFA726
+E -> E : **06:23** Pickup BARBE (2 pax)\n4 min #66BB6A
+E -> E : **06:27** Drive BARBE to HUB\n2 min #FFA726
+E -> E : **06:29** Drop HUB (2 pax)\n2 min #42A5F5
+
+note over E : Milestone: Beneo night end 05:35 #F44336
+
+== Saturday Late ==
+
+note over L : Off duty (05:50 - 21:00) #E0E0E0
+
+L -> L : **21:00** Pickup HUB (1 pax: Beneo)\n2 min #66BB6A
+L -> L : **21:02** Drive HUB to BENEO\n34 min #FFA726
+L -> L : **21:36** Drop BENEO (1 pax)\n1 min #42A5F5
+L -> L : **21:37** Drive BENEO to HUB\n34 min #FFA726
+
+note over L : Milestone: Beneo night start 21:35 #F44336
+
+newpage
+
+title KW 51 Weekend - Sunday 21.12.2025
+
+== Sunday Early ==
+
+E -> E : **05:10** Drive HUB to BENEO\n34 min #FFA726
+E -> E : **05:44** Pickup BENEO (1 pax)\n2 min #66BB6A
+E -> E : **05:46** Drive BENEO to HUB\n34 min #FFA726
+E -> E : **06:20** Drop HUB (1 pax)\n1 min #42A5F5
+
+note over E : Milestone: Beneo night end 05:35 #F44336
+
+== Sunday Late ==
+
+note over L : Off duty (06:20 - 17:00) #E0E0E0
+
+L -> L : **17:00** Pickup HUB (1 pax: Beneo)\n2 min #66BB6A
+L -> L : **17:02** Drive HUB to BENEO\n34 min #FFA726
+L -> L : **17:36** Drop BENEO (1 pax)\n1 min #42A5F5
+L -> L : **17:37** Drive BENEO to HUB\n34 min #FFA726
+
+note over L : Milestone: Beneo Sunday start 17:35 #F44336
+
+== Legend ==
+
+legend right
+  |= Color |= Meaning |
+  |<#66BB6A>  | Pickup |
+  |<#FFA726>  | Driving |
+  |<#42A5F5>  | Dropoff |
+  |<#E0E0E0>  | Idle |
+  |<#F44336>  | Milestone |
+endlegend
+
+note over E, L
+  Weekend: Only Beneo + Barbe need service.
+  Early driver: Beneo return + Barbe return (Sat only).
+  Late driver: Beneo night drop (Sat) / Sunday drop (Sun).
+  Weekend distance: ~141 km total (both drivers, both days).
+end note
+
+@enduml

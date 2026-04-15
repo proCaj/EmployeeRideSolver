@@ -1,0 +1,91 @@
+@startuml KW51_Timing_VehicleLocation
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+
+title KW 51 - Vehicle Location State Over Time (Mon-Thu)
+
+participant "Thomas\n(Driver 1)" as T
+participant "Sarah\n(Driver 2)" as S
+
+== Early Morning ==
+
+note over T : **04:00** HUB (idle) #E0E0E0
+note over S : **04:00** HUB (off duty) #E0E0E0
+
+T -> T : **04:12** >> TANK #FFA726
+T -> T : **04:20** TANK +1 pax #66BB6A
+T -> T : **04:22** >> HUB #FFA726
+T -> T : **04:30** HUB +5 pax #66BB6A
+note over T : <b>6/6 CAPACITY</b> #FF7043
+T -> T : **04:40** >> CHEP #FF7043
+T -> T : **05:09** CHEP -5 pax #42A5F5
+T -> T : **05:11** >> SANNER #FFA726
+T -> T : **05:37** SANNER -1 pax #42A5F5
+T -> T : **05:39** >> HUB #FFA726
+T -> T : **06:11** HUB +2 pax #66BB6A
+T -> T : **06:17** >> ORION #FFA726
+T -> T : **06:45** ORION -2 pax #42A5F5
+T -> T : **06:47** >> BARBE #FFA726
+T -> T : **07:09** BARBE +2 pax #66BB6A
+T -> T : **07:11** >> HUB #FFA726
+T -> T : **07:13** HUB -2 pax #42A5F5
+note over T : **07:15** HUB (idle) #E0E0E0
+
+== Midday ==
+
+note over T : **07:15 - 14:00** HUB idle #E0E0E0
+note over S : **04:00 - 13:00** Off duty #E0E0E0
+
+== Afternoon ==
+
+T -> T : **14:00** >> CHEP #FFA726
+S -> S : **13:00** HUB +1 pax #66BB6A
+S -> S : **13:02** >> BARBE #FFA726
+S -> S : **13:04** BARBE -1 pax #42A5F5
+S -> S : **13:05** >> HUB #FFA726
+S -> S : **13:07** HUB -1 pax #42A5F5
+note over S : **13:07** HUB idle #E0E0E0
+
+T -> T : **14:29** CHEP +5 pax #66BB6A
+T -> T : **14:31** >> HUB #FFA726
+S -> S : **14:29** >> HUB #FFA726
+T -> T : **15:00** HUB -5 pax #42A5F5
+S -> S : **15:00** HUB idle #E0E0E0
+
+T -> T : **15:02** >> SANNER #FFA726
+T -> T : **15:34** SANNER +1 pax #66BB6A
+T -> T : **15:36** >> HUB #FFA726
+T -> T : **16:08** HUB -1 pax #42A5F5
+T -> T : **16:10** >> ORION #FFA726
+T -> T : **16:38** ORION +2 pax #66BB6A
+T -> T : **16:40** >> HUB #FFA726
+T -> T : **17:08** HUB done #E0E0E0
+
+== Evening ==
+
+note over T : Done for the day
+
+S -> S : **21:30** HUB +2 pax #66BB6A
+S -> S : **21:32** >> BARBE #FFA726
+S -> S : **21:34** BARBE -2 pax #42A5F5
+S -> S : **21:36** BARBE +1 pax #66BB6A
+S -> S : **21:38** >> HUB #FFA726
+S -> S : **21:40** HUB -1 pax #42A5F5
+S -> S : **21:42** >> BENEO #FFA726
+S -> S : **22:16** BENEO +1 pax #66BB6A
+S -> S : **22:18** >> HUB #FFA726
+S -> S : **22:52** HUB done #E0E0E0
+
+== Legend ==
+
+legend right
+  |= Color |= State |
+  |<#66BB6A>  | Pickup (+N pax) |
+  |<#FFA726>  | Driving (>>) |
+  |<#FF7043>  | Driving at CAPACITY |
+  |<#42A5F5>  | Dropoff (-N pax) |
+  |<#E0E0E0>  | Idle / Done |
+endlegend
+
+@enduml

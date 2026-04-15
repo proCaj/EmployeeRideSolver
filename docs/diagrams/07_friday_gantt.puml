@@ -1,0 +1,63 @@
+@startuml KW51_Friday_Gantt
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+
+title KW 51 Friday - Compressed Afternoon Schedule\nChep 13:00 + Orion 12:45 overlap = capacity risk
+
+participant "Thomas\n(Driver 1)" as T
+participant "Sarah\n(Driver 2)" as S
+
+== Morning (same as Mon-Thu) ==
+
+note over T : **04:12 - 07:15** Same as Mon-Thu\n3h 3m active driving #B0BEC5
+
+== Break ==
+
+note over T : **07:15 - 12:40** Break\n5h 25m idle #E0E0E0
+
+== Afternoon - CAPACITY RISK ==
+
+T -> T : **12:40** Drive HUB to CHEP\n29 min #FFA726
+T -> T : **13:09** Pickup CHEP (5 pax)\n10 min #66BB6A
+T -> T : **13:19** Drive CHEP to ORION\n1 min #FFA726
+T -> T : **13:20** Pickup ORION (2 pax)\n4 min #66BB6A
+note over T : <b>7 PASSENGERS - OVER CAPACITY!</b> #F44336
+T -> T : **13:24** Drive ORION to HUB **(7 pax!)**\n28 min #F44336
+T -> T : **13:52** Drop HUB (7 pax)\n7 min #42A5F5
+
+T -> T : **14:24** Drive HUB to SANNER\n32 min #FFA726
+T -> T : **14:56** Pickup SANNER (1 pax)\n2 min #66BB6A
+T -> T : **14:58** Drive SANNER to HUB\n32 min #FFA726
+T -> T : **15:30** Drop HUB (1 pax)\n1 min #42A5F5
+
+== Milestones ==
+
+note over T : Chep end: 13:00 #F44336
+note over T : Orion end: 12:45 #F44336
+
+== Sarah (same as Mon-Thu) ==
+
+note over S : **13:00+** Same as Mon-Thu\nBarbe afternoon #B0BEC5
+
+== Legend ==
+
+legend right
+  |= Color |= Meaning |
+  |<#66BB6A>  | Pickup |
+  |<#FFA726>  | Driving |
+  |<#F44336>  | OVER CAPACITY! |
+  |<#42A5F5>  | Dropoff |
+  |<#E0E0E0>  | Idle / Break |
+  |<#B0BEC5>  | Same as Mon-Thu |
+endlegend
+
+note over T, S
+  CRITICAL: Chep (5 pax) + Orion (2 pax) overlap on Friday!
+  Combined = 7 passengers, exceeding 6-pax capacity.
+  Options: A) Two separate trips, B) Michael helps,
+  C) One Chep employee takes the bus.
+  Friday Thomas: ~6.2h total (3.0h + 3.2h compressed).
+end note
+
+@enduml
