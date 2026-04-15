@@ -1,0 +1,96 @@
+@startuml KW51_Gantt_LocationOverTime
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Helvetica
+skinparam noteFontName Helvetica
+skinparam sequenceMessageAlign center
+
+title KW 51 Manual Plan - Driver Location Over Time (Mon-Thu)\nScenario: FR-3 Multi-Stop Merging (TANK+HUB->CHEP->SANNER)
+
+participant "Thomas\n(Driver 1)" as T
+participant "Sarah\n(Driver 2)" as S
+
+== Early Morning (04:00 - 07:15) ==
+
+T -> T : **04:12** Drive to Tankstelle\n8 min #FFA726
+T -> T : **04:20** Pickup TANK (1 pax)\n2 min #66BB6A
+T -> T : **04:22** Drive TANK to HUB\n8 min #FFA726
+T -> T : **04:30** Pickup HUB (5 pax: Chep+Sanner)\n10 min #66BB6A
+T -> T : **04:40** Drive HUB to CHEP **(6 pax)**\n29 min #FF7043
+note over T : <b>AT CAPACITY 6/6</b>
+T -> T : **05:09** Drop CHEP (5 pax alight)\n5 min #42A5F5
+T -> T : **05:11** Drive CHEP to SANNER\n26 min #FFA726
+T -> T : **05:37** Drop SANNER (1 pax)\n1 min #42A5F5
+T -> T : **05:39** Drive SANNER to HUB\n32 min #FFA726
+T -> T : **06:11** Pickup HUB (2 pax: Orion)\n4 min #66BB6A
+T -> T : **06:17** Drive HUB to ORION\n28 min #FFA726
+T -> T : **06:45** Drop ORION (2 pax)\n2 min #42A5F5
+T -> T : **06:47** Drive ORION to BARBE\n22 min #FFA726
+T -> T : **07:09** Pickup BARBE (2 pax: return)\n4 min #66BB6A
+T -> T : **07:11** Drive BARBE to HUB\n2 min #FFA726
+T -> T : **07:13** Drop HUB (2 pax)\n2 min #42A5F5
+
+note over S : Off duty (04:00 - 13:00)
+
+== Midday Break ==
+
+note over T : **07:15 - 14:00** Break at HUB\n6h 25m idle #E0E0E0
+
+== Afternoon (14:00 - 17:08) ==
+
+T -> T : **14:00** Drive HUB to CHEP\n29 min #FFA726
+S -> S : **13:00** Pickup HUB (1 pax: Barbe)\n2 min #66BB6A
+S -> S : **13:02** Drive HUB to BARBE\n2 min #FFA726
+S -> S : **13:04** Drop BARBE (1 pax)\n1 min #42A5F5
+S -> S : **13:05** Drive BARBE to HUB\n2 min #FFA726
+note over S : Idle (13:07 - 21:30)
+
+T -> T : **14:29** Pickup CHEP (5 pax return)\n10 min #66BB6A
+T -> T : **14:31** Drive CHEP to HUB\n29 min #FFA726
+T -> T : **15:00** Drop HUB (5 pax)\n5 min #42A5F5
+
+T -> T : **15:02** Drive HUB to SANNER\n32 min #FFA726
+T -> T : **15:34** Pickup SANNER (1 pax)\n2 min #66BB6A
+T -> T : **15:36** Drive SANNER to HUB\n32 min #FFA726
+T -> T : **16:08** Drop HUB (1 pax)\n1 min #42A5F5
+
+T -> T : **16:10** Drive HUB to ORION\n28 min #FFA726
+T -> T : **16:38** Pickup ORION (2 pax)\n4 min #66BB6A
+T -> T : **16:40** Drive ORION to HUB\n28 min #FFA726
+T -> T : **17:08** Drop HUB (2 pax)\n2 min #42A5F5
+
+== Evening (21:30 - 22:52) ==
+
+note over T : Done for the day
+
+S -> S : **21:30** Pickup HUB (2 pax: Barbe night)\n4 min #66BB6A
+S -> S : **21:32** Drive HUB to BARBE\n2 min #FFA726
+S -> S : **21:34** Drop BARBE (2 pax)\n2 min #42A5F5
+S -> S : **21:36** Pickup BARBE (1 pax return)\n2 min #66BB6A
+S -> S : **21:38** Drive BARBE to HUB\n2 min #FFA726
+S -> S : **21:40** Drop HUB (1 pax)\n1 min #42A5F5
+S -> S : **21:42** Drive HUB to BENEO\n34 min #FFA726
+S -> S : **22:16** Pickup BENEO (1 pax: Temari)\n2 min #66BB6A
+S -> S : **22:18** Drive BENEO to HUB\n34 min #FFA726
+S -> S : **22:52** Drop HUB (1 pax)\n1 min #42A5F5
+
+== Legend ==
+
+legend right
+  |= Color |= Meaning |
+  |<#66BB6A>  | Pickup (boarding) |
+  |<#FFA726>  | Driving / Transit |
+  |<#FF7043>  | Driving at CAPACITY |
+  |<#42A5F5>  | Dropoff (alighting) |
+  |<#E0E0E0>  | Idle / Break |
+endlegend
+
+note over T, S
+  AMBIGUITY NOTE (Scenario A - FR-3 Merging):
+  Driver 1 picks up at TANK (04:20) then returns via HUB
+  to pick up 5 more passengers (04:30), creating a
+  6-passenger multi-stop route: TANK->HUB->CHEP->SANNER.
+  This is at vehicle capacity (6 pax).
+  Alternative: Two separate drivers for early morning.
+end note
+
+@enduml
