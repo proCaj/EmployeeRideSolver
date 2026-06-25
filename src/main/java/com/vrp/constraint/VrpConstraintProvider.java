@@ -39,118 +39,115 @@ public class VrpConstraintProvider implements ConstraintProvider {
     // ============================================================
     
     public Constraint driverAssignmentRequired(ConstraintFactory constraintFactory) {
-        return constraintFactory.forEach(Event.class)
+        return constraintFactory.forEachIncludingUnassigned(Event.class)
             .filter(event -> event.getDriver() == null)
             .penalizeLong(HardMediumSoftLongScore.ONE_HARD, event -> 1000L)
             .asConstraint("Driver assignment required");
     }
     
     public Constraint vehicleCapacityConstraint(ConstraintFactory constraintFactory) {
-        return constraintFactory.forEach(Event.class)
+        return constraintFactory.forEachIncludingUnassigned(Event.class)
             .filter(event -> event.getDriver() != null)
-            .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
-                event -> {
-                    int maxCapacity = event.getDriver().getMaxCapacity();
-
-                    // Check cumulative passenger count across the driver's chain
-                    Integer cumCount = event.getCumulativePassengerCount();
-                    long chainPenalty = 0;
-                    if (cumCount != null && cumCount > maxCapacity) {
-                        chainPenalty = (long) (cumCount - maxCapacity) * 1000L;
-                    }
-
-                    // FR-3: Check peak concurrent load within this event's multi-stop route.
-                    // The vehicle must have enough spare capacity at the point of peak load.
-                    // Peak load = previousEvent's cumulative + this event's peak concurrent.
-                    int previousCumulative = 0;
-                    if (event.getPreviousStandstill() instanceof Event) {
-                        Integer prevCum = ((Event) event.getPreviousStandstill()).getCumulativePassengerCount();
-                        previousCumulative = prevCum != null ? prevCum : 0;
-                    }
-                    int peakDuringEvent = previousCumulative + event.getPeakPassengerCount();
-                    long peakPenalty = 0;
-                    if (peakDuringEvent > maxCapacity) {
-                        peakPenalty = (long) (peakDuringEvent - maxCapacity) * 1000L;
-                    }
-
-                    return Math.max(chainPenalty, peakPenalty);
-                })
+            .filter(event -> calculateVehicleCapacityPenalty(event) > 0)
+            .penalizeLong(HardMediumSoftLongScore.ONE_HARD, VrpConstraintProvider::calculateVehicleCapacityPenalty)
             .asConstraint("Vehicle capacity constraint");
     }
     
     public Constraint timeWindowConstraint(ConstraintFactory constraintFactory) {
-        return constraintFactory.forEach(Event.class)
+        return constraintFactory.forEachIncludingUnassigned(Event.class)
             .filter(event -> event.getDriver() != null)
-            .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
-                event -> {
-                    long totalPenalty = 0;
-
-                    // Check event-level time window (legacy single-stop)
-                    if (event.getArrivalTime() != null) {
-                        Instant effectiveCompletion = event.getArrivalTime().plus(
-                            event.getDuration() != null ? event.getDuration() : Duration.ZERO
-                        );
-                        if (effectiveCompletion.isAfter(event.getMaxEndTime())) {
-                            totalPenalty += Duration.between(event.getMaxEndTime(), effectiveCompletion).getSeconds();
-                        }
-                    }
-
-                    // FR-3: Check per-stop time windows for multi-stop events
-                    if (event.getStops() != null && event.getStops().size() > 1 && event.getArrivalTime() != null) {
-                        Instant currentTime = event.getArrivalTime().isBefore(event.getMinStartTime())
-                            ? event.getMinStartTime() : event.getArrivalTime();
-                        for (Stop stop : event.getStops()) {
-                            // Add travel time to this stop
-                            if (stop.getTravelTimeFromPrevious() != null) {
-                                currentTime = currentTime.plus(stop.getTravelTimeFromPrevious());
-                            }
-                            // Add boarding/alighting time
-                            if (stop.getBoardingDuration() != null) {
-                                currentTime = currentTime.plus(stop.getBoardingDuration());
-                            }
-                            currentTime = currentTime.plusSeconds(stop.getAlightingCount() * 60L);
-
-                            // Check deadline
-                            if (stop.getMaxEndTime() != null && currentTime.isAfter(stop.getMaxEndTime())) {
-                                totalPenalty += Duration.between(stop.getMaxEndTime(), currentTime).getSeconds();
-                            }
-                        }
-                    }
-
-                    return totalPenalty;
-                })
+            .filter(event -> calculateTimeWindowPenalty(event) > 0)
+            .penalizeLong(HardMediumSoftLongScore.ONE_HARD, VrpConstraintProvider::calculateTimeWindowPenalty)
             .asConstraint("Time window constraint");
     }
     
     public Constraint pairingConstraint(ConstraintFactory constraintFactory) {
-        return constraintFactory.forEach(Event.class)
+        return constraintFactory.forEachIncludingUnassigned(Event.class)
             .filter(event -> event.getPairedEvent() != null && !event.isPickup())
-            .filter(dropoff -> {
-                Event pickup = dropoff.getPairedEvent();
-                if (dropoff.getDriver() == null || pickup.getDriver() == null) {
-                    return false;
-                }
-                if (!dropoff.getDriver().equals(pickup.getDriver())) {
-                    return true;
-                }
-                if (pickup.getArrivalTime() == null || dropoff.getArrivalTime() == null) {
-                    return false;
-                }
-                return dropoff.getArrivalTime().isBefore(pickup.getDepartureTime());
-            })
-            .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
-                dropoff -> {
-                    Event pickup = dropoff.getPairedEvent();
-                    if (dropoff.getDriver() == null || pickup.getDriver() == null ||
-                        !dropoff.getDriver().equals(pickup.getDriver())) {
-                        return 10000L;
-                    }
-                    if (pickup.getDepartureTime() == null || dropoff.getArrivalTime() == null) {
-                        return 1000L;
-                    }
-                    return Duration.between(dropoff.getArrivalTime(), pickup.getDepartureTime()).getSeconds();
-                })
+            .filter(dropoff -> calculatePairingPenalty(dropoff) > 0)
+            .penalizeLong(HardMediumSoftLongScore.ONE_HARD, VrpConstraintProvider::calculatePairingPenalty)
             .asConstraint("Pairing constraint");
+    }
+
+    private static long calculateVehicleCapacityPenalty(Event event) {
+        if (event.getDriver() == null) return 0L;
+        int maxCapacity = event.getDriver().getMaxCapacity();
+
+        // Check cumulative passenger count across the driver's chain.
+        Integer cumCount = event.getCumulativePassengerCount();
+        long chainPenalty = 0;
+        if (cumCount != null && cumCount > maxCapacity) {
+            chainPenalty = (long) (cumCount - maxCapacity) * 1000L;
+        }
+
+        // FR-3: Check peak concurrent load within this event's multi-stop route.
+        int previousCumulative = 0;
+        if (event.getPreviousStandstill() instanceof Event) {
+            Integer prevCum = ((Event) event.getPreviousStandstill()).getCumulativePassengerCount();
+            previousCumulative = prevCum != null ? prevCum : 0;
+        }
+        int peakDuringEvent = previousCumulative + event.getPeakPassengerCount();
+        long peakPenalty = 0;
+        if (peakDuringEvent > maxCapacity) {
+            peakPenalty = (long) (peakDuringEvent - maxCapacity) * 1000L;
+        }
+
+        return Math.max(chainPenalty, peakPenalty);
+    }
+
+    private static long calculateTimeWindowPenalty(Event event) {
+        if (event.getDriver() == null || event.getArrivalTime() == null || event.getMaxEndTime() == null) {
+            return 0L;
+        }
+        long totalPenalty = 0;
+
+        // Check event-level time window (legacy single-stop).
+        Instant effectiveCompletion = event.getArrivalTime().plus(
+            event.getDuration() != null ? event.getDuration() : Duration.ZERO
+        );
+        if (effectiveCompletion.isAfter(event.getMaxEndTime())) {
+            totalPenalty += Duration.between(event.getMaxEndTime(), effectiveCompletion).getSeconds();
+        }
+
+        // FR-3: Check per-stop time windows for multi-stop events.
+        if (event.getStops() != null && event.getStops().size() > 1 && event.getMinStartTime() != null) {
+            Instant currentTime = event.getArrivalTime().isBefore(event.getMinStartTime())
+                ? event.getMinStartTime() : event.getArrivalTime();
+            for (Stop stop : event.getStops()) {
+                if (stop.getTravelTimeFromPrevious() != null) {
+                    currentTime = currentTime.plus(stop.getTravelTimeFromPrevious());
+                }
+                if (stop.getBoardingDuration() != null) {
+                    currentTime = currentTime.plus(stop.getBoardingDuration());
+                }
+                currentTime = currentTime.plusSeconds(stop.getAlightingCount() * 60L);
+
+                if (stop.getMaxEndTime() != null && currentTime.isAfter(stop.getMaxEndTime())) {
+                    totalPenalty += Duration.between(stop.getMaxEndTime(), currentTime).getSeconds();
+                }
+            }
+        }
+
+        return totalPenalty;
+    }
+
+    private static long calculatePairingPenalty(Event dropoff) {
+        Event pickup = dropoff.getPairedEvent();
+        if (pickup == null || dropoff.isPickup()) return 0L;
+        if (dropoff.getDriver() == null || pickup.getDriver() == null ||
+            !dropoff.getDriver().equals(pickup.getDriver())) {
+            return 10000L;
+        }
+        if (pickup.getArrivalTime() == null || dropoff.getArrivalTime() == null) {
+            return 0L;
+        }
+        if (pickup.getDepartureTime() == null) {
+            return 1000L;
+        }
+        if (dropoff.getArrivalTime().isBefore(pickup.getDepartureTime())) {
+            return Duration.between(dropoff.getArrivalTime(), pickup.getDepartureTime()).getSeconds();
+        }
+        return 0L;
     }
 
     /**
