@@ -59,9 +59,22 @@ public class PassengerCountUpdatingVariableListener
         }
 
         // Propagate to next event in chain
-        Event nextEvent = event.getNextEvent();
+        Event nextEvent = findNextEvent(scoreDirector.getWorkingSolution(), event);
         if (nextEvent != null) {
             updatePassengerCount(scoreDirector, nextEvent);
         }
+    }
+
+    /** See ArrivalTimeUpdatingVariableListener for why this avoids inverse shadows. */
+    private Event findNextEvent(VrpSolution solution, Standstill standstill) {
+        if (solution == null || solution.getEvents() == null) {
+            return null;
+        }
+        for (Event candidate : solution.getEvents()) {
+            if (candidate.getPreviousStandstill() == standstill) {
+                return candidate;
+            }
+        }
+        return null;
     }
 }

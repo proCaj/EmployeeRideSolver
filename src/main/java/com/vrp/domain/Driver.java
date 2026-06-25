@@ -1,6 +1,5 @@
 package com.vrp.domain;
 
-import ai.timefold.solver.core.api.domain.variable.InverseRelationShadowVariable;
 import com.vrp.entity.Employee;
 
 import java.time.Duration;
@@ -17,17 +16,7 @@ public class Driver implements Standstill {
     private Duration maxDailyHours = Duration.ofHours(10);
     private Duration maxWeeklyHours = Duration.ofHours(40);
     private Employee employee;
-    
-    /**
-     * The first Event chained after this Driver anchor.
-     * Maintained by Timefold's inverse relation shadow variable — when an Event's
-     * previousStandstill points to this Driver, this field is set to that Event.
-     * Without this, Timefold's ChainedChangeMove tries to cast Driver to Event,
-     * causing ClassCastException and null score.
-     */
-    @InverseRelationShadowVariable(sourceVariableName = "previousStandstill")
-    private Event nextEvent;
-    
+
     public Driver() {
     }
     
@@ -123,15 +112,7 @@ public class Driver implements Standstill {
     public void setEmployee(Employee employee) {
         this.employee = employee;
     }
-    
-    public Event getNextEvent() {
-        return nextEvent;
-    }
-    
-    public void setNextEvent(Event nextEvent) {
-        this.nextEvent = nextEvent;
-    }
-    
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
