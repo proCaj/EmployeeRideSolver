@@ -37,3 +37,6 @@ Thumbs.db
 # Replit
 .replit
 replit.nix
+
+#API Key
+.env.local
