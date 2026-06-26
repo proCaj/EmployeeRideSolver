@@ -51,7 +51,11 @@ public class WebResource {
     
     @Inject
     Template routes;
-    
+
+    @Inject
+    @io.quarkus.qute.Location("routes-validate.html")
+    Template routesValidate;
+
     @Inject
     SolverService solverService;
 
@@ -174,6 +178,15 @@ public class WebResource {
             .data("routes", routeList);
     }
     
+    @GET
+    @Path("/routes/validate")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance routesValidatePage() {
+        return routesValidate
+            .data("title", "Route Validation")
+            .data("activeNav", "routes-validate");
+    }
+
     private String formatDuration(List<Event> events) {
         if (events.isEmpty()) return "-";
         Event first = events.get(0);

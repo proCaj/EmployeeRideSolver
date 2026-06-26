@@ -154,15 +154,17 @@ public class EventGenerationService {
             // Sort by minStartTime for clustering
             sameTimePickups.sort(Comparator.comparing(Event::getMinStartTime));
 
-            // Cluster events within FR3_TIME_WINDOW of each other
+            // Cluster events whose total pickup-time span stays within FR3_TIME_WINDOW.
+            // Compare each candidate with the first event in the cluster, not the
+            // previous one, to avoid transitive over-merging such as 04:45+05:15+05:45.
             List<List<Event>> clusters = new ArrayList<>();
             List<Event> currentCluster = new ArrayList<>();
             currentCluster.add(sameTimePickups.get(0));
 
             for (int i = 1; i < sameTimePickups.size(); i++) {
-                Event prev = currentCluster.get(currentCluster.size() - 1);
+                Event clusterStart = currentCluster.get(0);
                 Event curr = sameTimePickups.get(i);
-                Duration gap = Duration.between(prev.getMinStartTime(), curr.getMinStartTime());
+                Duration gap = Duration.between(clusterStart.getMinStartTime(), curr.getMinStartTime());
 
                 if (gap.compareTo(FR3_TIME_WINDOW) <= 0) {
                     currentCluster.add(curr);

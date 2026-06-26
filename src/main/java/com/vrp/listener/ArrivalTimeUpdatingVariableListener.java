@@ -75,10 +75,29 @@ public class ArrivalTimeUpdatingVariableListener implements VariableListener<Vrp
         sourceEvent.setArrivalTime(arrivalTime);
         scoreDirector.afterVariableChanged(sourceEvent, "arrivalTime");
         
-        Event nextEvent = sourceEvent.getNextEvent();
+        Event nextEvent = findNextEvent(scoreDirector.getWorkingSolution(), sourceEvent);
         if (nextEvent != null) {
             updateArrivalTime(scoreDirector, nextEvent);
         }
+    }
+
+    /**
+     * Find the successor in the chained route. This intentionally uses a small
+     * linear scan instead of @InverseRelationShadowVariable because Timefold
+     * Quarkus rejects inverse shadow annotations on non-planning anchor facts
+     * (Driver), while the inverse relation for a chained variable must also
+     * work when the previous standstill is a Driver anchor.
+     */
+    private Event findNextEvent(VrpSolution solution, Standstill standstill) {
+        if (solution == null || solution.getEvents() == null) {
+            return null;
+        }
+        for (Event candidate : solution.getEvents()) {
+            if (candidate.getPreviousStandstill() == standstill) {
+                return candidate;
+            }
+        }
+        return null;
     }
     
     /**

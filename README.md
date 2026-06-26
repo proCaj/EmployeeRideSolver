@@ -62,6 +62,30 @@ mvn quarkus:dev
 
 The application starts on `http://localhost:5000` with live reload enabled.
 
+### Google Routes API (optional)
+
+To enable traffic-aware ETA validation at `/routes/validate`, set your Google Maps API key before starting the app:
+
+```bash
+# Option A: export directly
+export GOOGLE_MAPS_API_KEY=your_key_here
+mvn quarkus:dev
+
+# Option B: source from .env.local (git-ignored)
+# .env.local contains: export GOOGLE_MAPS_API_KEY=your_key_here
+source .env.local
+mvn quarkus:dev
+```
+
+The validation page works without a key — it shows the Haversine fallback estimate and explains how to configure the key.
+
+**Test URLs (after starting the app):**
+- UI page: `http://localhost:5000/routes/validate`
+- JSON API: `http://localhost:5000/api/routes/validate` (demo route, default traffic model)
+- JSON API with params: `http://localhost:5000/api/routes/validate?originLat=49.6441&originLng=8.3253&destLat=50.1073&destLng=8.6637&trafficModel=BEST_GUESS`
+
+The API requires a Google Maps API key with **Routes API** enabled. Create one at [Google Cloud Console](https://console.cloud.google.com/).
+
 ### Build
 
 ```bash
@@ -225,6 +249,7 @@ All CRUD endpoints accept both `application/json` and `application/x-www-form-ur
 | `/shifts/{id}`            | Shift detail with employee assignment             |
 | `/optimize`               | Start optimization (date/runtime parameters)      |
 | `/routes`                 | Optimization results with driver timelines        |
+| `/routes/validate`        | Compare Google Routes ETA vs Haversine fallback   |
 
 ---
 
@@ -244,6 +269,7 @@ All CRUD endpoints accept both `application/json` and `application/x-www-form-ur
 | `quarkus.timefold.solver.termination.spent-limit`| `120s`                            | Solver timeout                     |
 | `quarkus.timefold.solver.environment-mode`      | `REPRODUCIBLE`                     | Deterministic solving              |
 | `quarkus.log.category."com.vrp".level`          | `DEBUG`                            | Debug logging for app code         |
+| `google.maps.api.key`                           | `${GOOGLE_MAPS_API_KEY:}` (empty default) | Google Routes API key — set via env var |
 
 ---
 
@@ -252,6 +278,20 @@ All CRUD endpoints accept both `application/json` and `application/x-www-form-ur
 ### RouteOptimizationTest
 
 Constraint verifier tests and solver integration tests validating all 7 hard constraints and 4 soft constraints.
+
+### GoogleRoutesServiceTest
+
+11 tests covering (no real API calls, no API key required):
+- `parseDurationSeconds` — Google duration string parsing (`"3600s"`, decimals, no-suffix)
+- `toRfc3339Utc` — Berlin→UTC conversion for both CET (winter) and CEST (summer) offsets
+- `parseResponse` — JSON response parsing with mock fixture
+- `isApiKeyConfigured` — returns false when CDI key injection is absent
+- `nextTuesdayAt05` — always returns a future Tuesday at 05:00
+
+Run targeted:
+```bash
+mvn test -Dtest=GoogleRoutesServiceTest
+```
 
 ### EventGenerationServiceTest
 

@@ -1,0 +1,70 @@
+{#include base}
+{#content}
+<header class="header">
+    <div class="header-left">
+        <h1>Route Validation</h1>
+        <p>Compare Google Routes traffic-aware ETA against the current Haversine fallback estimate</p>
+    </div>
+</header>
+
+<div class="content-area">
+    <div class="card" style="margin-bottom: 24px;">
+        <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">Validate a Route</h2>
+        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">
+            Default demo: Burgheimer Str. 6, 67575 Eich → Frankfurt am Main Hbf, next Tuesday 05:00 Europe/Berlin.
+            Submit opens the JSON result from <code>/api/routes/validate</code>.
+        </p>
+
+        <form method="get" action="/api/routes/validate">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Origin Latitude</label>
+                    <input type="number" name="originLat" step="0.0001" value="49.6441">
+                </div>
+                <div class="form-group">
+                    <label>Origin Longitude</label>
+                    <input type="number" name="originLng" step="0.0001" value="8.3253">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Destination Latitude</label>
+                    <input type="number" name="destLat" step="0.0001" value="50.1073">
+                </div>
+                <div class="form-group">
+                    <label>Destination Longitude</label>
+                    <input type="number" name="destLng" step="0.0001" value="8.6637">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Departure (Europe/Berlin) — blank = next Tuesday 05:00</label>
+                    <input type="datetime-local" name="departure">
+                </div>
+                <div class="form-group">
+                    <label>Traffic Model</label>
+                    <select name="trafficModel">
+                        <option value="BEST_GUESS">BEST_GUESS</option>
+                        <option value="OPTIMISTIC" selected>OPTIMISTIC</option>
+                        <option value="PESSIMISTIC">PESSIMISTIC</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Validate Route</button>
+        </form>
+    </div>
+
+    <div class="card" style="margin-top: 24px; border-color: var(--border);">
+        <p style="color: var(--text-muted); font-size: 12px;">
+            <strong style="color: var(--text-secondary);">Direct demo endpoint:</strong>
+            <a href="/api/routes/validate?trafficModel=OPTIMISTIC" style="color: var(--accent-blue);">
+                /api/routes/validate?trafficModel=OPTIMISTIC
+            </a>
+        </p>
+        <p style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">
+            Requires <code>GOOGLE_MAPS_API_KEY</code>. Without a key, the endpoint returns the Haversine fallback estimate only.
+        </p>
+    </div>
+</div>
+{/content}
+{/include}

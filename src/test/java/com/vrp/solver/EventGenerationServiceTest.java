@@ -282,7 +282,9 @@ class EventGenerationServiceTest {
         // With FR-3: Chep4+Sanner1 merge at Hub. Others separate.
         // Pickups: Naruto(Tankstelle) + Chep4+Sanner1(Hub FR3) + Orion2(Hub) + BarbeNight2(Hub) + BarbeLate1(Hub) = 5
         assertEquals(5, pickups, "Should have 5 pickup events with FR-3 merging");
-        assertEquals(5, dropoffs, "Should have 5 dropoff events");
+        // FR-3 merges compatible pickup events only. Return/dropoff events remain
+        // independent because each original pickup location/customer return leg still exists.
+        assertEquals(6, dropoffs, "Should keep all original dropoff events after pickup-only FR-3 merging");
 
         // Verify FR-3 merged event exists
         Event fr3Event = events.stream()

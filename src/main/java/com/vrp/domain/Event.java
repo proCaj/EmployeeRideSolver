@@ -2,7 +2,6 @@ package com.vrp.domain;
 
 import ai.timefold.solver.core.api.domain.entity.PlanningEntity;
 import ai.timefold.solver.core.api.domain.variable.*;
-import ai.timefold.solver.core.api.domain.variable.InverseRelationShadowVariable;
 import com.vrp.entity.Employee;
 import com.vrp.entity.ShiftDemand;
 import com.vrp.listener.ArrivalTimeUpdatingVariableListener;
@@ -79,9 +78,6 @@ public class Event implements Standstill {
     @ShadowVariable(variableListenerClass = com.vrp.listener.PassengerCountUpdatingVariableListener.class,
                      sourceVariableName = "previousStandstill")
     private Integer cumulativePassengerCount;
-
-    @InverseRelationShadowVariable(sourceVariableName = "previousStandstill")
-    private Event nextEvent;
 
     private int cachedPassengerDelta;
     private int cachedPeakPassengerCount;
@@ -353,9 +349,6 @@ public class Event implements Standstill {
 
     public Integer getCumulativePassengerCount() { return cumulativePassengerCount; }
     public void setCumulativePassengerCount(Integer cumulativePassengerCount) { this.cumulativePassengerCount = cumulativePassengerCount; }
-
-    public Event getNextEvent() { return nextEvent; }
-    public void setNextEvent(Event nextEvent) { this.nextEvent = nextEvent; }
 
     @Override
     public boolean equals(Object o) {
