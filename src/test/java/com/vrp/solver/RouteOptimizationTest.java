@@ -540,13 +540,14 @@ class RouteOptimizationTest {
     }
 
     // ============================================================
-    // Solver Test: Individual (unbatched) events - current behavior
+    // Solver Test: Individual (unbatched) events document why batching is required
     // ============================================================
 
     @Test
-    void testMondayIndividualEventsOptimization() {
-        // Same scenario but with individual events per employee (no batching)
-        // This models the CURRENT behavior of EventGenerationService
+    void testMondayIndividualEventsWithoutBatchingIsInfeasible() {
+        // Same scenario but with individual events per employee (no batching).
+        // This intentionally documents the infeasible baseline that FR-1/FR-3
+        // batching fixes in the batched/full-day scenario tests.
         Driver driver1 = new Driver("driver-1", HUB);
         Driver driver2 = new Driver("driver-2", HUB);
 
@@ -613,13 +614,15 @@ class RouteOptimizationTest {
         System.out.println("=== Monday Individual Events (No Batching) ===");
         System.out.println("Score: " + solution.getScore());
         System.out.println("Events: " + solution.getEvents().size() +
-                " (vs 10 batched = " + (solution.getEvents().size() - 10) + " more)");
+                " (vs 6 FR-3 batched = " + (solution.getEvents().size() - 6) + " more)");
         printScoreExplanation(solverFactory, solution);
         System.out.println();
 
-        // Hard constraints must still be satisfied
-        assertTrue(solution.getScore().hardScore() >= 0,
-                "Hard score must be >= 0. Actual: " + solution.getScore());
+        // The unbatched baseline is expected to remain infeasible with two drivers:
+        // individual Chep/Sanner/Orion trips cannot all meet the morning windows.
+        // This documents why the FR-1/FR-3 batched topology is required.
+        assertTrue(solution.getScore().hardScore() < 0,
+                "Unbatched baseline should retain hard violations. Actual: " + solution.getScore());
 
         // All events assigned
         for (Event event : solution.getEvents()) {
