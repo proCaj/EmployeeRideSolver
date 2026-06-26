@@ -661,29 +661,32 @@ class RouteOptimizationTest {
 
         // ---- Early shift events (Driver 1 in manual plan) ----
 
-        // Person 1 → Chep (separate pickup at Tankstelle)
-        Event[] person1Chep = createPairedEvents("person1-chep-early",
-                TANKSTELLE, CHEP,
-                toInstant(MONDAY, 4, 45), toInstant(MONDAY, 5, 30),
-                toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(person1));
-        events.addAll(List.of(person1Chep[0], person1Chep[1]));
+        // FR-3 cross-customer merged early shift (05:30 Chep, 06:00 Sanner).
+        // One vehicle boards Person 1 at Tankstelle and Person 2-6 at Hub, then drops
+        // Chep passengers at Chep and the Sanner passenger at Sanner. Reuses the same
+        // multi-stop topology as the green testMondayBatchedRouteOptimization scenario,
+        // mirroring EventGenerationService's merged event output.
+        Event chepSannerMorning = createMultiStopEvent("pickup-chep-sanner-fr3",
+                true,
+                toInstant(MONDAY, 4, 20), toInstant(MONDAY, 6, 0),
+                List.of(
+                        createStop(TANKSTELLE, List.of(person1), 0, "", null),
+                        createStop(HUB, List.of(person2, person3, person4, person5, person6), 0, "", CHEP),
+                        createStop(CHEP, List.of(), 5, "Chep Deutschland GmbH", HUB),
+                        createStop(SANNER, List.of(), 1, "Sanner GmbH", CHEP)
+                ));
 
-        // 4 Chep → Chep (batched at Hub)
-        Event[] batchChep = createPairedEvents("batch-chep-early",
-                HUB, CHEP,
-                toInstant(MONDAY, 4, 45), toInstant(MONDAY, 5, 30),
+        Event chepSannerReturn = createMultiStopEvent("dropoff-chep-sanner-fr3",
+                false,
                 toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(person2, person3, person4, person5));
-        events.addAll(List.of(batchChep[0], batchChep[1]));
-
-        // Person 6 → Sanner
-        Event[] person6Sanner = createPairedEvents("person6-sanner-early",
-                HUB, SANNER,
-                toInstant(MONDAY, 5, 15), toInstant(MONDAY, 6, 0),
-                toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(person6));
-        events.addAll(List.of(person6Sanner[0], person6Sanner[1]));
+                List.of(
+                        createStop(CHEP, List.of(person1, person2, person3, person4, person5), 0, "", null),
+                        createStop(SANNER, List.of(person6), 0, "", CHEP),
+                        createStop(HUB, List.of(), 6, "City-Fahrschule", SANNER)
+                ));
+        chepSannerMorning.setPairedEvent(chepSannerReturn);
+        chepSannerReturn.setPairedEvent(chepSannerMorning);
+        events.addAll(List.of(chepSannerMorning, chepSannerReturn));
 
         // Person 7 + Person 8 → Orion
         Event[] orionBatch = createPairedEvents("orion-batch-day",
