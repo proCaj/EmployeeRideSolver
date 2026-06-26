@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class VrpConstraintProvider implements ConstraintProvider {
+    private static final long STRUCTURAL_VIOLATION_PENALTY = 1_000_000L;
     
     @Override
     public Constraint[] defineConstraints(ConstraintFactory constraintFactory) {
@@ -21,6 +22,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
             // Hard constraints
             driverAssignmentRequired(constraintFactory),
             vehicleCapacityConstraint(constraintFactory),
+            negativeCumulativePassengerCount(constraintFactory),
             timeWindowConstraint(constraintFactory),
             pairingConstraint(constraintFactory),
             maxDailyWorkingHours(constraintFactory),
@@ -53,6 +55,23 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .asConstraint("Vehicle capacity constraint");
     }
     
+    /**
+     * Hard constraint: cumulative passenger count must never go negative.
+     * A negative count means a dropoff event precedes its paired pickup in the
+     * driver's chain — a structural infeasibility. Penalized heavily per unit
+     * below zero so the solver immediately fixes chain ordering before refining
+     * timing.
+     */
+    public Constraint negativeCumulativePassengerCount(ConstraintFactory constraintFactory) {
+        return constraintFactory.forEachIncludingUnassigned(Event.class)
+            .filter(event -> event.getDriver() != null)
+            .filter(event -> event.getCumulativePassengerCount() != null
+                          && event.getCumulativePassengerCount() < 0)
+            .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
+                event -> (long)(-event.getCumulativePassengerCount()) * STRUCTURAL_VIOLATION_PENALTY)
+            .asConstraint("Negative cumulative passenger count");
+    }
+
     public Constraint timeWindowConstraint(ConstraintFactory constraintFactory) {
         return constraintFactory.forEachIncludingUnassigned(Event.class)
             .filter(event -> event.getDriver() != null)
@@ -136,7 +155,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
         if (pickup == null || dropoff.isPickup()) return 0L;
         if (dropoff.getDriver() == null || pickup.getDriver() == null ||
             !dropoff.getDriver().equals(pickup.getDriver())) {
-            return 10000L;
+            return STRUCTURAL_VIOLATION_PENALTY;
         }
         if (pickup.getArrivalTime() == null || dropoff.getArrivalTime() == null) {
             return 0L;

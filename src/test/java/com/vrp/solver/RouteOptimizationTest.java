@@ -203,6 +203,28 @@ class RouteOptimizationTest {
     }
 
     @Test
+    void negativeCumulativePassengerCount_dropoffBeforePickup_shouldPenalize() {
+        Driver driver = new Driver("d1", HUB);
+
+        Event event = new Event();
+        event.setId("negative-passenger-count");
+        event.setPickup(false);
+        event.setPassengers(List.of(naruto));
+        event.setFromLocation(CHEP);
+        event.setToLocation(HUB);
+        event.setMinStartTime(toInstant(MONDAY, 14, 0));
+        event.setMaxEndTime(toInstant(MONDAY, 15, 0));
+        event.setDuration(Duration.ofMinutes(30));
+        event.setDistance(CHEP.getHaversineDistance(HUB));
+        event.setDriver(driver);
+        event.setCumulativePassengerCount(-1); // impossible: dropped off before pickup
+
+        constraintVerifier.verifyThat(VrpConstraintProvider::negativeCumulativePassengerCount)
+                .given(event)
+                .penalizesBy(1_000_000L);
+    }
+
+    @Test
     void timeWindow_completesBeforeMaxEnd_shouldNotPenalize() {
         Driver driver = new Driver("d1", HUB);
 
