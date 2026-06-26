@@ -120,7 +120,7 @@ public class EventGenerationService {
      * → single event: Hub(5 board) → Chep(4 alight) → Sanner(1 alight)
      *
      * TODO: Extend to merge events whose pickup locations are on the way
-     * (e.g., Naruto at Tankstelle → Hub on the way to Chep). This requires
+     * (e.g., Person 1 at Tankstelle → Hub on the way to Chep). This requires
      * geographic awareness of route overlap, which is best handled by the
      * solver's chaining. Current limitation: different pickup locations
      * (Tankstelle vs Hub) are not merged, causing slight backtracking.

@@ -1,5 +1,8 @@
 package com.vrp.solver;
 
+import ai.timefold.solver.core.api.score.ScoreManager;
+import ai.timefold.solver.core.api.score.buildin.hardmediumsoftlong.HardMediumSoftLongScore;
+import ai.timefold.solver.core.api.score.constraint.ConstraintMatchTotal;
 import ai.timefold.solver.core.api.solver.Solver;
 import ai.timefold.solver.core.api.solver.SolverFactory;
 import ai.timefold.solver.core.config.score.director.ScoreDirectorFactoryConfig;
@@ -25,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,11 +65,11 @@ class RouteOptimizationTest {
     static final ZoneId ZONE = ZoneId.of("Europe/Berlin");
 
     // Employees from REQUIREMENTS.md Section 7
-    static Employee naruto, sasuke, sakura, hinata, shikamaru;
-    static Employee kakashi;
-    static Employee ino, choji;
-    static Employee rockLee, neji, gaara;
-    static Employee temari;
+    static Employee person1, person2, person3, person4, person5;
+    static Employee person6;
+    static Employee person7, person8;
+    static Employee person9, person10, person11;
+    static Employee person12;
 
     // Customers
     static Customer chepCustomer, sannerCustomer, orionCustomer, barbeCustomer, beneoCustomer;
@@ -74,27 +78,27 @@ class RouteOptimizationTest {
 
     @BeforeAll
     static void setupTestData() {
-        // Chep employees: Naruto at Tankstelle, 4 others at Hub
-        naruto = createEmployee(1L, "Naruto Uzumaki", TANKSTELLE);
-        sasuke = createEmployee(2L, "Sasuke Uchiha", HUB);
-        sakura = createEmployee(3L, "Sakura Haruno", HUB);
-        hinata = createEmployee(4L, "Hinata Hyuga", HUB);
-        shikamaru = createEmployee(5L, "Shikamaru Nara", HUB);
+        // Chep employees: Person 1 at Tankstelle, 4 others at Hub
+        person1 = createEmployee(1L, "Person 1", TANKSTELLE);
+        person2 = createEmployee(2L, "Person 2", HUB);
+        person3 = createEmployee(3L, "Person 3", HUB);
+        person4 = createEmployee(4L, "Person 4", HUB);
+        person5 = createEmployee(5L, "Person 5", HUB);
 
         // Sanner employee
-        kakashi = createEmployee(6L, "Kakashi Hatake", HUB);
+        person6 = createEmployee(6L, "Person 6", HUB);
 
         // Orion employees
-        ino = createEmployee(7L, "Ino Yamanaka", HUB);
-        choji = createEmployee(8L, "Choji Akimichi", HUB);
+        person7 = createEmployee(7L, "Person 7", HUB);
+        person8 = createEmployee(8L, "Person 8", HUB);
 
         // Barbe employees
-        rockLee = createEmployee(9L, "Rock Lee", HUB);
-        neji = createEmployee(10L, "Neji Hyuga", HUB);
-        gaara = createEmployee(11L, "Gaara Sabaku", HUB);
+        person9 = createEmployee(9L, "Person 9", HUB);
+        person10 = createEmployee(10L, "Person 10", HUB);
+        person11 = createEmployee(11L, "Person 11", HUB);
 
         // Beneo employee
-        temari = createEmployee(12L, "Temari Sabaku", HUB);
+        person12 = createEmployee(12L, "Person 12", HUB);
 
         // Customers with real coordinates
         chepCustomer = createCustomer(1L, "Chep Deutschland GmbH", "Am Winkelgraben 13, 64584 Biebesheim", 49.7784, 8.4625);
@@ -119,7 +123,7 @@ class RouteOptimizationTest {
         Event event = new Event();
         event.setId("unassigned-event");
         event.setPickup(true);
-        event.setPassengers(List.of(naruto));
+        event.setPassengers(List.of(person1));
         event.setFromLocation(HUB);
         event.setToLocation(CHEP);
         event.setMinStartTime(toInstant(MONDAY, 4, 45));
@@ -140,7 +144,7 @@ class RouteOptimizationTest {
         Event event = new Event();
         event.setId("assigned-event");
         event.setPickup(true);
-        event.setPassengers(List.of(naruto));
+        event.setPassengers(List.of(person1));
         event.setFromLocation(HUB);
         event.setToLocation(CHEP);
         event.setMinStartTime(toInstant(MONDAY, 4, 45));
@@ -164,7 +168,7 @@ class RouteOptimizationTest {
         Event event = new Event();
         event.setId("capacity-ok");
         event.setPickup(true);
-        event.setPassengers(List.of(sasuke, sakura, hinata, shikamaru));
+        event.setPassengers(List.of(person2, person3, person4, person5));
         event.setFromLocation(HUB);
         event.setToLocation(CHEP);
         event.setMinStartTime(toInstant(MONDAY, 4, 45));
@@ -187,7 +191,7 @@ class RouteOptimizationTest {
         Event event = new Event();
         event.setId("capacity-exceeded");
         event.setPickup(true);
-        event.setPassengers(List.of(sasuke, sakura, hinata, shikamaru));
+        event.setPassengers(List.of(person2, person3, person4, person5));
         event.setFromLocation(HUB);
         event.setToLocation(CHEP);
         event.setMinStartTime(toInstant(MONDAY, 4, 45));
@@ -209,7 +213,7 @@ class RouteOptimizationTest {
         Event event = new Event();
         event.setId("negative-passenger-count");
         event.setPickup(false);
-        event.setPassengers(List.of(naruto));
+        event.setPassengers(List.of(person1));
         event.setFromLocation(CHEP);
         event.setToLocation(HUB);
         event.setMinStartTime(toInstant(MONDAY, 14, 0));
@@ -231,7 +235,7 @@ class RouteOptimizationTest {
         Event event = new Event();
         event.setId("on-time");
         event.setPickup(true);
-        event.setPassengers(List.of(naruto));
+        event.setPassengers(List.of(person1));
         event.setFromLocation(HUB);
         event.setToLocation(CHEP);
         event.setMinStartTime(toInstant(MONDAY, 4, 45));
@@ -253,7 +257,7 @@ class RouteOptimizationTest {
         Event event = new Event();
         event.setId("late");
         event.setPickup(true);
-        event.setPassengers(List.of(naruto));
+        event.setPassengers(List.of(person1));
         event.setFromLocation(HUB);
         event.setToLocation(CHEP);
         event.setMinStartTime(toInstant(MONDAY, 4, 45));
@@ -276,7 +280,7 @@ class RouteOptimizationTest {
         Event pickup = new Event();
         pickup.setId("pickup-paired");
         pickup.setPickup(true);
-        pickup.setPassengers(List.of(naruto));
+        pickup.setPassengers(List.of(person1));
         pickup.setFromLocation(HUB);
         pickup.setToLocation(CHEP);
         pickup.setMinStartTime(toInstant(MONDAY, 4, 45));
@@ -289,7 +293,7 @@ class RouteOptimizationTest {
         Event dropoff = new Event();
         dropoff.setId("dropoff-paired");
         dropoff.setPickup(false);
-        dropoff.setPassengers(List.of(naruto));
+        dropoff.setPassengers(List.of(person1));
         dropoff.setFromLocation(CHEP);
         dropoff.setToLocation(HUB);
         dropoff.setMinStartTime(toInstant(MONDAY, 14, 0));
@@ -316,7 +320,7 @@ class RouteOptimizationTest {
         Event pickup = new Event();
         pickup.setId("pickup-split");
         pickup.setPickup(true);
-        pickup.setPassengers(List.of(gaara));
+        pickup.setPassengers(List.of(person11));
         pickup.setFromLocation(HUB);
         pickup.setToLocation(BARBE);
         pickup.setMinStartTime(toInstant(MONDAY, 13, 15));
@@ -329,7 +333,7 @@ class RouteOptimizationTest {
         Event dropoff = new Event();
         dropoff.setId("dropoff-split");
         dropoff.setPickup(false);
-        dropoff.setPassengers(List.of(gaara));
+        dropoff.setPassengers(List.of(person11));
         dropoff.setFromLocation(BARBE);
         dropoff.setToLocation(HUB);
         dropoff.setMinStartTime(toInstant(MONDAY, 22, 0));
@@ -360,55 +364,55 @@ class RouteOptimizationTest {
         List<Event> events = new ArrayList<>();
 
         // ---- Chep early shift (05:30 - 14:00) ----
-        // Naruto has a separate pickup at Tankstelle (FR-4)
-        Event[] narutoChep = createPairedEvents("naruto-chep",
+        // Person 1 has a separate pickup at Tankstelle (FR-4)
+        Event[] person1Chep = createPairedEvents("person1-chep",
                 TANKSTELLE, CHEP,
                 toInstant(MONDAY, 4, 45), toInstant(MONDAY, 5, 30),
                 toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(naruto));
-        events.addAll(List.of(narutoChep[0], narutoChep[1]));
+                List.of(person1));
+        events.addAll(List.of(person1Chep[0], person1Chep[1]));
 
         // 4 Chep employees batched from Hub (FR-1)
         Event[] batchChep = createPairedEvents("batch-chep",
                 HUB, CHEP,
                 toInstant(MONDAY, 4, 45), toInstant(MONDAY, 5, 30),
                 toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(sasuke, sakura, hinata, shikamaru));
+                List.of(person2, person3, person4, person5));
         events.addAll(List.of(batchChep[0], batchChep[1]));
 
         // ---- Sanner early shift (06:00 - 14:00) ----
-        // Kakashi from Hub - in manual plan combined with Chep batch at 04:30 (FR-3)
-        Event[] kakashiSanner = createPairedEvents("kakashi-sanner",
+        // Person 6 from Hub - in manual plan combined with Chep batch at 04:30 (FR-3)
+        Event[] person6Sanner = createPairedEvents("person6-sanner",
                 HUB, SANNER,
                 toInstant(MONDAY, 5, 15), toInstant(MONDAY, 6, 0),
                 toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(kakashi));
-        events.addAll(List.of(kakashiSanner[0], kakashiSanner[1]));
+                List.of(person6));
+        events.addAll(List.of(person6Sanner[0], person6Sanner[1]));
 
         // ---- Orion day shift (06:30 - 16:00) ----
-        // Ino + Choji batched from Hub
+        // Person 7 + Person 8 batched from Hub
         Event[] orionBatch = createPairedEvents("orion-batch",
                 HUB, ORION,
                 toInstant(MONDAY, 5, 45), toInstant(MONDAY, 6, 30),
                 toInstant(MONDAY, 16, 0), toInstant(MONDAY, 17, 0),
-                List.of(ino, choji));
+                List.of(person7, person8));
         events.addAll(List.of(orionBatch[0], orionBatch[1]));
 
         // ---- Barbe late shift (14:00 - 22:00) ----
-        // Gaara from Hub (Driver 2 in manual plan)
-        Event[] gaaraBarbe = createPairedEvents("gaara-barbe",
+        // Person 11 from Hub (Driver 2 in manual plan)
+        Event[] person11Barbe = createPairedEvents("person11-barbe",
                 HUB, BARBE,
                 toInstant(MONDAY, 13, 15), toInstant(MONDAY, 14, 0),
                 toInstant(MONDAY, 22, 0), toInstant(MONDAY, 23, 0),
-                List.of(gaara));
-        events.addAll(List.of(gaaraBarbe[0], gaaraBarbe[1]));
+                List.of(person11));
+        events.addAll(List.of(person11Barbe[0], person11Barbe[1]));
 
         // All locations used
         List<Location> locations = List.of(HUB, TANKSTELLE, CHEP, SANNER, ORION, BARBE);
 
         // All passengers
-        List<Employee> employees = List.of(naruto, sasuke, sakura, hinata, shikamaru,
-                kakashi, ino, choji, gaara);
+        List<Employee> employees = List.of(person1, person2, person3, person4, person5,
+                person6, person7, person8, person11);
 
         List<Customer> customers = List.of(chepCustomer, sannerCustomer, orionCustomer, barbeCustomer);
 
@@ -433,6 +437,7 @@ class RouteOptimizationTest {
         assertNotNull(solution.getScore(), "Solution must have a score");
         System.out.println("=== Monday Batched Route Optimization (KW 51) ===");
         System.out.println("Score: " + solution.getScore());
+        printScoreExplanation(solverFactory, solution);
         System.out.println();
 
         // HARD CONSTRAINT: No violations
@@ -510,9 +515,9 @@ class RouteOptimizationTest {
         List<Event> events = new ArrayList<>();
 
         // ---- Chep early shift (05:30 - 14:00) - 5 individual events ----
-        List<Employee> chepEmployees = List.of(naruto, sasuke, sakura, hinata, shikamaru);
+        List<Employee> chepEmployees = List.of(person1, person2, person3, person4, person5);
         for (Employee emp : chepEmployees) {
-            Location pickup = emp.id == 1L ? TANKSTELLE : HUB; // Naruto at Tankstelle
+            Location pickup = emp.id == 1L ? TANKSTELLE : HUB; // Person 1 at Tankstelle
             Event[] pair = createPairedEvents("chep-" + emp.id,
                     pickup, CHEP,
                     toInstant(MONDAY, 4, 45), toInstant(MONDAY, 5, 30),
@@ -522,15 +527,15 @@ class RouteOptimizationTest {
         }
 
         // ---- Sanner early shift (06:00 - 14:00) - 1 event ----
-        Event[] kakashiPair = createPairedEvents("sanner-" + kakashi.id,
+        Event[] person6Pair = createPairedEvents("sanner-" + person6.id,
                 HUB, SANNER,
                 toInstant(MONDAY, 5, 15), toInstant(MONDAY, 6, 0),
                 toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(kakashi));
-        events.addAll(List.of(kakashiPair[0], kakashiPair[1]));
+                List.of(person6));
+        events.addAll(List.of(person6Pair[0], person6Pair[1]));
 
         // ---- Orion day shift (06:30 - 16:00) - 2 individual events ----
-        for (Employee emp : List.of(ino, choji)) {
+        for (Employee emp : List.of(person7, person8)) {
             Event[] pair = createPairedEvents("orion-" + emp.id,
                     HUB, ORION,
                     toInstant(MONDAY, 5, 45), toInstant(MONDAY, 6, 30),
@@ -540,16 +545,16 @@ class RouteOptimizationTest {
         }
 
         // ---- Barbe late shift (14:00 - 22:00) - 1 event ----
-        Event[] gaaraPair = createPairedEvents("barbe-" + gaara.id,
+        Event[] person11Pair = createPairedEvents("barbe-" + person11.id,
                 HUB, BARBE,
                 toInstant(MONDAY, 13, 15), toInstant(MONDAY, 14, 0),
                 toInstant(MONDAY, 22, 0), toInstant(MONDAY, 23, 0),
-                List.of(gaara));
-        events.addAll(List.of(gaaraPair[0], gaaraPair[1]));
+                List.of(person11));
+        events.addAll(List.of(person11Pair[0], person11Pair[1]));
 
         List<Location> locations = List.of(HUB, TANKSTELLE, CHEP, SANNER, ORION, BARBE);
-        List<Employee> employees = List.of(naruto, sasuke, sakura, hinata, shikamaru,
-                kakashi, ino, choji, gaara);
+        List<Employee> employees = List.of(person1, person2, person3, person4, person5,
+                person6, person7, person8, person11);
         List<Customer> customers = List.of(chepCustomer, sannerCustomer, orionCustomer, barbeCustomer);
 
         VrpSolution problem = new VrpSolution(locations, customers, employees,
@@ -571,6 +576,7 @@ class RouteOptimizationTest {
         System.out.println("Score: " + solution.getScore());
         System.out.println("Events: " + solution.getEvents().size() +
                 " (vs 10 batched = " + (solution.getEvents().size() - 10) + " more)");
+        printScoreExplanation(solverFactory, solution);
         System.out.println();
 
         // Hard constraints must still be satisfied
@@ -617,63 +623,63 @@ class RouteOptimizationTest {
 
         // ---- Early shift events (Driver 1 in manual plan) ----
 
-        // Naruto → Chep (separate pickup at Tankstelle)
-        Event[] narutoChep = createPairedEvents("naruto-chep-early",
+        // Person 1 → Chep (separate pickup at Tankstelle)
+        Event[] person1Chep = createPairedEvents("person1-chep-early",
                 TANKSTELLE, CHEP,
                 toInstant(MONDAY, 4, 45), toInstant(MONDAY, 5, 30),
                 toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(naruto));
-        events.addAll(List.of(narutoChep[0], narutoChep[1]));
+                List.of(person1));
+        events.addAll(List.of(person1Chep[0], person1Chep[1]));
 
         // 4 Chep → Chep (batched at Hub)
         Event[] batchChep = createPairedEvents("batch-chep-early",
                 HUB, CHEP,
                 toInstant(MONDAY, 4, 45), toInstant(MONDAY, 5, 30),
                 toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(sasuke, sakura, hinata, shikamaru));
+                List.of(person2, person3, person4, person5));
         events.addAll(List.of(batchChep[0], batchChep[1]));
 
-        // Kakashi → Sanner
-        Event[] kakashiSanner = createPairedEvents("kakashi-sanner-early",
+        // Person 6 → Sanner
+        Event[] person6Sanner = createPairedEvents("person6-sanner-early",
                 HUB, SANNER,
                 toInstant(MONDAY, 5, 15), toInstant(MONDAY, 6, 0),
                 toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(kakashi));
-        events.addAll(List.of(kakashiSanner[0], kakashiSanner[1]));
+                List.of(person6));
+        events.addAll(List.of(person6Sanner[0], person6Sanner[1]));
 
-        // Ino + Choji → Orion
+        // Person 7 + Person 8 → Orion
         Event[] orionBatch = createPairedEvents("orion-batch-day",
                 HUB, ORION,
                 toInstant(MONDAY, 5, 45), toInstant(MONDAY, 6, 30),
                 toInstant(MONDAY, 16, 0), toInstant(MONDAY, 17, 0),
-                List.of(ino, choji));
+                List.of(person7, person8));
         events.addAll(List.of(orionBatch[0], orionBatch[1]));
 
         // ---- Late shift events (Driver 2 in manual plan) ----
 
-        // Gaara → Barbe late shift
-        Event[] gaaraBarbe = createPairedEvents("gaara-barbe-late",
+        // Person 11 → Barbe late shift
+        Event[] person11Barbe = createPairedEvents("person11-barbe-late",
                 HUB, BARBE,
                 toInstant(MONDAY, 13, 15), toInstant(MONDAY, 14, 0),
                 toInstant(MONDAY, 22, 0), toInstant(MONDAY, 23, 0),
-                List.of(gaara));
-        events.addAll(List.of(gaaraBarbe[0], gaaraBarbe[1]));
+                List.of(person11));
+        events.addAll(List.of(person11Barbe[0], person11Barbe[1]));
 
         // ---- Night shift events (Driver 2 in manual plan) ----
 
-        // Rock Lee + Neji → Barbe night shift (22:00 - 06:00)
+        // Person 9 + Person 10 → Barbe night shift (22:00 - 06:00)
         // Pickup in evening, dropoff next morning (we set maxEnd generously for test)
         Event[] barbeNight = createPairedEvents("barbe-night",
                 HUB, BARBE,
                 toInstant(MONDAY, 21, 15), toInstant(MONDAY, 22, 0),
                 // Dropoff would be Tuesday 06:00, but for single-day test we use late Monday
                 toInstant(MONDAY, 23, 0), toInstant(MONDAY, 23, 59),
-                List.of(rockLee, neji));
+                List.of(person9, person10));
         events.addAll(List.of(barbeNight[0], barbeNight[1]));
 
         List<Location> locations = List.of(HUB, TANKSTELLE, CHEP, SANNER, ORION, BARBE);
-        List<Employee> allPassengers = List.of(naruto, sasuke, sakura, hinata, shikamaru,
-                kakashi, ino, choji, gaara, rockLee, neji);
+        List<Employee> allPassengers = List.of(person1, person2, person3, person4, person5,
+                person6, person7, person8, person11, person9, person10);
         List<Customer> customers = List.of(chepCustomer, sannerCustomer, orionCustomer, barbeCustomer);
 
         VrpSolution problem = new VrpSolution(locations, customers, allPassengers,
@@ -694,6 +700,7 @@ class RouteOptimizationTest {
         System.out.println("=== Monday Full Day (All Shifts, 3 Drivers) ===");
         System.out.println("Score: " + solution.getScore());
         System.out.println("Total events: " + solution.getEvents().size());
+        printScoreExplanation(solverFactory, solution);
         System.out.println();
 
         // Hard constraints satisfied
@@ -842,6 +849,23 @@ class RouteOptimizationTest {
                     eventCount, totalDistance / 1000.0);
             System.out.println();
         }
+    }
+
+    /**
+     * Prints a compact per-constraint score breakdown for failing scenario triage.
+     */
+    private void printScoreExplanation(SolverFactory<VrpSolution> solverFactory, VrpSolution solution) {
+        ScoreManager<VrpSolution, HardMediumSoftLongScore> scoreManager = ScoreManager.create(solverFactory);
+        Map<String, ConstraintMatchTotal<HardMediumSoftLongScore>> constraintTotals =
+                scoreManager.explainScore(solution).getConstraintMatchTotalMap();
+
+        System.out.println("Constraint score breakdown:");
+        constraintTotals.entrySet().stream()
+                .sorted(Comparator.comparing(Map.Entry::getKey))
+                .forEach(entry -> System.out.printf("  %s: %s (%d matches)%n",
+                        entry.getKey(),
+                        entry.getValue().getScore(),
+                        entry.getValue().getConstraintMatchCount()));
     }
 
     private Event findFirstEvent(VrpSolution solution, Driver driver) {

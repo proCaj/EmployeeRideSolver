@@ -10,15 +10,15 @@ title KW 51 Manual Plan - Operations Metrics Dashboard (Mon-Thu Base)
 ' DRIVER UTILIZATION
 ' ============================================
 package "Driver Utilization" {
-  rectangle "Thomas Koch\n(Driver 1)" as TK {
+  rectangle "Driver 1\n(Driver 1)" as TK {
     card "**Active: ~6.8 h**\n04:12 - 07:15 (3.0 h)\n14:00 - 17:08 (2.8 h)\nBreak: 06:53 (6.8 h gap)\n\nTotal driving: ~4.8 h\nTotal idle: ~2.0 h\nUtilization: 71%\n\nPassengers moved: 22\n  Morning: 6+2+2 = 10\n  Afternoon: 5+1+2 = 8\n  Barbe return: 2 = 2\n  Driving segments: 2 more = 2" as TK1 #C8E6C9
   }
 
-  rectangle "Sarah Meyer\n(Driver 2)" as SM {
+  rectangle "Driver 2\n(Driver 2)" as SM {
     card "**Active: ~3.3 h**\n13:00 - 13:10 (0.2 h)\n21:30 - 22:52 (1.4 h)\nIdle gap: 8.3 h\n\nTotal driving: ~1.4 h\nTotal idle: ~1.9 h\nUtilization: 42%\n\nPassengers moved: 5\n  Afternoon: 1\n  Night: 2+1+1 = 4" as SM1 #BBDEFB
   }
 
-  rectangle "Michael Wagner\n(Driver 3)" as MW {
+  rectangle "Driver 3\n(Driver 3)" as MW {
     card "**Reserve Only**\nNot scheduled in base scenario\nCalled in when:\n- Barbe + Sanner both Früh\n- Beneo schedule conflicts\n- 2 Früh + 2 Spät needed" as MW1 #E0E0E0
   }
 }
@@ -27,11 +27,11 @@ package "Driver Utilization" {
 ' DISTANCE & TIME METRICS
 ' ============================================
 package "Distance & Time" {
-  rectangle "Thomas Koch\nRoute Summary" as TDist {
+  rectangle "Driver 1\nRoute Summary" as TDist {
     card "**Morning Route (04:12-07:15)**\n  HUB→TANK: 5.0 km (8 min)\n  TANK→HUB: 5.0 km (8 min)\n  HUB→CHEP: 18.0 km (29 min)\n  CHEP→SANNER: 16.0 km (26 min)\n  SANNER→HUB: 19.6 km (32 min)\n  HUB→ORION: 17.5 km (28 min)\n  ORION→BARBE: 17.5 km (28 min)\n  BARBE→HUB: 1.3 km (2 min)\n  **Subtotal: 99.9 km / ~161 min**\n\n**Afternoon Route (14:00-17:08)**\n  HUB→CHEP: 18.0 km (29 min)\n  CHEP→HUB: 18.0 km (29 min)\n  HUB→SANNER: 19.6 km (32 min)\n  SANNER→HUB: 19.6 km (32 min)\n  HUB→ORION: 17.5 km (28 min)\n  ORION→HUB: 17.5 km (28 min)\n  **Subtotal: 110.2 km / ~178 min**\n\n**Daily Total: 210.1 km / ~339 min (5.6 h)**" as TDist1 #C8E6C9
   }
 
-  rectangle "Sarah Meyer\nRoute Summary" as SDist {
+  rectangle "Driver 2\nRoute Summary" as SDist {
     card "**Afternoon (13:00-13:10)**\n  HUB→BARBE: 1.3 km (2 min)\n  BARBE→HUB: 1.3 km (2 min)\n  **Subtotal: 2.6 km / ~4 min**\n\n**Night (21:30-22:52)**\n  HUB→BARBE: 1.3 km (2 min)\n  BARBE→HUB: 1.3 km (2 min)\n  HUB→BENEO: 20.9 km (34 min)\n  BENEO→HUB: 20.9 km (34 min)\n  **Subtotal: 44.4 km / ~72 min**\n\n**Daily Total: 47.0 km / ~76 min (1.3 h)**" as SDist1 #BBDEFB
   }
 }
@@ -41,11 +41,11 @@ package "Distance & Time" {
 ' ============================================
 package "ArbZG (Arbeitszeitgesetz) Compliance" {
   rectangle "Daily Limits" as Daily {
-    card "**Thomas (Mon-Thu):**\n  Working time: ~6.8 h (split shift)\n  Morning block: 3.0 h\n  Afternoon block: 2.8 h\n  Break between blocks: 6.8 h\n  ✓ Max 10h/day: PASS\n  ✓ Max 4h consecutive: PASS\n    (3.0h morning, 2.8h afternoon)\n  ✓ 30min break: PASS\n    (6.8h break between blocks)\n\n**Sarah (Mon-Thu):**\n  Working time: ~3.3 h (split shift)\n  Afternoon block: 0.2 h\n  Night block: 1.4 h\n  ✓ Max 10h/day: PASS\n  ✓ Max 4h consecutive: PASS\n  ✓ 30min break: PASS" as Arb1 #C8E6C9
+    card "**Driver 1 (Mon-Thu):**\n  Working time: ~6.8 h (split shift)\n  Morning block: 3.0 h\n  Afternoon block: 2.8 h\n  Break between blocks: 6.8 h\n  ✓ Max 10h/day: PASS\n  ✓ Max 4h consecutive: PASS\n    (3.0h morning, 2.8h afternoon)\n  ✓ 30min break: PASS\n    (6.8h break between blocks)\n\n**Driver 2 (Mon-Thu):**\n  Working time: ~3.3 h (split shift)\n  Afternoon block: 0.2 h\n  Night block: 1.4 h\n  ✓ Max 10h/day: PASS\n  ✓ Max 4h consecutive: PASS\n  ✓ 30min break: PASS" as Arb1 #C8E6C9
   }
 
   rectangle "Weekly Limits" as Weekly {
-    card "**Thomas (5 days × 6.8h):**\n  Estimated weekly: ~34.0 h\n  ✓ Max 40h/week: PASS\n\n**Sarah (5 days × 3.3h):**\n  Estimated weekly: ~16.5 h\n  ✓ Max 40h/week: PASS\n\n**Fleet total: ~50.5 h/week**\n  Avg per driver: ~25.3 h/week" as Arb2 #C8E6C9
+    card "**Driver 1 (5 days × 6.8h):**\n  Estimated weekly: ~34.0 h\n  ✓ Max 40h/week: PASS\n\n**Driver 2 (5 days × 3.3h):**\n  Estimated weekly: ~16.5 h\n  ✓ Max 40h/week: PASS\n\n**Fleet total: ~50.5 h/week**\n  Avg per driver: ~25.3 h/week" as Arb2 #C8E6C9
   }
 }
 
@@ -54,7 +54,7 @@ package "ArbZG (Arbeitszeitgesetz) Compliance" {
 ' ============================================
 package "Vehicle Utilization" {
   rectangle "Load Factors" as Load {
-    card "**Capacity: 6 passengers per vehicle**\n\nThomas peak load: 6/6 (100%)\n  at 04:30 during FR-3 merge\n  (TANK+HUB→CHEP→SANNER)\n\nThomas avg load: 2.8 pax/segment\n  (22 pax across 8 driving segments)\n\nSarah peak load: 2/6 (33%)\nSarah avg load: 1.3 pax/segment\n  (5 pax across 4 driving segments)\n\n**Fleet avg: 2.3 pax/segment**\n**Fleet avg utilization: 38%**" as Load1 #FFF9C4
+    card "**Capacity: 6 passengers per vehicle**\n\nDriver 1 peak load: 6/6 (100%)\n  at 04:30 during FR-3 merge\n  (TANK+HUB→CHEP→SANNER)\n\nDriver 1 avg load: 2.8 pax/segment\n  (22 pax across 8 driving segments)\n\nDriver 2 peak load: 2/6 (33%)\nDriver 2 avg load: 1.3 pax/segment\n  (5 pax across 4 driving segments)\n\n**Fleet avg: 2.3 pax/segment**\n**Fleet avg utilization: 38%**" as Load1 #FFF9C4
   }
 }
 
@@ -63,7 +63,7 @@ package "Vehicle Utilization" {
 ' ============================================
 package "Operational Risks" {
   rectangle "Scheduling Conflicts" as Risk {
-    card "**HIGH RISK:**\n  • Thomas at 100% capacity during\n    FR-3 merge (6/6 pax). No room for\n    unexpected passengers.\n  • If Barbe+Sanner both Früh → need\n    2 early drivers (Michael called in)\n  • Beneo 2-2-3 night rhythm causes\n    mid-week scheduling conflicts\n\n**MEDIUM RISK:**\n  • Sarah long idle gap (8.3h between\n    afternoon and night duties)\n  • Friday compressed schedule\n    (Chep 13:00, Orion 12:45)\n  • Weekend requires full coverage\n    (Beneo + Barbe + Beneo night)\n\n**LOW RISK:**\n  • Chep/Orion nearly co-located\n    (0.5 km) - could merge if needed\n  • Barbe very close to HUB\n    (1.3 km) - quick emergency access" as Risk1 #FFCCBC
+    card "**HIGH RISK:**\n  • Driver 1 at 100% capacity during\n    FR-3 merge (6/6 pax). No room for\n    unexpected passengers.\n  • If Barbe+Sanner both Früh → need\n    2 early drivers (Driver 3 called in)\n  • Beneo 2-2-3 night rhythm causes\n    mid-week scheduling conflicts\n\n**MEDIUM RISK:**\n  • Driver 2 long idle gap (8.3h between\n    afternoon and night duties)\n  • Friday compressed schedule\n    (Chep 13:00, Orion 12:45)\n  • Weekend requires full coverage\n    (Beneo + Barbe + Beneo night)\n\n**LOW RISK:**\n  • Chep/Orion nearly co-located\n    (0.5 km) - could merge if needed\n  • Barbe very close to HUB\n    (1.3 km) - quick emergency access" as Risk1 #FFCCBC
   }
 }
 
@@ -73,7 +73,7 @@ SM -[hidden]down- MW
 TDist -[hidden]down- SDist
 
 legend right
-  |= Metric |= Thomas |= Sarah |= Total |
+  |= Metric |= Driver 1 |= Driver 2 |= Total |
   | Daily driving | 5.6 h | 1.3 h | 6.9 h |
   | Daily distance | 210.1 km | 47.0 km | 257.1 km |
   | Passengers/day | 22 | 5 | 27 |

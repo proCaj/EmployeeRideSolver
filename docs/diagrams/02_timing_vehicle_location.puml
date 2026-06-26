@@ -5,8 +5,8 @@ skinparam sequenceMessageAlign center
 
 title KW 51 - Vehicle Location State Over Time (Mon-Thu)
 
-participant "Thomas\n(Driver 1)" as T
-participant "Sarah\n(Driver 2)" as S
+participant "Driver 1\n(Driver 1)" as T
+participant "Driver 2\n(Driver 2)" as S
 
 == Early Morning ==
 

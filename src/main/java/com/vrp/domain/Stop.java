@@ -24,7 +24,7 @@ import java.util.List;
  *   Stop 1: Chep site   → 4 Chep employees alight (4 leave)
  *
  * Example (morning pickup with remote pickup point):
- *   Stop 0: Tankstelle  → pickup 1 Chep employee (Naruto, 1 boards)
+ *   Stop 0: Tankstelle  → pickup 1 Chep employee (Person 1, 1 boards)
  *   Stop 1: Hub         → pickup 4 Chep employees (4 board)
  *   Stop 2: Chep site   → 5 Chep employees alight (5 leave)
  */

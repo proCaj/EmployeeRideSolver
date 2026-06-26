@@ -49,10 +49,10 @@ class EventGenerationServiceTest {
     void sameCustomer_sameLocation_shouldBeBatched() {
         Customer chep = createCustomer("Chep", CHEP);
         List<Employee> employees = List.of(
-            createEmployee(1, "Sasuke", null, null),
-            createEmployee(2, "Sakura", null, null),
-            createEmployee(3, "Hinata", null, null),
-            createEmployee(4, "Shikamaru", null, null)
+            createEmployee(1, "Person 2", null, null),
+            createEmployee(2, "Person 3", null, null),
+            createEmployee(3, "Person 4", null, null),
+            createEmployee(4, "Person 5", null, null)
         );
         ShiftDemand shift = createShift(chep, DayOfWeek.MONDAY, LocalTime.of(5, 30), LocalTime.of(14, 0), employees);
 
@@ -66,8 +66,8 @@ class EventGenerationServiceTest {
     @Test
     void differentPickupLocations_shouldCreateSeparateEvents() {
         Customer chep = createCustomer("Chep", CHEP);
-        Employee atHub = createEmployee(1, "Sasuke", null, null);
-        Employee atTankstelle = createEmployee(2, "Naruto", TANKSTELLE.latitude(), TANKSTELLE.longitude());
+        Employee atHub = createEmployee(1, "Person 2", null, null);
+        Employee atTankstelle = createEmployee(2, "Person 1", TANKSTELLE.latitude(), TANKSTELLE.longitude());
         ShiftDemand shift = createShift(chep, DayOfWeek.MONDAY, LocalTime.of(5, 30), LocalTime.of(14, 0),
             List.of(atHub, atTankstelle));
 
@@ -166,13 +166,13 @@ class EventGenerationServiceTest {
         Customer sanner = createCustomer("Sanner", SANNER);
 
         List<Employee> chepEmployees = List.of(
-            createEmployee(1, "Sasuke", null, null),
-            createEmployee(2, "Sakura", null, null),
-            createEmployee(3, "Hinata", null, null),
-            createEmployee(4, "Shikamaru", null, null)
+            createEmployee(1, "Person 2", null, null),
+            createEmployee(2, "Person 3", null, null),
+            createEmployee(3, "Person 4", null, null),
+            createEmployee(4, "Person 5", null, null)
         );
         List<Employee> sannerEmployees = List.of(
-            createEmployee(5, "Kakashi", null, null)
+            createEmployee(5, "Person 6", null, null)
         );
 
         ShiftDemand chepShift = createShift(chep, DayOfWeek.MONDAY, LocalTime.of(5, 30), LocalTime.of(14, 0), chepEmployees);
@@ -226,8 +226,8 @@ class EventGenerationServiceTest {
         Customer chep = createCustomer("Chep", CHEP);
         Customer sanner = createCustomer("Sanner", SANNER);
 
-        Employee atTankstelle = createEmployee(1, "Naruto", TANKSTELLE.latitude(), TANKSTELLE.longitude());
-        Employee atHub = createEmployee(2, "Kakashi", null, null);
+        Employee atTankstelle = createEmployee(1, "Person 1", TANKSTELLE.latitude(), TANKSTELLE.longitude());
+        Employee atHub = createEmployee(2, "Person 6", null, null);
 
         ShiftDemand chepShift = createShift(chep, DayOfWeek.MONDAY, LocalTime.of(5, 30), LocalTime.of(14, 0), List.of(atTankstelle));
         ShiftDemand sannerShift = createShift(sanner, DayOfWeek.MONDAY, LocalTime.of(6, 0), LocalTime.of(14, 0), List.of(atHub));
@@ -249,28 +249,28 @@ class EventGenerationServiceTest {
         Customer orion = createCustomer("Orion", ORION);
         Customer barbe = createCustomer("Barbe", BARBE);
 
-        Employee naruto = createEmployee(1, "Naruto", TANKSTELLE.latitude(), TANKSTELLE.longitude());
-        Employee sasuke = createEmployee(2, "Sasuke", null, null);
-        Employee sakura = createEmployee(3, "Sakura", null, null);
-        Employee hinata = createEmployee(4, "Hinata", null, null);
-        Employee shikamaru = createEmployee(5, "Shikamaru", null, null);
-        Employee kakashi = createEmployee(6, "Kakashi", null, null);
-        Employee ino = createEmployee(7, "Ino", null, null);
-        Employee choji = createEmployee(8, "Choji", null, null);
-        Employee rockLee = createEmployee(9, "Rock Lee", null, null);
-        Employee neji = createEmployee(10, "Neji", null, null);
-        Employee gaara = createEmployee(11, "Gaara", null, null);
+        Employee person1 = createEmployee(1, "Person 1", TANKSTELLE.latitude(), TANKSTELLE.longitude());
+        Employee person2 = createEmployee(2, "Person 2", null, null);
+        Employee person3 = createEmployee(3, "Person 3", null, null);
+        Employee person4 = createEmployee(4, "Person 4", null, null);
+        Employee person5 = createEmployee(5, "Person 5", null, null);
+        Employee person6 = createEmployee(6, "Person 6", null, null);
+        Employee person7 = createEmployee(7, "Person 7", null, null);
+        Employee person8 = createEmployee(8, "Person 8", null, null);
+        Employee person9 = createEmployee(9, "Person 9", null, null);
+        Employee person10 = createEmployee(10, "Person 10", null, null);
+        Employee person11 = createEmployee(11, "Person 11", null, null);
 
         ShiftDemand chepEarly = createShift(chep, DayOfWeek.MONDAY, LocalTime.of(5, 30), LocalTime.of(14, 0),
-            List.of(naruto, sasuke, sakura, hinata, shikamaru));
+            List.of(person1, person2, person3, person4, person5));
         ShiftDemand sannerEarly = createShift(sanner, DayOfWeek.MONDAY, LocalTime.of(6, 0), LocalTime.of(14, 0),
-            List.of(kakashi));
+            List.of(person6));
         ShiftDemand orionDay = createShift(orion, DayOfWeek.MONDAY, LocalTime.of(6, 30), LocalTime.of(16, 0),
-            List.of(ino, choji));
+            List.of(person7, person8));
         ShiftDemand barbeNight = createShift(barbe, DayOfWeek.MONDAY, LocalTime.of(22, 0), LocalTime.of(6, 0),
-            List.of(rockLee, neji));
+            List.of(person9, person10));
         ShiftDemand barbeLate = createShift(barbe, DayOfWeek.MONDAY, LocalTime.of(14, 0), LocalTime.of(22, 0),
-            List.of(gaara));
+            List.of(person11));
 
         List<Event> events = service.generateEventsForWeek(
             List.of(chepEarly, sannerEarly, orionDay, barbeNight, barbeLate),
@@ -280,7 +280,7 @@ class EventGenerationServiceTest {
         long dropoffs = events.stream().filter(e -> !e.isPickup()).count();
 
         // With FR-3: Chep4+Sanner1 merge at Hub. Others separate.
-        // Pickups: Naruto(Tankstelle) + Chep4+Sanner1(Hub FR3) + Orion2(Hub) + BarbeNight2(Hub) + BarbeLate1(Hub) = 5
+        // Pickups: Person 1(Tankstelle) + Chep4+Sanner1(Hub FR3) + Orion2(Hub) + BarbeNight2(Hub) + BarbeLate1(Hub) = 5
         assertEquals(5, pickups, "Should have 5 pickup events with FR-3 merging");
         // FR-3 merges compatible pickup events only. Return/dropoff events remain
         // independent because each original pickup location/customer return leg still exists.
