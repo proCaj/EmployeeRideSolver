@@ -172,9 +172,9 @@ public class VrpConstraintProvider implements ConstraintProvider {
     /**
      * Hard constraint: Maximum daily working hours per driver.
      * 
-     * "Working hours" = sum of actual event durations for a driver on a given work day.
-     * Each event's duration = departureTime - arrivalTime (includes travel, boarding, waiting).
-     * Events are grouped by (driver, shiftDate) for per-day accounting.
+     * "Working hours" = sum of planned event service/route durations for a driver
+     * on a given work day. Waiting until an event's minStartTime is treated as
+     * break/standby time here, not continuous driving/working time.
      * 
      * Night shifts spanning midnight: both pickup and dropoff count toward the day
      * the shift started (shiftDate), per German ArbZG interpretation.
@@ -193,10 +193,9 @@ public class VrpConstraintProvider implements ConstraintProvider {
                     if (date == null || events.isEmpty()) return 0L;
                     long totalWorkingMinutes = 0;
                     for (Event e : events) {
-                        Instant arrival = e.getArrivalTime();
-                        Instant departure = e.getDepartureTime();
-                        if (arrival == null || departure == null) continue;
-                        totalWorkingMinutes += (departure.getEpochSecond() - arrival.getEpochSecond()) / 60;
+                        Duration duration = e.getDuration();
+                        if (duration == null) continue;
+                        totalWorkingMinutes += duration.toMinutes();
                     }
                     long overMinutes = totalWorkingMinutes - driver.getMaxDailyHours().toMinutes();
                     return overMinutes > 0 ? overMinutes * 100L : 0L;
@@ -207,7 +206,8 @@ public class VrpConstraintProvider implements ConstraintProvider {
     /**
      * Hard constraint: Maximum weekly working hours per driver.
      * 
-     * Sums actual event durations across the entire week for each driver.
+     * Sums planned event service/route durations across the entire week for each driver.
+     * Waiting until minStartTime is excluded as break/standby time.
      * Maximum: 40 hours per week.
      */
     public Constraint maxWeeklyWorkingHours(ConstraintFactory constraintFactory) {
@@ -221,10 +221,9 @@ public class VrpConstraintProvider implements ConstraintProvider {
                     if (events.isEmpty()) return 0L;
                     long totalWorkingMinutes = 0;
                     for (Event e : events) {
-                        Instant arrival = e.getArrivalTime();
-                        Instant departure = e.getDepartureTime();
-                        if (arrival == null || departure == null) continue;
-                        totalWorkingMinutes += (departure.getEpochSecond() - arrival.getEpochSecond()) / 60;
+                        Duration duration = e.getDuration();
+                        if (duration == null) continue;
+                        totalWorkingMinutes += duration.toMinutes();
                     }
                     long overMinutes = totalWorkingMinutes - driver.getMaxWeeklyHours().toMinutes();
                     return overMinutes > 0 ? overMinutes * 100L : 0L;
@@ -349,18 +348,19 @@ public class VrpConstraintProvider implements ConstraintProvider {
         if (count < 2) return 0L;
         Arrays.sort(arr, 0, count, Comparator.comparing(Event::getArrivalTime));
 
-        Instant spanStart = arr[0].getArrivalTime();
+        Instant spanStart = getEffectiveStart(arr[0]);
         long maxOverMinutes = 0;
         for (int i = 1; i < count; i++) {
             Event prev = arr[i - 1];
             Event curr = arr[i];
-            Duration gap = Duration.between(prev.getDepartureTime(), curr.getArrivalTime());
+            Instant currEffectiveStart = getEffectiveStart(curr);
+            Duration breakBeforeCurrentEvent = Duration.between(prev.getDepartureTime(), currEffectiveStart);
             if (!getEventDate(prev).equals(getEventDate(curr))) {
-                spanStart = curr.getArrivalTime();
+                spanStart = currEffectiveStart;
                 continue;
             }
-            if (gap.compareTo(driver.getMinBreak()) >= 0) {
-                spanStart = curr.getArrivalTime();
+            if (breakBeforeCurrentEvent.compareTo(driver.getMinBreak()) >= 0) {
+                spanStart = currEffectiveStart;
             } else {
                 Duration consecutiveSpan = Duration.between(spanStart, curr.getDepartureTime());
                 long over = consecutiveSpan.toMinutes() - driver.getMaxConsecutiveHours().toMinutes();
@@ -370,5 +370,17 @@ public class VrpConstraintProvider implements ConstraintProvider {
             }
         }
         return maxOverMinutes * 100L;
+    }
+
+    private static Instant getEffectiveStart(Event event) {
+        Instant arrival = event.getArrivalTime();
+        Instant minStart = event.getMinStartTime();
+        if (arrival == null) {
+            return minStart;
+        }
+        if (minStart != null && arrival.isBefore(minStart)) {
+            return minStart;
+        }
+        return arrival;
     }
 }

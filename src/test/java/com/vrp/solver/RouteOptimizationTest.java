@@ -13,6 +13,7 @@ import com.vrp.constraint.VrpConstraintProvider;
 import com.vrp.domain.Driver;
 import com.vrp.domain.Event;
 import com.vrp.domain.Location;
+import com.vrp.domain.Stop;
 import com.vrp.domain.VrpSolution;
 import com.vrp.entity.Customer;
 import com.vrp.entity.Employee;
@@ -229,6 +230,43 @@ class RouteOptimizationTest {
     }
 
     @Test
+    void maxConsecutiveDrivingHours_waitingBeforeMinStartCountsAsBreak() {
+        Driver driver = new Driver("d1", HUB);
+
+        Event morningRun = new Event();
+        morningRun.setId("morning-run");
+        morningRun.setPickup(true);
+        morningRun.setPassengers(List.of(person1));
+        morningRun.setFromLocation(HUB);
+        morningRun.setToLocation(CHEP);
+        morningRun.setMinStartTime(toInstant(MONDAY, 8, 0));
+        morningRun.setMaxEndTime(toInstant(MONDAY, 9, 0));
+        morningRun.setDuration(Duration.ofMinutes(30));
+        morningRun.setDriver(driver);
+        morningRun.setShiftDate(MONDAY);
+        morningRun.setArrivalTime(toInstant(MONDAY, 8, 0));
+
+        Event afternoonRun = new Event();
+        afternoonRun.setId("afternoon-run-after-long-wait");
+        afternoonRun.setPickup(false);
+        afternoonRun.setPassengers(List.of(person1));
+        afternoonRun.setFromLocation(CHEP);
+        afternoonRun.setToLocation(HUB);
+        afternoonRun.setMinStartTime(toInstant(MONDAY, 14, 0));
+        afternoonRun.setMaxEndTime(toInstant(MONDAY, 15, 0));
+        afternoonRun.setDuration(Duration.ofMinutes(30));
+        afternoonRun.setDriver(driver);
+        afternoonRun.setShiftDate(MONDAY);
+        // The driver reaches the site shortly after the morning run, then waits until 14:00.
+        // That waiting period is a break for consecutive-driving purposes.
+        afternoonRun.setArrivalTime(toInstant(MONDAY, 8, 45));
+
+        constraintVerifier.verifyThat(VrpConstraintProvider::maxConsecutiveDrivingHours)
+                .given(driver, morningRun, afternoonRun)
+                .penalizes(0);
+    }
+
+    @Test
     void timeWindow_completesBeforeMaxEnd_shouldNotPenalize() {
         Driver driver = new Driver("d1", HUB);
 
@@ -363,31 +401,31 @@ class RouteOptimizationTest {
 
         List<Event> events = new ArrayList<>();
 
-        // ---- Chep early shift (05:30 - 14:00) ----
-        // Person 1 has a separate pickup at Tankstelle (FR-4)
-        Event[] person1Chep = createPairedEvents("person1-chep",
-                TANKSTELLE, CHEP,
-                toInstant(MONDAY, 4, 45), toInstant(MONDAY, 5, 30),
-                toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(person1));
-        events.addAll(List.of(person1Chep[0], person1Chep[1]));
+        // ---- FR-3 early shift multi-stop route (05:30 Chep, 06:00 Sanner) ----
+        // One vehicle boards Person 1 at Tankstelle and Person 2-6 at Hub, then drops
+        // Chep passengers at Chep and the Sanner passenger at Sanner. This mirrors
+        // EventGenerationService's cross-customer merged event topology.
+        Event chepSannerMorning = createMultiStopEvent("pickup-chep-sanner-fr3",
+                true,
+                toInstant(MONDAY, 4, 20), toInstant(MONDAY, 6, 0),
+                List.of(
+                        createStop(TANKSTELLE, List.of(person1), 0, "", null),
+                        createStop(HUB, List.of(person2, person3, person4, person5, person6), 0, "", CHEP),
+                        createStop(CHEP, List.of(), 5, "Chep Deutschland GmbH", HUB),
+                        createStop(SANNER, List.of(), 1, "Sanner GmbH", CHEP)
+                ));
 
-        // 4 Chep employees batched from Hub (FR-1)
-        Event[] batchChep = createPairedEvents("batch-chep",
-                HUB, CHEP,
-                toInstant(MONDAY, 4, 45), toInstant(MONDAY, 5, 30),
+        Event chepSannerReturn = createMultiStopEvent("dropoff-chep-sanner-fr3",
+                false,
                 toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(person2, person3, person4, person5));
-        events.addAll(List.of(batchChep[0], batchChep[1]));
-
-        // ---- Sanner early shift (06:00 - 14:00) ----
-        // Person 6 from Hub - in manual plan combined with Chep batch at 04:30 (FR-3)
-        Event[] person6Sanner = createPairedEvents("person6-sanner",
-                HUB, SANNER,
-                toInstant(MONDAY, 5, 15), toInstant(MONDAY, 6, 0),
-                toInstant(MONDAY, 14, 0), toInstant(MONDAY, 15, 0),
-                List.of(person6));
-        events.addAll(List.of(person6Sanner[0], person6Sanner[1]));
+                List.of(
+                        createStop(CHEP, List.of(person1, person2, person3, person4, person5), 0, "", null),
+                        createStop(SANNER, List.of(person6), 0, "", CHEP),
+                        createStop(HUB, List.of(), 6, "City-Fahrschule", SANNER)
+                ));
+        chepSannerMorning.setPairedEvent(chepSannerReturn);
+        chepSannerReturn.setPairedEvent(chepSannerMorning);
+        events.addAll(List.of(chepSannerMorning, chepSannerReturn));
 
         // ---- Orion day shift (06:30 - 16:00) ----
         // Person 7 + Person 8 batched from Hub
@@ -496,9 +534,9 @@ class RouteOptimizationTest {
         assertTrue(driverEventCounts.size() >= 1,
                 "At least 1 driver should be used");
 
-        // Total events should match what we created (10 events = 5 pairs)
-        assertEquals(10, solution.getEvents().size(),
-                "Should have 10 events (5 pickup + 5 dropoff)");
+        // Total events should match what we created (6 events = 3 pickup/return pairs)
+        assertEquals(6, solution.getEvents().size(),
+                "Should have 6 events (FR-3 Chep/Sanner pair + Orion pair + Barbe pair)");
     }
 
     // ============================================================
@@ -797,6 +835,30 @@ class RouteOptimizationTest {
                 false, passengers, null, "weekday",
                 Duration.ZERO, Duration.ZERO);
         // Derive shiftDate from minStart (tests are single-day, so this works)
+        event.setShiftDate(minStart.atZone(ZONE).toLocalDate());
+        return event;
+    }
+
+    static Stop createStop(Location location, List<Employee> boardingPassengers,
+                           int alightingCount, String alightingCustomerName,
+                           Location previousLocation) {
+        Stop stop = new Stop(location, boardingPassengers, alightingCount, alightingCustomerName);
+        if (previousLocation == null) {
+            stop.setDistanceFromPrevious(0L);
+            stop.setTravelTimeFromPrevious(Duration.ZERO);
+        } else {
+            long distance = previousLocation.getHaversineDistance(location);
+            stop.setDistanceFromPrevious(distance);
+            stop.setTravelTimeFromPrevious(Duration.ofSeconds(distance / 15));
+        }
+        return stop;
+    }
+
+    static Event createMultiStopEvent(String id, boolean pickup,
+                                      Instant minStart, Instant maxEnd,
+                                      List<Stop> stops) {
+        Event event = new Event(id, stops, minStart, maxEnd,
+                pickup, null, "weekday", Duration.ZERO, Duration.ZERO);
         event.setShiftDate(minStart.atZone(ZONE).toLocalDate());
         return event;
     }
