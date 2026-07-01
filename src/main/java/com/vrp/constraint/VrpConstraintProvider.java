@@ -1,6 +1,6 @@
 package com.vrp.constraint;
 
-import ai.timefold.solver.core.api.score.buildin.hardmediumsoftlong.HardMediumSoftLongScore;
+import ai.timefold.solver.core.api.score.HardMediumSoftScore;
 import ai.timefold.solver.core.api.score.stream.*;
 import com.vrp.domain.Driver;
 import com.vrp.domain.Event;
@@ -43,7 +43,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
     public Constraint driverAssignmentRequired(ConstraintFactory constraintFactory) {
         return constraintFactory.forEachIncludingUnassigned(Event.class)
             .filter(event -> event.getDriver() == null)
-            .penalizeLong(HardMediumSoftLongScore.ONE_HARD, event -> 1000L)
+            .penalize(HardMediumSoftScore.ONE_HARD, event -> 1000L)
             .asConstraint("Driver assignment required");
     }
     
@@ -51,15 +51,15 @@ public class VrpConstraintProvider implements ConstraintProvider {
         return constraintFactory.forEachIncludingUnassigned(Event.class)
             .filter(event -> event.getDriver() != null)
             .filter(event -> calculateVehicleCapacityPenalty(event) > 0)
-            .penalizeLong(HardMediumSoftLongScore.ONE_HARD, VrpConstraintProvider::calculateVehicleCapacityPenalty)
+            .penalize(HardMediumSoftScore.ONE_HARD, VrpConstraintProvider::calculateVehicleCapacityPenalty)
             .asConstraint("Vehicle capacity constraint");
     }
     
     /**
      * Hard constraint: cumulative passenger count must never go negative.
      * A negative count means a dropoff event precedes its paired pickup in the
-     * driver's chain — a structural infeasibility. Penalized heavily per unit
-     * below zero so the solver immediately fixes chain ordering before refining
+     * driver's route — a structural infeasibility. Penalized heavily per unit
+     * below zero so the solver immediately fixes route ordering before refining
      * timing.
      */
     public Constraint negativeCumulativePassengerCount(ConstraintFactory constraintFactory) {
@@ -67,7 +67,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .filter(event -> event.getDriver() != null)
             .filter(event -> event.getCumulativePassengerCount() != null
                           && event.getCumulativePassengerCount() < 0)
-            .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
+            .penalize(HardMediumSoftScore.ONE_HARD,
                 event -> (long)(-event.getCumulativePassengerCount()) * STRUCTURAL_VIOLATION_PENALTY)
             .asConstraint("Negative cumulative passenger count");
     }
@@ -76,7 +76,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
         return constraintFactory.forEachIncludingUnassigned(Event.class)
             .filter(event -> event.getDriver() != null)
             .filter(event -> calculateTimeWindowPenalty(event) > 0)
-            .penalizeLong(HardMediumSoftLongScore.ONE_HARD, VrpConstraintProvider::calculateTimeWindowPenalty)
+            .penalize(HardMediumSoftScore.ONE_HARD, VrpConstraintProvider::calculateTimeWindowPenalty)
             .asConstraint("Time window constraint");
     }
     
@@ -84,7 +84,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
         return constraintFactory.forEachIncludingUnassigned(Event.class)
             .filter(event -> event.getPairedEvent() != null && !event.isPickup())
             .filter(dropoff -> calculatePairingPenalty(dropoff) > 0)
-            .penalizeLong(HardMediumSoftLongScore.ONE_HARD, VrpConstraintProvider::calculatePairingPenalty)
+            .penalize(HardMediumSoftScore.ONE_HARD, VrpConstraintProvider::calculatePairingPenalty)
             .asConstraint("Pairing constraint");
     }
 
@@ -92,7 +92,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
         if (event.getDriver() == null) return 0L;
         int maxCapacity = event.getDriver().getMaxCapacity();
 
-        // Check cumulative passenger count across the driver's chain.
+        // Check cumulative passenger count across the driver's route.
         Integer cumCount = event.getCumulativePassengerCount();
         long chainPenalty = 0;
         if (cumCount != null && cumCount > maxCapacity) {
@@ -101,8 +101,8 @@ public class VrpConstraintProvider implements ConstraintProvider {
 
         // FR-3: Check peak concurrent load within this event's multi-stop route.
         int previousCumulative = 0;
-        if (event.getPreviousStandstill() instanceof Event) {
-            Integer prevCum = ((Event) event.getPreviousStandstill()).getCumulativePassengerCount();
+        if (event.getPreviousEvent() != null) {
+            Integer prevCum = event.getPreviousEvent().getCumulativePassengerCount();
             previousCumulative = prevCum != null ? prevCum : 0;
         }
         int peakDuringEvent = previousCumulative + event.getPeakPassengerCount();
@@ -188,7 +188,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
             .groupBy((driver, event) -> driver,
                      (driver, event) -> event.getShiftDate(),
                      ConstraintCollectors.toList((driver, event) -> event))
-            .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
+            .penalize(HardMediumSoftScore.ONE_HARD,
                 (driver, date, events) -> {
                     if (date == null || events.isEmpty()) return 0L;
                     long totalWorkingMinutes = 0;
@@ -216,7 +216,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
                   Joiners.equal(driver -> driver, Event::getDriver))
             .groupBy((driver, event) -> driver,
                      ConstraintCollectors.toList((driver, event) -> event))
-            .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
+            .penalize(HardMediumSoftScore.ONE_HARD,
                 (driver, events) -> {
                     if (events.isEmpty()) return 0L;
                     long totalWorkingMinutes = 0;
@@ -249,7 +249,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
                   Joiners.equal(driver -> driver, Event::getDriver))
             .groupBy((driver, event) -> driver,
                      ConstraintCollectors.toList((driver, event) -> event))
-            .penalizeLong(HardMediumSoftLongScore.ONE_HARD,
+            .penalize(HardMediumSoftScore.ONE_HARD,
                 (driver, events) -> calculateConsecutiveDrivingPenalty(driver, events))
             .asConstraint("Max consecutive driving hours");
     }
@@ -261,7 +261,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
     public Constraint minimizeTotalDistance(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Event.class)
             .filter(event -> event.getDriver() != null)
-            .penalizeLong(HardMediumSoftLongScore.ONE_SOFT,
+            .penalize(HardMediumSoftScore.ONE_SOFT,
                 Event::getDistance)
             .asConstraint("Minimize total distance");
     }
@@ -269,7 +269,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
     public Constraint minimizeWaitingTime(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Event.class)
             .filter(event -> event.getDriver() != null && event.getWaitingTime() != null)
-            .penalizeLong(HardMediumSoftLongScore.ONE_SOFT,
+            .penalize(HardMediumSoftScore.ONE_SOFT,
                 event -> event.getWaitingTime().toMinutes())
             .asConstraint("Minimize waiting time");
     }
@@ -280,7 +280,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
                   Joiners.equal(driver -> driver, Event::getDriver))
             .groupBy((driver, event) -> driver,
                      ConstraintCollectors.toList((driver, event) -> event))
-            .penalizeLong(HardMediumSoftLongScore.ONE_SOFT,
+            .penalize(HardMediumSoftScore.ONE_SOFT,
                      (driver, events) -> {
                          Event lastEvent = findLastEvent(events);
                          if (lastEvent == null) return 0L;
@@ -291,18 +291,18 @@ public class VrpConstraintProvider implements ConstraintProvider {
 
     public Constraint excessiveIdleTime(ConstraintFactory constraintFactory) {
         return constraintFactory.forEach(Event.class)
-            .filter(event -> event.getPreviousStandstill() instanceof Event)
+            .filter(event -> event.getPreviousEvent() != null)
             .filter(event -> {
-                Event previous = (Event) event.getPreviousStandstill();
+                Event previous = event.getPreviousEvent();
                 if (previous.getDepartureTime() == null || event.getArrivalTime() == null) {
                     return false;
                 }
                 Duration idle = Duration.between(previous.getDepartureTime(), event.getArrivalTime());
                 return idle.toMinutes() > 240; // More than 4 hours
             })
-            .penalizeLong(HardMediumSoftLongScore.ONE_SOFT,
+            .penalize(HardMediumSoftScore.ONE_SOFT,
                      event -> {
-                         Event previous = (Event) event.getPreviousStandstill();
+                         Event previous = event.getPreviousEvent();
                          Duration idle = Duration.between(previous.getDepartureTime(), event.getArrivalTime());
                          return idle.toMinutes() - 240; // Penalize minutes over 4 hours
                      })

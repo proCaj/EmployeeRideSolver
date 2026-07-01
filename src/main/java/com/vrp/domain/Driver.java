@@ -1,12 +1,17 @@
 package com.vrp.domain;
 
+import ai.timefold.solver.core.api.domain.entity.PlanningEntity;
+import ai.timefold.solver.core.api.domain.variable.PlanningListVariable;
 import com.vrp.entity.Employee;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
-public class Driver implements Standstill {
-    
+@PlanningEntity
+public class Driver {
+
     private String id;
     private Location homeLocation;
     private int maxCapacity = 6;
@@ -17,30 +22,35 @@ public class Driver implements Standstill {
     private Duration maxWeeklyHours = Duration.ofHours(40);
     private Employee employee;
 
+    @PlanningListVariable(valueRangeProviderRefs = "eventRange", allowsUnassignedValues = true)
+    private List<Event> events = new ArrayList<>();
+
     public Driver() {
     }
-    
+
     public Driver(String id, Location homeLocation) {
         this.id = id;
         this.homeLocation = homeLocation;
     }
-    
+
     public Driver(String id, Location homeLocation, Employee employee) {
         this.id = id;
         this.homeLocation = homeLocation;
         this.employee = employee;
     }
-    
-    @Override
+
     public Location getLocation() {
         return homeLocation;
     }
-    
-    @Override
-    public Driver getDriver() {
-        return this;
+
+    public List<Event> getEvents() {
+        return events;
     }
-    
+
+    public void setEvents(List<Event> events) {
+        this.events = events != null ? events : new ArrayList<>();
+    }
+
     public String getId() {
         return id;
     }
