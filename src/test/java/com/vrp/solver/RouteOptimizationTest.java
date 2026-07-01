@@ -5,7 +5,7 @@ import ai.timefold.solver.core.api.solver.SolverFactory;
 import ai.timefold.solver.core.config.score.director.ScoreDirectorFactoryConfig;
 import ai.timefold.solver.core.config.solver.SolverConfig;
 import ai.timefold.solver.core.config.solver.termination.TerminationConfig;
-import ai.timefold.solver.test.api.score.stream.ConstraintVerifier;
+import ai.timefold.solver.core.api.score.stream.test.ConstraintVerifier;
 import com.vrp.constraint.VrpConstraintProvider;
 import com.vrp.domain.Driver;
 import com.vrp.domain.Event;
@@ -107,12 +107,60 @@ class RouteOptimizationTest {
     @BeforeEach
     void setupConstraintVerifier() {
         constraintVerifier = ConstraintVerifier.build(
-                new VrpConstraintProvider(), VrpSolution.class, Event.class);
+                new VrpConstraintProvider(), VrpSolution.class, Driver.class, Event.class);
     }
 
     // ============================================================
     // Constraint Verifier Tests
     // ============================================================
+
+    /**
+     * Regression test for the Timefold 2.x list-variable migration: verifies that
+     * the driver/previousEvent/arrivalTime shadow variables are correctly derived
+     * from a driver's events list without going through a full solve.
+     */
+    @Test
+    void shadowVariables_propagateAlongDriverEventsList() {
+        Driver driver = new Driver("d1", HUB);
+
+        Event e1 = new Event();
+        e1.setId("e1");
+        e1.setPickup(true);
+        e1.setFromLocation(HUB);
+        e1.setToLocation(CHEP);
+        e1.setMinStartTime(toInstant(MONDAY, 4, 45));
+        e1.setMaxEndTime(toInstant(MONDAY, 5, 30));
+        e1.setDuration(Duration.ofMinutes(30));
+        e1.setDistance(HUB.getHaversineDistance(CHEP));
+
+        Event e2 = new Event();
+        e2.setId("e2");
+        e2.setPickup(true);
+        e2.setFromLocation(CHEP);
+        e2.setToLocation(SANNER);
+        e2.setMinStartTime(toInstant(MONDAY, 6, 0));
+        e2.setMaxEndTime(toInstant(MONDAY, 7, 0));
+        e2.setDuration(Duration.ofMinutes(30));
+        e2.setDistance(CHEP.getHaversineDistance(SANNER));
+
+        driver.getEvents().add(e1);
+        driver.getEvents().add(e2);
+
+        VrpSolution solution = new VrpSolution(
+            List.of(HUB, CHEP, SANNER), List.of(), List.of(),
+            List.of(driver), List.of(e1, e2), MONDAY);
+
+        ai.timefold.solver.core.api.solver.SolutionManager.updateShadowVariables(solution);
+
+        assertEquals(driver, e1.getDriver(), "e1 driver should be set after shadow variable update");
+        assertNull(e1.getPreviousEvent(), "e1 is first in the route, so it has no previous event");
+        assertEquals(e1.getMinStartTime(), e1.getArrivalTime(), "e1 arrivalTime should default to its minStartTime");
+
+        assertEquals(driver, e2.getDriver(), "e2 driver should be set after shadow variable update");
+        assertEquals(e1, e2.getPreviousEvent(), "e2 previousEvent should be e1");
+        assertEquals(e1.getDepartureTime().plus(e1.getToLocation().getTravelTime(e2.getFromLocation(), null)),
+            e2.getArrivalTime(), "e2 arrivalTime should follow e1's departure plus travel time");
+    }
 
     @Test
     void driverAssignmentRequired_unassignedEvent_shouldPenalize() {
@@ -148,7 +196,6 @@ class RouteOptimizationTest {
         event.setDuration(Duration.ofMinutes(30));
         event.setDistance(HUB.getHaversineDistance(CHEP));
         event.setDriver(driver);
-        event.setPreviousStandstill(driver);
 
         constraintVerifier.verifyThat(VrpConstraintProvider::driverAssignmentRequired)
                 .given(event)
@@ -418,7 +465,7 @@ class RouteOptimizationTest {
         // Configure solver with 30-second time limit
         SolverConfig solverConfig = new SolverConfig()
                 .withSolutionClass(VrpSolution.class)
-                .withEntityClasses(Event.class)
+                .withEntityClasses(Driver.class, Event.class)
                 .withScoreDirectorFactory(new ScoreDirectorFactoryConfig()
                         .withConstraintProviderClass(VrpConstraintProvider.class))
                 .withTerminationConfig(new TerminationConfig()
@@ -557,7 +604,7 @@ class RouteOptimizationTest {
 
         SolverConfig solverConfig = new SolverConfig()
                 .withSolutionClass(VrpSolution.class)
-                .withEntityClasses(Event.class)
+                .withEntityClasses(Driver.class, Event.class)
                 .withScoreDirectorFactory(new ScoreDirectorFactoryConfig()
                         .withConstraintProviderClass(VrpConstraintProvider.class))
                 .withTerminationConfig(new TerminationConfig()
@@ -681,7 +728,7 @@ class RouteOptimizationTest {
 
         SolverConfig solverConfig = new SolverConfig()
                 .withSolutionClass(VrpSolution.class)
-                .withEntityClasses(Event.class)
+                .withEntityClasses(Driver.class, Event.class)
                 .withScoreDirectorFactory(new ScoreDirectorFactoryConfig()
                         .withConstraintProviderClass(VrpConstraintProvider.class))
                 .withTerminationConfig(new TerminationConfig()
@@ -816,11 +863,10 @@ class RouteOptimizationTest {
     private void printRoutes(VrpSolution solution) {
         for (Driver driver : solution.getDrivers()) {
             System.out.println("--- " + driver.getId() + " (home: " + driver.getHomeLocation().name() + ") ---");
-            Event current = findFirstEvent(solution, driver);
             int eventCount = 0;
             long totalDistance = 0;
 
-            while (current != null) {
+            for (Event current : driver.getEvents()) {
                 eventCount++;
                 totalDistance += current.getDistance();
                 String arrivalStr = current.getArrivalTime() != null
@@ -836,29 +882,10 @@ class RouteOptimizationTest {
                         current.getCumulativePassengerCount() != null
                                 ? String.valueOf(current.getCumulativePassengerCount()) : "?",
                         arrivalStr);
-                current = findNextEvent(solution, current);
             }
             System.out.printf("  Route: %d events, ~%.1f km total event distance%n",
                     eventCount, totalDistance / 1000.0);
             System.out.println();
         }
-    }
-
-    private Event findFirstEvent(VrpSolution solution, Driver driver) {
-        for (Event event : solution.getEvents()) {
-            if (event.getPreviousStandstill() == driver) {
-                return event;
-            }
-        }
-        return null;
-    }
-
-    private Event findNextEvent(VrpSolution solution, Event current) {
-        for (Event event : solution.getEvents()) {
-            if (event.getPreviousStandstill() == current) {
-                return event;
-            }
-        }
-        return null;
     }
 }
