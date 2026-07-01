@@ -82,7 +82,6 @@ public class VrpSolution {
         return events;
     }
 
-
     public List<Location> getLocations() {
         return locations;
     }

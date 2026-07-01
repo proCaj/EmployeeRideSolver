@@ -58,8 +58,8 @@ public class VrpConstraintProvider implements ConstraintProvider {
     /**
      * Hard constraint: cumulative passenger count must never go negative.
      * A negative count means a dropoff event precedes its paired pickup in the
-     * driver's chain — a structural infeasibility. Penalized heavily per unit
-     * below zero so the solver immediately fixes chain ordering before refining
+     * driver's route — a structural infeasibility. Penalized heavily per unit
+     * below zero so the solver immediately fixes route ordering before refining
      * timing.
      */
     public Constraint negativeCumulativePassengerCount(ConstraintFactory constraintFactory) {
@@ -92,7 +92,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
         if (event.getDriver() == null) return 0L;
         int maxCapacity = event.getDriver().getMaxCapacity();
 
-        // Check cumulative passenger count across the driver's chain.
+        // Check cumulative passenger count across the driver's route.
         Integer cumCount = event.getCumulativePassengerCount();
         long chainPenalty = 0;
         if (cumCount != null && cumCount > maxCapacity) {

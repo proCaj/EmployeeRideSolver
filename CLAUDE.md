@@ -122,6 +122,7 @@ Unlike the old `VariableListener`s, these suppliers are pure functions with no `
 **Hard constraints:**
 - `driverAssignmentRequired` - Every event must have a driver
 - `vehicleCapacityConstraint` - Checks both cumulative passenger count across the driver's route AND peak concurrent load within multi-stop events; penalizes whichever exceeds driver `maxCapacity` more
+- `negativeCumulativePassengerCount` - Cumulative passenger count must never go negative (a dropoff scheduled before its paired pickup in the driver's route)
 - `timeWindowConstraint` - Event-level time window (completion before `maxEndTime`) AND per-stop time windows for multi-stop events (each stop checked against its `maxEndTime`)
 - `pairingConstraint` - Pickup/dropoff pairs must use same driver, pickup before dropoff
 - `maxDailyWorkingHours` - Per driver per shiftDate, maximum 10 hours of working time per ArbZG; night shifts count toward the day the shift started

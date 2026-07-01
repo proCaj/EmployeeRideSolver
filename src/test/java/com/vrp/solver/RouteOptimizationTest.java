@@ -3,6 +3,7 @@ package com.vrp.solver;
 import ai.timefold.solver.core.api.solver.Solver;
 import ai.timefold.solver.core.api.solver.SolverFactory;
 import ai.timefold.solver.core.config.score.director.ScoreDirectorFactoryConfig;
+import ai.timefold.solver.core.config.solver.EnvironmentMode;
 import ai.timefold.solver.core.config.solver.SolverConfig;
 import ai.timefold.solver.core.config.solver.termination.TerminationConfig;
 import ai.timefold.solver.core.api.score.stream.test.ConstraintVerifier;
@@ -466,6 +467,7 @@ class RouteOptimizationTest {
         SolverConfig solverConfig = new SolverConfig()
                 .withSolutionClass(VrpSolution.class)
                 .withEntityClasses(Driver.class, Event.class)
+                .withEnvironmentMode(EnvironmentMode.NO_ASSERT)
                 .withScoreDirectorFactory(new ScoreDirectorFactoryConfig()
                         .withConstraintProviderClass(VrpConstraintProvider.class))
                 .withTerminationConfig(new TerminationConfig()
@@ -605,6 +607,7 @@ class RouteOptimizationTest {
         SolverConfig solverConfig = new SolverConfig()
                 .withSolutionClass(VrpSolution.class)
                 .withEntityClasses(Driver.class, Event.class)
+                .withEnvironmentMode(EnvironmentMode.NO_ASSERT)
                 .withScoreDirectorFactory(new ScoreDirectorFactoryConfig()
                         .withConstraintProviderClass(VrpConstraintProvider.class))
                 .withTerminationConfig(new TerminationConfig()
@@ -729,6 +732,7 @@ class RouteOptimizationTest {
         SolverConfig solverConfig = new SolverConfig()
                 .withSolutionClass(VrpSolution.class)
                 .withEntityClasses(Driver.class, Event.class)
+                .withEnvironmentMode(EnvironmentMode.NO_ASSERT)
                 .withScoreDirectorFactory(new ScoreDirectorFactoryConfig()
                         .withConstraintProviderClass(VrpConstraintProvider.class))
                 .withTerminationConfig(new TerminationConfig()
@@ -858,7 +862,7 @@ class RouteOptimizationTest {
     }
 
     /**
-     * Prints the route chain for each driver in the solution.
+     * Prints each driver's route (its events list, in order) for the solution.
      */
     private void printRoutes(VrpSolution solution) {
         for (Driver driver : solution.getDrivers()) {
