@@ -81,9 +81,15 @@ public class VrpConstraintProvider implements ConstraintProvider {
     }
     
     public Constraint pairingConstraint(ConstraintFactory constraintFactory) {
+        // The pickup must be selected into the tuple via a join, NOT discovered through the
+        // dropoff's pairedEvent reference inside the penalty function. Incremental score
+        // calculation only re-evaluates a constraint when a selected entity changes, so a
+        // transitively-read pickup going stale corrupts the score (proven by FULL_ASSERT).
         return constraintFactory.forEachIncludingUnassigned(Event.class)
             .filter(event -> event.getPairedEvent() != null && !event.isPickup())
-            .filter(dropoff -> calculatePairingPenalty(dropoff) > 0)
+            .join(constraintFactory.forEachIncludingUnassigned(Event.class),
+                  Joiners.equal(Event::getPairedEvent, pickup -> pickup))
+            .filter((dropoff, pickup) -> calculatePairingPenalty(dropoff, pickup) > 0)
             .penalizeLong(HardMediumSoftLongScore.ONE_HARD, VrpConstraintProvider::calculatePairingPenalty)
             .asConstraint("Pairing constraint");
     }
@@ -120,12 +126,20 @@ public class VrpConstraintProvider implements ConstraintProvider {
         }
         long totalPenalty = 0;
 
-        // Check event-level time window (legacy single-stop).
-        Instant effectiveCompletion = event.getArrivalTime().plus(
-            event.getDuration() != null ? event.getDuration() : Duration.ZERO
-        );
-        if (effectiveCompletion.isAfter(event.getMaxEndTime())) {
-            totalPenalty += Duration.between(event.getMaxEndTime(), effectiveCompletion).getSeconds();
+        // Check event-level time window — but only when no stop carries its own deadline.
+        // A merged multi-stop event's maxEndTime is the TIGHTEST customer deadline, while the
+        // event completes only after the farthest stop, so the event-level check is inherently
+        // violated even when every per-stop deadline is met; the per-stop walk below is
+        // authoritative there.
+        boolean hasPerStopDeadlines = event.getStops() != null
+            && event.getStops().stream().anyMatch(stop -> stop.getMaxEndTime() != null);
+        if (!hasPerStopDeadlines) {
+            Instant effectiveCompletion = event.getArrivalTime().plus(
+                event.getDuration() != null ? event.getDuration() : Duration.ZERO
+            );
+            if (effectiveCompletion.isAfter(event.getMaxEndTime())) {
+                totalPenalty += Duration.between(event.getMaxEndTime(), effectiveCompletion).getSeconds();
+            }
         }
 
         // FR-3: Check per-stop time windows for multi-stop events.
@@ -150,8 +164,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
         return totalPenalty;
     }
 
-    private static long calculatePairingPenalty(Event dropoff) {
-        Event pickup = dropoff.getPairedEvent();
+    private static long calculatePairingPenalty(Event dropoff, Event pickup) {
         if (pickup == null || dropoff.isPickup()) return 0L;
         if (dropoff.getDriver() == null || pickup.getDriver() == null ||
             !dropoff.getDriver().equals(pickup.getDriver())) {

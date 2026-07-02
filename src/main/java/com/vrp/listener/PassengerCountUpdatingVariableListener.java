@@ -6,6 +6,8 @@ import com.vrp.domain.Event;
 import com.vrp.domain.Standstill;
 import com.vrp.domain.VrpSolution;
 
+import java.util.Objects;
+
 public class PassengerCountUpdatingVariableListener
         implements VariableListener<VrpSolution, Event> {
 
@@ -42,17 +44,23 @@ public class PassengerCountUpdatingVariableListener
     private void updatePassengerCount(ScoreDirector<VrpSolution> scoreDirector, Event event) {
         Standstill previous = event.getPreviousStandstill();
 
-        int previousCount = 0;
-        if (previous instanceof Event) {
+        // Must stay a pure function of the source variable, mirroring
+        // ArrivalTimeUpdatingVariableListener: unassigned (or downstream of
+        // unassigned) events keep null, otherwise FULL_ASSERT flags the stored
+        // null vs recomputed value as shadow-variable corruption.
+        Integer newCount;
+        if (previous == null) {
+            newCount = null;
+        } else if (previous instanceof Event) {
             Integer prevCumulative = ((Event) previous).getCumulativePassengerCount();
-            previousCount = prevCumulative != null ? prevCumulative : 0;
+            newCount = prevCumulative == null ? null : prevCumulative + event.getPassengerDelta();
+        } else {
+            // Previous is the Driver anchor: chain starts at this event's delta
+            newCount = event.getPassengerDelta();
         }
-        // If previous is Driver, count starts at 0
-
-        int newCount = previousCount + event.getPassengerDelta();
 
         Integer currentCount = event.getCumulativePassengerCount();
-        if (currentCount == null || currentCount.intValue() != newCount) {
+        if (!Objects.equals(currentCount, newCount)) {
             scoreDirector.beforeVariableChanged(event, "cumulativePassengerCount");
             event.setCumulativePassengerCount(newCount);
             scoreDirector.afterVariableChanged(event, "cumulativePassengerCount");
