@@ -41,9 +41,14 @@ public class VrpConstraintProvider implements ConstraintProvider {
     // ============================================================
     
     public Constraint driverAssignmentRequired(ConstraintFactory constraintFactory) {
+        // Structural scale, not a token 1000: with @PlanningListVariable(allowsUnassignedValues
+        // = true) local search CAN unassign events mid-search (the chained model never could),
+        // so leaving a hard-to-place event unassigned must cost more than any violation it
+        // would take to actually place it — otherwise the solver dumps events instead of
+        // repairing routes.
         return constraintFactory.forEachIncludingUnassigned(Event.class)
             .filter(event -> event.getDriver() == null)
-            .penalize(HardMediumSoftScore.ONE_HARD, event -> 1000L)
+            .penalize(HardMediumSoftScore.ONE_HARD, event -> STRUCTURAL_VIOLATION_PENALTY)
             .asConstraint("Driver assignment required");
     }
     
@@ -81,9 +86,15 @@ public class VrpConstraintProvider implements ConstraintProvider {
     }
     
     public Constraint pairingConstraint(ConstraintFactory constraintFactory) {
+        // The pickup must be selected into the tuple via a join, NOT discovered through the
+        // dropoff's pairedEvent reference inside the penalty function. Incremental score
+        // calculation only re-evaluates a constraint when a selected entity changes, so a
+        // transitively-read pickup going stale corrupts the score (proven by FULL_ASSERT).
         return constraintFactory.forEachIncludingUnassigned(Event.class)
             .filter(event -> event.getPairedEvent() != null && !event.isPickup())
-            .filter(dropoff -> calculatePairingPenalty(dropoff) > 0)
+            .join(constraintFactory.forEachIncludingUnassigned(Event.class),
+                  Joiners.equal(Event::getPairedEvent, pickup -> pickup))
+            .filter((dropoff, pickup) -> calculatePairingPenalty(dropoff, pickup) > 0)
             .penalize(HardMediumSoftScore.ONE_HARD, VrpConstraintProvider::calculatePairingPenalty)
             .asConstraint("Pairing constraint");
     }
@@ -120,12 +131,20 @@ public class VrpConstraintProvider implements ConstraintProvider {
         }
         long totalPenalty = 0;
 
-        // Check event-level time window (legacy single-stop).
-        Instant effectiveCompletion = event.getArrivalTime().plus(
-            event.getDuration() != null ? event.getDuration() : Duration.ZERO
-        );
-        if (effectiveCompletion.isAfter(event.getMaxEndTime())) {
-            totalPenalty += Duration.between(event.getMaxEndTime(), effectiveCompletion).getSeconds();
+        // Check event-level time window — but only when no stop carries its own deadline.
+        // A merged multi-stop event's maxEndTime is the TIGHTEST customer deadline, while the
+        // event completes only after the farthest stop, so the event-level check is inherently
+        // violated even when every per-stop deadline is met; the per-stop walk below is
+        // authoritative there.
+        boolean hasPerStopDeadlines = event.getStops() != null
+            && event.getStops().stream().anyMatch(stop -> stop.getMaxEndTime() != null);
+        if (!hasPerStopDeadlines) {
+            Instant effectiveCompletion = event.getArrivalTime().plus(
+                event.getDuration() != null ? event.getDuration() : Duration.ZERO
+            );
+            if (effectiveCompletion.isAfter(event.getMaxEndTime())) {
+                totalPenalty += Duration.between(event.getMaxEndTime(), effectiveCompletion).getSeconds();
+            }
         }
 
         // FR-3: Check per-stop time windows for multi-stop events.
@@ -150,8 +169,7 @@ public class VrpConstraintProvider implements ConstraintProvider {
         return totalPenalty;
     }
 
-    private static long calculatePairingPenalty(Event dropoff) {
-        Event pickup = dropoff.getPairedEvent();
+    private static long calculatePairingPenalty(Event dropoff, Event pickup) {
         if (pickup == null || dropoff.isPickup()) return 0L;
         if (dropoff.getDriver() == null || pickup.getDriver() == null ||
             !dropoff.getDriver().equals(pickup.getDriver())) {
@@ -172,9 +190,9 @@ public class VrpConstraintProvider implements ConstraintProvider {
     /**
      * Hard constraint: Maximum daily working hours per driver.
      * 
-     * "Working hours" = sum of actual event durations for a driver on a given work day.
-     * Each event's duration = departureTime - arrivalTime (includes travel, boarding, waiting).
-     * Events are grouped by (driver, shiftDate) for per-day accounting.
+     * "Working hours" = sum of planned event service/route durations for a driver
+     * on a given work day. Waiting until an event's minStartTime is treated as
+     * break/standby time here, not continuous driving/working time.
      * 
      * Night shifts spanning midnight: both pickup and dropoff count toward the day
      * the shift started (shiftDate), per German ArbZG interpretation.
@@ -193,10 +211,9 @@ public class VrpConstraintProvider implements ConstraintProvider {
                     if (date == null || events.isEmpty()) return 0L;
                     long totalWorkingMinutes = 0;
                     for (Event e : events) {
-                        Instant arrival = e.getArrivalTime();
-                        Instant departure = e.getDepartureTime();
-                        if (arrival == null || departure == null) continue;
-                        totalWorkingMinutes += (departure.getEpochSecond() - arrival.getEpochSecond()) / 60;
+                        Duration duration = e.getDuration();
+                        if (duration == null) continue;
+                        totalWorkingMinutes += duration.toMinutes();
                     }
                     long overMinutes = totalWorkingMinutes - driver.getMaxDailyHours().toMinutes();
                     return overMinutes > 0 ? overMinutes * 100L : 0L;
@@ -207,7 +224,8 @@ public class VrpConstraintProvider implements ConstraintProvider {
     /**
      * Hard constraint: Maximum weekly working hours per driver.
      * 
-     * Sums actual event durations across the entire week for each driver.
+     * Sums planned event service/route durations across the entire week for each driver.
+     * Waiting until minStartTime is excluded as break/standby time.
      * Maximum: 40 hours per week.
      */
     public Constraint maxWeeklyWorkingHours(ConstraintFactory constraintFactory) {
@@ -221,10 +239,9 @@ public class VrpConstraintProvider implements ConstraintProvider {
                     if (events.isEmpty()) return 0L;
                     long totalWorkingMinutes = 0;
                     for (Event e : events) {
-                        Instant arrival = e.getArrivalTime();
-                        Instant departure = e.getDepartureTime();
-                        if (arrival == null || departure == null) continue;
-                        totalWorkingMinutes += (departure.getEpochSecond() - arrival.getEpochSecond()) / 60;
+                        Duration duration = e.getDuration();
+                        if (duration == null) continue;
+                        totalWorkingMinutes += duration.toMinutes();
                     }
                     long overMinutes = totalWorkingMinutes - driver.getMaxWeeklyHours().toMinutes();
                     return overMinutes > 0 ? overMinutes * 100L : 0L;
@@ -349,18 +366,19 @@ public class VrpConstraintProvider implements ConstraintProvider {
         if (count < 2) return 0L;
         Arrays.sort(arr, 0, count, Comparator.comparing(Event::getArrivalTime));
 
-        Instant spanStart = arr[0].getArrivalTime();
+        Instant spanStart = getEffectiveStart(arr[0]);
         long maxOverMinutes = 0;
         for (int i = 1; i < count; i++) {
             Event prev = arr[i - 1];
             Event curr = arr[i];
-            Duration gap = Duration.between(prev.getDepartureTime(), curr.getArrivalTime());
+            Instant currEffectiveStart = getEffectiveStart(curr);
+            Duration breakBeforeCurrentEvent = Duration.between(prev.getDepartureTime(), currEffectiveStart);
             if (!getEventDate(prev).equals(getEventDate(curr))) {
-                spanStart = curr.getArrivalTime();
+                spanStart = currEffectiveStart;
                 continue;
             }
-            if (gap.compareTo(driver.getMinBreak()) >= 0) {
-                spanStart = curr.getArrivalTime();
+            if (breakBeforeCurrentEvent.compareTo(driver.getMinBreak()) >= 0) {
+                spanStart = currEffectiveStart;
             } else {
                 Duration consecutiveSpan = Duration.between(spanStart, curr.getDepartureTime());
                 long over = consecutiveSpan.toMinutes() - driver.getMaxConsecutiveHours().toMinutes();
@@ -370,5 +388,17 @@ public class VrpConstraintProvider implements ConstraintProvider {
             }
         }
         return maxOverMinutes * 100L;
+    }
+
+    private static Instant getEffectiveStart(Event event) {
+        Instant arrival = event.getArrivalTime();
+        Instant minStart = event.getMinStartTime();
+        if (arrival == null) {
+            return minStart;
+        }
+        if (minStart != null && arrival.isBefore(minStart)) {
+            return minStart;
+        }
+        return arrival;
     }
 }

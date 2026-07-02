@@ -93,208 +93,208 @@ public class DataBootstrap {
 
         // ==================== DRIVERS ====================
 
-        Employee thomas = new Employee("Thomas Koch", "thomas@example.com", "+49 151 1234 5607", EmployeeType.DRIVER);
-        thomas.homeLatitude = HUB_LAT;
-        thomas.homeLongitude = HUB_LON;
-        thomas.persist();
+        Employee driver1 = new Employee("Driver 1", "driver1@example.com", "+49 151 1234 5607", EmployeeType.DRIVER);
+        driver1.homeLatitude = HUB_LAT;
+        driver1.homeLongitude = HUB_LON;
+        driver1.persist();
 
-        Employee sarah = new Employee("Sarah Meyer", "sarah@example.com", "+49 151 1234 5608", EmployeeType.DRIVER);
-        sarah.homeLatitude = HUB_LAT;
-        sarah.homeLongitude = HUB_LON;
-        sarah.persist();
+        Employee driver2 = new Employee("Driver 2", "driver2@example.com", "+49 151 1234 5608", EmployeeType.DRIVER);
+        driver2.homeLatitude = HUB_LAT;
+        driver2.homeLongitude = HUB_LON;
+        driver2.persist();
 
-        Employee michael = new Employee("Michael Wagner", "michael@example.com", "+49 151 1234 5609", EmployeeType.DRIVER);
-        michael.homeLatitude = HUB_LAT;
-        michael.homeLongitude = HUB_LON;
-        michael.persist();
+        Employee driver3 = new Employee("Driver 3", "driver3@example.com", "+49 151 1234 5609", EmployeeType.DRIVER);
+        driver3.homeLatitude = HUB_LAT;
+        driver3.homeLongitude = HUB_LON;
+        driver3.persist();
 
         // ==================== SITE EMPLOYEES ====================
 
         // --- CHEP employees (5 total) ---
         // 1 from Tankstelle Pfeddersheim, 4 from City-Fahrschule
 
-        Employee naruto = new Employee("Naruto Uzumaki", "naruto@example.com", "+49 151 1234 5001", EmployeeType.SITE_EMPLOYEE);
-        naruto.pickupLatitude = TANKSTELLE_LAT;  // Pfeddersheim pickup
-        naruto.pickupLongitude = TANKSTELLE_LON;
-        naruto.persist();
+        Employee person1 = new Employee("Person 1", "person1@example.com", "+49 151 1234 5001", EmployeeType.SITE_EMPLOYEE);
+        person1.pickupLatitude = TANKSTELLE_LAT;  // Pfeddersheim pickup
+        person1.pickupLongitude = TANKSTELLE_LON;
+        person1.persist();
 
-        Employee sasuke = new Employee("Sasuke Uchiha", "sasuke@example.com", "+49 151 1234 5002", EmployeeType.SITE_EMPLOYEE);
-        sasuke.pickupLatitude = HUB_LAT;  // City-Fahrschule
-        sasuke.pickupLongitude = HUB_LON;
-        sasuke.persist();
+        Employee person2 = new Employee("Person 2", "person2@example.com", "+49 151 1234 5002", EmployeeType.SITE_EMPLOYEE);
+        person2.pickupLatitude = HUB_LAT;  // City-Fahrschule
+        person2.pickupLongitude = HUB_LON;
+        person2.persist();
 
-        Employee sakura = new Employee("Sakura Haruno", "sakura@example.com", "+49 151 1234 5003", EmployeeType.SITE_EMPLOYEE);
-        sakura.pickupLatitude = HUB_LAT;
-        sakura.pickupLongitude = HUB_LON;
-        sakura.persist();
+        Employee person3 = new Employee("Person 3", "person3@example.com", "+49 151 1234 5003", EmployeeType.SITE_EMPLOYEE);
+        person3.pickupLatitude = HUB_LAT;
+        person3.pickupLongitude = HUB_LON;
+        person3.persist();
 
-        Employee hinata = new Employee("Hinata Hyuga", "hinata@example.com", "+49 151 1234 5004", EmployeeType.SITE_EMPLOYEE);
-        hinata.pickupLatitude = HUB_LAT;
-        hinata.pickupLongitude = HUB_LON;
-        hinata.persist();
+        Employee person4 = new Employee("Person 4", "person4@example.com", "+49 151 1234 5004", EmployeeType.SITE_EMPLOYEE);
+        person4.pickupLatitude = HUB_LAT;
+        person4.pickupLongitude = HUB_LON;
+        person4.persist();
 
-        Employee shikamaru = new Employee("Shikamaru Nara", "shikamaru@example.com", "+49 151 1234 5005", EmployeeType.SITE_EMPLOYEE);
-        shikamaru.pickupLatitude = HUB_LAT;
-        shikamaru.pickupLongitude = HUB_LON;
-        shikamaru.persist();
+        Employee person5 = new Employee("Person 5", "person5@example.com", "+49 151 1234 5005", EmployeeType.SITE_EMPLOYEE);
+        person5.pickupLatitude = HUB_LAT;
+        person5.pickupLongitude = HUB_LON;
+        person5.persist();
 
         // --- SANNER employee (1) ---
 
-        Employee kakashi = new Employee("Kakashi Hatake", "kakashi@example.com", "+49 151 1234 5006", EmployeeType.SITE_EMPLOYEE);
-        kakashi.pickupLatitude = HUB_LAT;
-        kakashi.pickupLongitude = HUB_LON;
-        kakashi.persist();
+        Employee person6 = new Employee("Person 6", "person6@example.com", "+49 151 1234 5006", EmployeeType.SITE_EMPLOYEE);
+        person6.pickupLatitude = HUB_LAT;
+        person6.pickupLongitude = HUB_LON;
+        person6.persist();
 
         // --- ORION employees (2) ---
 
-        Employee ino = new Employee("Ino Yamanaka", "ino@example.com", "+49 151 1234 5007", EmployeeType.SITE_EMPLOYEE);
-        ino.pickupLatitude = HUB_LAT;
-        ino.pickupLongitude = HUB_LON;
-        ino.persist();
+        Employee person7 = new Employee("Person 7", "person7@example.com", "+49 151 1234 5007", EmployeeType.SITE_EMPLOYEE);
+        person7.pickupLatitude = HUB_LAT;
+        person7.pickupLongitude = HUB_LON;
+        person7.persist();
 
-        Employee choji = new Employee("Choji Akimichi", "choji@example.com", "+49 151 1234 5008", EmployeeType.SITE_EMPLOYEE);
-        choji.pickupLatitude = HUB_LAT;
-        choji.pickupLongitude = HUB_LON;
-        choji.persist();
+        Employee person8 = new Employee("Person 8", "person8@example.com", "+49 151 1234 5008", EmployeeType.SITE_EMPLOYEE);
+        person8.pickupLatitude = HUB_LAT;
+        person8.pickupLongitude = HUB_LON;
+        person8.persist();
 
         // --- BARBE employees (3 for different shifts) ---
 
-        Employee rockLee = new Employee("Rock Lee", "rocklee@example.com", "+49 151 1234 5009", EmployeeType.SITE_EMPLOYEE);
-        rockLee.pickupLatitude = HUB_LAT;
-        rockLee.pickupLongitude = HUB_LON;
-        rockLee.persist();
+        Employee person9 = new Employee("Person 9", "person9@example.com", "+49 151 1234 5009", EmployeeType.SITE_EMPLOYEE);
+        person9.pickupLatitude = HUB_LAT;
+        person9.pickupLongitude = HUB_LON;
+        person9.persist();
 
-        Employee neji = new Employee("Neji Hyuga", "neji@example.com", "+49 151 1234 5010", EmployeeType.SITE_EMPLOYEE);
-        neji.pickupLatitude = HUB_LAT;
-        neji.pickupLongitude = HUB_LON;
-        neji.persist();
+        Employee person10 = new Employee("Person 10", "person10@example.com", "+49 151 1234 5010", EmployeeType.SITE_EMPLOYEE);
+        person10.pickupLatitude = HUB_LAT;
+        person10.pickupLongitude = HUB_LON;
+        person10.persist();
 
-        Employee gaara = new Employee("Gaara Sabaku", "gaara@example.com", "+49 151 1234 5011", EmployeeType.SITE_EMPLOYEE);
-        gaara.pickupLatitude = HUB_LAT;
-        gaara.pickupLongitude = HUB_LON;
-        gaara.persist();
+        Employee person11 = new Employee("Person 11", "person11@example.com", "+49 151 1234 5011", EmployeeType.SITE_EMPLOYEE);
+        person11.pickupLatitude = HUB_LAT;
+        person11.pickupLongitude = HUB_LON;
+        person11.persist();
 
         // --- BENEO employee (1) ---
 
-        Employee temari = new Employee("Temari Sabaku", "temari@example.com", "+49 151 1234 5012", EmployeeType.SITE_EMPLOYEE);
-        temari.pickupLatitude = HUB_LAT;
-        temari.pickupLongitude = HUB_LON;
-        temari.persist();
+        Employee person12 = new Employee("Person 12", "person12@example.com", "+49 151 1234 5012", EmployeeType.SITE_EMPLOYEE);
+        person12.pickupLatitude = HUB_LAT;
+        person12.pickupLongitude = HUB_LON;
+        person12.persist();
 
         // ==================== SHIFTS ====================
 
         // --- CHEP shifts ---
         // Early: Mon-Thu 05:30-14:00, Fri 05:30-13:00
-        // 5 employees: Naruto, Sasuke, Sakura, Hinata, Shikamaru
+        // 5 employees: Person 1, Person 2, Person 3, Person 4, Person 5
 
         for (DayOfWeek day : new DayOfWeek[]{DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY}) {
             ShiftDemand chepEarly = new ShiftDemand(chep, "Frühschicht", day, LocalTime.of(5, 30), LocalTime.of(14, 0), 5);
             chepEarly.persist();
-            naruto.assignToShift(chepEarly);
-            sasuke.assignToShift(chepEarly);
-            sakura.assignToShift(chepEarly);
-            hinata.assignToShift(chepEarly);
-            shikamaru.assignToShift(chepEarly);
+            person1.assignToShift(chepEarly);
+            person2.assignToShift(chepEarly);
+            person3.assignToShift(chepEarly);
+            person4.assignToShift(chepEarly);
+            person5.assignToShift(chepEarly);
         }
 
         // Friday early shift ends at 13:00
         ShiftDemand chepEarlyFri = new ShiftDemand(chep, "Frühschicht", DayOfWeek.FRIDAY, LocalTime.of(5, 30), LocalTime.of(13, 0), 5);
         chepEarlyFri.persist();
-        naruto.assignToShift(chepEarlyFri);
-        sasuke.assignToShift(chepEarlyFri);
-        sakura.assignToShift(chepEarlyFri);
-        hinata.assignToShift(chepEarlyFri);
-        shikamaru.assignToShift(chepEarlyFri);
+        person1.assignToShift(chepEarlyFri);
+        person2.assignToShift(chepEarlyFri);
+        person3.assignToShift(chepEarlyFri);
+        person4.assignToShift(chepEarlyFri);
+        person5.assignToShift(chepEarlyFri);
 
         // --- SANNER shifts ---
         // Early: Mon-Fri 06:00-14:00
-        // 1 employee: Kakashi
+        // 1 employee: Person 6
 
         for (DayOfWeek day : new DayOfWeek[]{DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY}) {
             ShiftDemand sannerEarly = new ShiftDemand(sanner, "Frühschicht", day, LocalTime.of(6, 0), LocalTime.of(14, 0), 1);
             sannerEarly.persist();
-            kakashi.assignToShift(sannerEarly);
+            person6.assignToShift(sannerEarly);
         }
 
         // --- ORION shifts ---
         // Day: Mon-Thu 06:30-16:00, Fri 06:30-12:45
-        // 2 employees: Ino, Choji
+        // 2 employees: Person 7, Person 8
 
         for (DayOfWeek day : new DayOfWeek[]{DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY}) {
             ShiftDemand orionDay = new ShiftDemand(orion, "Tagschicht", day, LocalTime.of(6, 30), LocalTime.of(16, 0), 2);
             orionDay.persist();
-            ino.assignToShift(orionDay);
-            choji.assignToShift(orionDay);
+            person7.assignToShift(orionDay);
+            person8.assignToShift(orionDay);
         }
 
         // Friday ends at 12:45
         ShiftDemand orionDayFri = new ShiftDemand(orion, "Tagschicht", DayOfWeek.FRIDAY, LocalTime.of(6, 30), LocalTime.of(12, 45), 2);
         orionDayFri.persist();
-        ino.assignToShift(orionDayFri);
-        choji.assignToShift(orionDayFri);
+        person7.assignToShift(orionDayFri);
+        person8.assignToShift(orionDayFri);
 
         // --- BARBE shifts ---
-        // Night shift workers (picked up 06:00/06:30 after their night shift): Rock Lee, Neji
+        // Night shift workers (picked up 06:00/06:30 after their night shift): Person 9, Person 10
         // They work night 22:00-06:00, so we model the return trip
-        // Late shift (13:00 dropoff, 22:00 pickup): Gaara
+        // Late shift (13:00 dropoff, 22:00 pickup): Person 11
 
-        // Rock Lee and Neji work night shifts (Tue-Sat nights, meaning Mon-Fri evening dropoff, Tue-Sat morning pickup)
+        // Person 9 and Person 10 work night shifts (Tue-Sat nights, meaning Mon-Fri evening dropoff, Tue-Sat morning pickup)
         // For simplicity, model as night shift with return trip
         for (DayOfWeek day : new DayOfWeek[]{DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY}) {
             ShiftDemand barbeNight = new ShiftDemand(barbe, "Nachtschicht", day, LocalTime.of(22, 0), LocalTime.of(6, 0), 2);
             barbeNight.persist();
-            rockLee.assignToShift(barbeNight);
-            neji.assignToShift(barbeNight);
+            person9.assignToShift(barbeNight);
+            person10.assignToShift(barbeNight);
         }
 
-        // Gaara works late shift Mon-Fri
+        // Person 11 works late shift Mon-Fri
         for (DayOfWeek day : new DayOfWeek[]{DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY}) {
             ShiftDemand barbeLate = new ShiftDemand(barbe, "Spätschicht", day, LocalTime.of(14, 0), LocalTime.of(22, 0), 1);
             barbeLate.persist();
-            gaara.assignToShift(barbeLate);
+            person11.assignToShift(barbeLate);
         }
 
         // Saturday night shift for Barbe (pickup at 06:00 Saturday)
         ShiftDemand barbeNightSat = new ShiftDemand(barbe, "Nachtschicht", DayOfWeek.SATURDAY, LocalTime.of(22, 0), LocalTime.of(6, 0), 2);
         barbeNightSat.persist();
-        rockLee.assignToShift(barbeNightSat);
-        neji.assignToShift(barbeNightSat);
+        person9.assignToShift(barbeNightSat);
+        person10.assignToShift(barbeNightSat);
 
         // --- BENEO shifts ---
-        // Night shift worker: Temari
+        // Night shift worker: Person 12
         // Picked up Wed/Thu and Fri/Sat at 21:40/22:30 (after night shift ends at 05:35)
         // Complex schedule - model key shifts
 
         // Wednesday night (pickup Thursday morning)
         ShiftDemand beneoNightWed = new ShiftDemand(beneo, "Nachtschicht", DayOfWeek.WEDNESDAY, LocalTime.of(21, 35), LocalTime.of(5, 35), 1);
         beneoNightWed.persist();
-        temari.assignToShift(beneoNightWed);
+        person12.assignToShift(beneoNightWed);
 
         // Thursday night (pickup Friday morning)
         ShiftDemand beneoNightThu = new ShiftDemand(beneo, "Nachtschicht", DayOfWeek.THURSDAY, LocalTime.of(21, 35), LocalTime.of(5, 35), 1);
         beneoNightThu.persist();
-        temari.assignToShift(beneoNightThu);
+        person12.assignToShift(beneoNightThu);
 
         // Friday night (pickup Saturday morning)
         ShiftDemand beneoNightFri = new ShiftDemand(beneo, "Nachtschicht", DayOfWeek.FRIDAY, LocalTime.of(21, 35), LocalTime.of(5, 35), 1);
         beneoNightFri.persist();
-        temari.assignToShift(beneoNightFri);
+        person12.assignToShift(beneoNightFri);
 
         // Saturday - pickup from night shift in morning (05:40), dropoff for late shift (21:00)
         ShiftDemand beneoNightSat = new ShiftDemand(beneo, "Nachtschicht", DayOfWeek.SATURDAY, LocalTime.of(21, 35), LocalTime.of(5, 35), 1);
         beneoNightSat.persist();
-        temari.assignToShift(beneoNightSat);
+        person12.assignToShift(beneoNightSat);
 
         // Sunday - 12 hour shift (05:35-17:35 or 17:35-05:35)
         // Model as early 12h shift with dropoff at 17:00
         ShiftDemand beneoSunday = new ShiftDemand(beneo, "Sonntagsschicht", DayOfWeek.SUNDAY, LocalTime.of(5, 35), LocalTime.of(17, 35), 1);
         beneoSunday.persist();
-        temari.assignToShift(beneoSunday);
+        person12.assignToShift(beneoSunday);
 
         LOG.info("KW 51 demo data loaded successfully:");
         LOG.info("  - 5 customers: Chep, Sanner, Orion, Barbe, Beneo");
-        LOG.info("  - 3 drivers: Thomas, Sarah, Michael");
-        LOG.info("  - 12 site employees (Naruto characters)");
+        LOG.info("  - 3 drivers: Driver 1, Driver 2, Driver 3");
+        LOG.info("  - 12 site employees (generic sample persons)");
         LOG.info("  - Multiple shifts covering Mon-Sun with early, late, and night patterns");
     }
 }

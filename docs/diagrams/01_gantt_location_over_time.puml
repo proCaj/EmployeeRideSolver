@@ -6,8 +6,8 @@ skinparam sequenceMessageAlign center
 
 title KW 51 Manual Plan - Driver Location Over Time (Mon-Thu)\nScenario: FR-3 Multi-Stop Merging (TANK+HUB->CHEP->SANNER)
 
-participant "Thomas\n(Driver 1)" as T
-participant "Sarah\n(Driver 2)" as S
+participant "Driver 1\n(Driver 1)" as T
+participant "Driver 2\n(Driver 2)" as S
 
 == Early Morning (04:00 - 07:15) ==
 
@@ -69,7 +69,7 @@ S -> S : **21:36** Pickup BARBE (1 pax return)\n2 min #66BB6A
 S -> S : **21:38** Drive BARBE to HUB\n2 min #FFA726
 S -> S : **21:40** Drop HUB (1 pax)\n1 min #42A5F5
 S -> S : **21:42** Drive HUB to BENEO\n34 min #FFA726
-S -> S : **22:16** Pickup BENEO (1 pax: Temari)\n2 min #66BB6A
+S -> S : **22:16** Pickup BENEO (1 pax: Person 12)\n2 min #66BB6A
 S -> S : **22:18** Drive BENEO to HUB\n34 min #FFA726
 S -> S : **22:52** Drop HUB (1 pax)\n1 min #42A5F5
 

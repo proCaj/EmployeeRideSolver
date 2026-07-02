@@ -16,43 +16,43 @@ title KW 51 - Route Network with Distances & Drive Times\nHaversine distances / 
 ' Pickup points
 package "Pickup Points (Worms)" as pickups {
   rectangle "HUB\nCity-Fahrschule\nSiegfriedstr. 25\n49.6295, 8.3640\n\n3 Drivers (home base)\n12 Employees pickup here" as HUB #LightBlue
-  rectangle "TANK\nTankstelle Pfeddersheim\nOdenwaldstr. 7\n49.6180, 8.2970\n\n1 Employee (Naruto)\npickup here" as TANK #B0BEC5
+  rectangle "TANK\nTankstelle Pfeddersheim\nOdenwaldstr. 7\n49.6180, 8.2970\n\n1 Employee (Person 1)\npickup here" as TANK #B0BEC5
 }
 
 ' Customer locations
 package "Customer Locations" as customers {
   rectangle "CHEP\nChep Deutschland GmbH\nAm Winkelgraben 13\n64584 Biebesheim\n49.7784, 8.4625\n\n5 employees (Früh+Spät)\nShift: 05:30-14:00" as CHEP #C8E6C9
-  rectangle "SANNER\nSanner GmbH\nBertha-Benz-Str. 5\n64625 Bensheim\n49.6800, 8.6250\n\n1 employee (Kakashi)\nShift: 06:00-14:00" as SANNER #C8E6C9
-  rectangle "ORION\nOrion Bausysteme GmbH\nWaldstr. 2\n64584 Biebesheim\n49.7750, 8.4580\n\n2 employees (Ino,Choji)\nShift: 06:30-16:00" as ORION #C8E6C9
-  rectangle "BARBE\nHans W. Barbe\nJustus-von-Liebig-Str. 17\n67549 Worms\n49.6350, 8.3480\n\n3 employees (Gaara,Rock Lee,Neji)\nShift: 06:00-14:00 / 14:00-22:00 / 22:00-06:00" as BARBE #FFCCBC
-  rectangle "BENEO\nBeneo-Palatinit GmbH\nWormser Str. 11\n67283 Obrigheim\n49.4700, 8.2100\n\n1 employee (Temari)\nShift: 05:35-13:35 / 13:35-21:35 / 21:35-05:35\nWeekend: 05:35-17:35 / 17:35-05:35" as BENEO #FFCCBC
+  rectangle "SANNER\nSanner GmbH\nBertha-Benz-Str. 5\n64625 Bensheim\n49.6800, 8.6250\n\n1 employee (Person 6)\nShift: 06:00-14:00" as SANNER #C8E6C9
+  rectangle "ORION\nOrion Bausysteme GmbH\nWaldstr. 2\n64584 Biebesheim\n49.7750, 8.4580\n\n2 employees (Person 7,Person 8)\nShift: 06:30-16:00" as ORION #C8E6C9
+  rectangle "BARBE\nHans W. Barbe\nJustus-von-Liebig-Str. 17\n67549 Worms\n49.6350, 8.3480\n\n3 employees (Person 11,Person 9,Person 10)\nShift: 06:00-14:00 / 14:00-22:00 / 22:00-06:00" as BARBE #FFCCBC
+  rectangle "BENEO\nBeneo-Palatinit GmbH\nWormser Str. 11\n67283 Obrigheim\n49.4700, 8.2100\n\n1 employee (Person 12)\nShift: 05:35-13:35 / 13:35-21:35 / 21:35-05:35\nWeekend: 05:35-17:35 / 17:35-05:35" as BENEO #FFCCBC
 }
 
-' Driver 1 routes (Thomas - Green)
-HUB -right-|> TANK : **5.0 km / 6.7 km / ~8 min**\nThomas early pickup\n<<Thomas>> #$THOMAS_ROUTE
-TANK -up-|> CHEP : **21.4 km / 28.9 km / ~35 min**\nThomas early drop\n<<Thomas>> #$THOMAS_ROUTE
-CHEP -right-|> SANNER : **16.0 km / 21.6 km / ~26 min**\nThomas multi-stop\n<<Thomas>> #$THOMAS_ROUTE
+' Driver 1 routes (Driver 1 - Green)
+HUB -right-|> TANK : **5.0 km / 6.7 km / ~8 min**\nDriver 1 early pickup\n<<Driver 1>> #$THOMAS_ROUTE
+TANK -up-|> CHEP : **21.4 km / 28.9 km / ~35 min**\nDriver 1 early drop\n<<Driver 1>> #$THOMAS_ROUTE
+CHEP -right-|> SANNER : **16.0 km / 21.6 km / ~26 min**\nDriver 1 multi-stop\n<<Driver 1>> #$THOMAS_ROUTE
 
-HUB -up-|> CHEP : **18.0 km / 24.3 km / ~29 min**\nThomas morning+afternoon\n<<Thomas>> #$THOMAS_ROUTE
-HUB -up-|> SANNER : **19.6 km / 26.5 km / ~32 min**\nThomas afternoon return\n<<Thomas>> #$THOMAS_ROUTE
-HUB -right-|> ORION : **17.5 km / 23.7 km / ~28 min**\nThomas morning+afternoon\n<<Thomas>> #$THOMAS_ROUTE
+HUB -up-|> CHEP : **18.0 km / 24.3 km / ~29 min**\nDriver 1 morning+afternoon\n<<Driver 1>> #$THOMAS_ROUTE
+HUB -up-|> SANNER : **19.6 km / 26.5 km / ~32 min**\nDriver 1 afternoon return\n<<Driver 1>> #$THOMAS_ROUTE
+HUB -right-|> ORION : **17.5 km / 23.7 km / ~28 min**\nDriver 1 morning+afternoon\n<<Driver 1>> #$THOMAS_ROUTE
 
-' Driver 2 routes (Sarah - Blue)
-HUB -down-|> BARBE : **1.3 km / 1.8 km / ~2 min**\nSarah afternoon+night\n<<Sarah>> #$SARAH_ROUTE
-BARBE -down-|> BENEO : **20.9 km / 28.2 km / ~34 min**\nSarah night return\n<<Sarah>> #$SARAH_ROUTE
-HUB -down-|> BENEO : **20.9 km / 28.2 km / ~34 min**\nSarah weekend drop\n<<Sarah>> #$SARAH_ROUTE
+' Driver 2 routes (Driver 2 - Blue)
+HUB -down-|> BARBE : **1.3 km / 1.8 km / ~2 min**\nDriver 2 afternoon+night\n<<Driver 2>> #$SARAH_ROUTE
+BARBE -down-|> BENEO : **20.9 km / 28.2 km / ~34 min**\nDriver 2 night return\n<<Driver 2>> #$SARAH_ROUTE
+HUB -down-|> BENEO : **20.9 km / 28.2 km / ~34 min**\nDriver 2 weekend drop\n<<Driver 2>> #$SARAH_ROUTE
 
-' Very short hop (Thomas morning side-trip)
-ORION -left-|> BARBE : **17.5 km / 23.6 km / ~28 min**\nThomas morning pickup\n(night shift return) #$SHARED
+' Very short hop (Driver 1 morning side-trip)
+ORION -left-|> BARBE : **17.5 km / 23.6 km / ~28 min**\nDriver 1 morning pickup\n(night shift return) #$SHARED
 
 ' Nearly co-located
 CHEP .right.> ORION : **0.5 km / 0.7 km / ~1 min**\nNearly co-located #$SHORT
 
 legend right
   |= Color |= Driver |
-  |<#4CAF50>  | Thomas Koch (Driver 1) |
-  |<#2196F3>  | Sarah Meyer (Driver 2) |
-  |<#FF9800>  | Shared / Thomas side-trip |
+  |<#4CAF50>  | Driver 1 (Driver 1) |
+  |<#2196F3>  | Driver 2 (Driver 2) |
+  |<#FF9800>  | Shared / Driver 1 side-trip |
   |<#E0E0E0>  | Walking distance |
 
   |= Route |= Haversine |= Road Est |= Time |

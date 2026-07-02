@@ -74,8 +74,8 @@ The VRP solver produces routes for employee transportation using a 2-pass pipeli
 ### 3.2 Pickup Location Grouping
 
 **FR-4**: Employees with different pickup locations MUST be in separate events
-- Naruto (Tankstelle Pfeddersheim) → separate event at 04:20
-- Sasuke, Sakura, Hinata, Shikamaru (City-Fahrschule) → batched event at 04:30
+- Person 1 (Tankstelle Pfeddersheim) → separate event at 04:20
+- Person 2, Person 3, Person 4, Person 5 (City-Fahrschule) → batched event at 04:30
 
 **FR-5**: The hub location (City-Fahrschule) coordinates:
 - Latitude: 49.6295
@@ -217,24 +217,24 @@ for each pickup_location:
 
 | Customer | Employees | Pickup Location |
 |----------|-----------|-----------------|
-| Chep | Naruto Uzumaki | Tankstelle Pfeddersheim |
-| Chep | Sasuke Uchiha, Sakura Haruno, Hinata Hyuga, Shikamaru Nara | City-Fahrschule |
-| Sanner | Kakashi Hatake | City-Fahrschule |
-| Orion | Ino Yamanaka, Choji Akimichi | City-Fahrschule |
-| Barbe | Rock Lee, Neji Hyuga, Gaara Sabaku | City-Fahrschule |
-| Beneo | Temari Sabaku | City-Fahrschule |
+| Chep | Person 1 | Tankstelle Pfeddersheim |
+| Chep | Person 2, Person 3, Person 4, Person 5 | City-Fahrschule |
+| Sanner | Person 6 | City-Fahrschule |
+| Orion | Person 7, Person 8 | City-Fahrschule |
+| Barbe | Person 9, Person 10, Person 11 | City-Fahrschule |
+| Beneo | Person 12 | City-Fahrschule |
 
 ### Expected Batched Events (Monday Example)
 
 | Event | Type | Customer | Passengers | Location |
 |-------|------|----------|------------|----------|
-| 1 | Pickup | Chep | Naruto (1) | Pfeddersheim |
-| 2 | Pickup | Chep + Sanner | Sasuke, Sakura, Hinata, Shikamaru, Kakashi (5) | City-Fahrschule |
-| 3 | Pickup | Orion | Ino, Choji (2) | City-Fahrschule |
-| 4 | Pickup | Barbe Night End | Rock Lee, Neji (2) | Barbe |
-| 5 | Pickup | Barbe Late | Gaara (1) | City-Fahrschule |
-| 6 | Dropoff | Chep | Naruto (1) | Pfeddersheim |
-| 7 | Dropoff | Chep + Sanner | Sasuke, Sakura, Hinata, Shikamaru, Kakashi (5) | City-Fahrschule |
+| 1 | Pickup | Chep | Person 1 (1) | Pfeddersheim |
+| 2 | Pickup | Chep + Sanner | Person 2, Person 3, Person 4, Person 5, Person 6 (5) | City-Fahrschule |
+| 3 | Pickup | Orion | Person 7, Person 8 (2) | City-Fahrschule |
+| 4 | Pickup | Barbe Night End | Person 9, Person 10 (2) | Barbe |
+| 5 | Pickup | Barbe Late | Person 11 (1) | City-Fahrschule |
+| 6 | Dropoff | Chep | Person 1 (1) | Pfeddersheim |
+| 7 | Dropoff | Chep + Sanner | Person 2, Person 3, Person 4, Person 5, Person 6 (5) | City-Fahrschule |
 | ... | ... | ... | ... | ... |
 
 ---

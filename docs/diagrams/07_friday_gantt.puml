@@ -5,8 +5,8 @@ skinparam sequenceMessageAlign center
 
 title KW 51 Friday - Compressed Afternoon Schedule\nChep 13:00 + Orion 12:45 overlap = capacity risk
 
-participant "Thomas\n(Driver 1)" as T
-participant "Sarah\n(Driver 2)" as S
+participant "Driver 1\n(Driver 1)" as T
+participant "Driver 2\n(Driver 2)" as S
 
 == Morning (same as Mon-Thu) ==
 
@@ -36,7 +36,7 @@ T -> T : **15:30** Drop HUB (1 pax)\n1 min #42A5F5
 note over T : Chep end: 13:00 #F44336
 note over T : Orion end: 12:45 #F44336
 
-== Sarah (same as Mon-Thu) ==
+== Driver 2 (same as Mon-Thu) ==
 
 note over S : **13:00+** Same as Mon-Thu\nBarbe afternoon #B0BEC5
 
@@ -55,9 +55,9 @@ endlegend
 note over T, S
   CRITICAL: Chep (5 pax) + Orion (2 pax) overlap on Friday!
   Combined = 7 passengers, exceeding 6-pax capacity.
-  Options: A) Two separate trips, B) Michael helps,
+  Options: A) Two separate trips, B) Driver 3 helps,
   C) One Chep employee takes the bus.
-  Friday Thomas: ~6.2h total (3.0h + 3.2h compressed).
+  Friday Driver 1: ~6.2h total (3.0h + 3.2h compressed).
 end note
 
 @enduml

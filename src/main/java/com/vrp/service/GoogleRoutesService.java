@@ -13,6 +13,7 @@ import java.net.http.HttpResponse;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Optional;
 
 @ApplicationScoped
 public class GoogleRoutesService {
@@ -21,14 +22,17 @@ public class GoogleRoutesService {
     static final String ROUTES_API_URL = "https://routes.googleapis.com/directions/v2:computeRoutes";
     static final ZoneId BERLIN_ZONE = ZoneId.of("Europe/Berlin");
 
-    @ConfigProperty(name = "google.maps.api.key", defaultValue = "")
-    String apiKey;
+    // Optional so an unset OR empty key leaves the app bootable (SmallRye converts "" to null and
+    // would otherwise fail deployment). The /routes/validate resource then degrades gracefully to a
+    // 503 + Haversine fallback instead of the app failing to start.
+    @ConfigProperty(name = "google.maps.api.key")
+    Optional<String> apiKey;
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public boolean isApiKeyConfigured() {
-        return apiKey != null && !apiKey.isBlank();
+        return apiKey != null && apiKey.isPresent() && !apiKey.get().isBlank();
     }
 
     public record RouteResult(
@@ -58,7 +62,7 @@ public class GoogleRoutesService {
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(ROUTES_API_URL))
                 .header("Content-Type", "application/json")
-                .header("X-Goog-Api-Key", apiKey)
+                .header("X-Goog-Api-Key", apiKey.orElseThrow())
                 .header("X-Goog-FieldMask", "routes.duration,routes.staticDuration,routes.distanceMeters")
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
@@ -70,6 +74,64 @@ public class GoogleRoutesService {
             }
 
             return parseResponse(response.body(), trafficModel, departureUtcStr);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Request interrupted", e);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to call Google Routes API: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Issues a computeRoutes request with a caller-supplied {@code X-Goog-FieldMask} and returns
+     * the complete raw JSON response, parsed but otherwise untouched. Unlike {@link #computeRoute},
+     * which extracts a narrow {@link RouteResult}, this exposes the entire payload so callers can
+     * capture and assert on every field. The production request path ({@link #computeRoute} and the
+     * {@code /routes/validate} resource) is deliberately left unchanged.
+     *
+     * <p>Pass {@code fieldMask = "*"} to retrieve the full response (all routes.* fields). Note that
+     * broad field masks and {@code TRAFFIC_AWARE_OPTIMAL} routing map to Google's higher-cost SKUs —
+     * cost scales with the number of calls, so keep live usage to a handful.
+     *
+     * @return the parsed root {@link JsonNode} of the API response
+     * @throws IllegalStateException if no API key is configured
+     * @throws RuntimeException      on non-200 responses or transport failures
+     */
+    public JsonNode computeRouteRaw(
+        double originLat, double originLng,
+        double destLat, double destLng,
+        LocalDateTime departureBerlin,
+        String trafficModel,
+        String fieldMask
+    ) {
+        if (!isApiKeyConfigured()) {
+            throw new IllegalStateException("Google Maps API key not configured. Set GOOGLE_MAPS_API_KEY or google.maps.api.key.");
+        }
+
+        String departureUtcStr = toRfc3339Utc(departureBerlin);
+        String requestBody = buildRequestBody(originLat, originLng, destLat, destLng, departureUtcStr, trafficModel);
+
+        LOG.debugf("Calling Google Routes API (raw): departure=%s trafficModel=%s fieldMask=%s",
+            departureUtcStr, trafficModel, fieldMask);
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(ROUTES_API_URL))
+                .header("Content-Type", "application/json")
+                .header("X-Goog-Api-Key", apiKey.orElseThrow())
+                .header("X-Goog-FieldMask", fieldMask)
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Google Routes API error " + response.statusCode() + ": " + response.body());
+            }
+
+            return objectMapper.readTree(response.body());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Request interrupted", e);

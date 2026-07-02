@@ -17,7 +17,10 @@
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.version>3.33.1</quarkus.platform.version>
         <timefold.version>2.2.0</timefold.version>
-        <graphhopper.version>8.0</graphhopper.version>
+        <!-- 11.0+ required on Quarkus 3.33+: older GraphHopper references the
+             PropertyNamingStrategy.SNAKE_CASE constant removed from the Jackson
+             version managed by the Quarkus BOM -->
+        <graphhopper.version>11.0</graphhopper.version>
         <surefire-plugin.version>3.0.0</surefire-plugin.version>
     </properties>
 
@@ -100,6 +103,13 @@
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- timefold-solver-test was merged into timefold-solver-core in 2.x -->
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>4.2.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -142,6 +152,44 @@
     </build>
 
     <profiles>
+        <!--
+            Real-routing profile: auto-activates only when GRAPHHOPPER_PBF is set (the same env
+            var the real-routing tests gate on). When active it builds the GraphHopper cache from
+            the provided .pbf BEFORE the test JVM boots Quarkus - GraphHopperService.init() only
+            schedules its async load if the cache already exists at @PostConstruct. When the env
+            var is unset, this profile stays dormant so `mvn test` runs the always-on suites
+            (DB seed, Google snapshot replay, no-key validation) with no external assets required.
+        -->
+        <profile>
+            <id>real-routing</id>
+            <activation>
+                <property>
+                    <name>env.GRAPHHOPPER_PBF</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.1</version>
+                        <executions>
+                            <execution>
+                                <id>build-graphhopper-cache</id>
+                                <phase>process-test-resources</phase>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
+                                <configuration>
+                                    <mainClass>com.vrp.service.GraphHopperBuilder</mainClass>
+                                    <classpathScope>compile</classpathScope>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>native</id>
             <activation>

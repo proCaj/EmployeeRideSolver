@@ -9,7 +9,7 @@ Employee Transportation VRP Solver - A Java-based optimization system for routin
 **Technology Stack:**
 - Quarkus 3.33.1 (Java 21)
 - Timefold Solver 2.2.0 (VRP optimization)
-- GraphHopper 8.0 (real-world routing with OSM data)
+- GraphHopper 11.0 (real-world routing with OSM data; 11.0+ required on Quarkus 3.33+ because older GraphHopper uses a Jackson constant the managed Jackson removed)
 - H2 database (file-based persistence at `./db/vrp`)
 - Qute templates + HTMX + TailwindCSS (frontend)
 - Maven 3.x
@@ -100,6 +100,8 @@ Unlike the old `VariableListener`s, these suppliers are pure functions with no `
 - Groups employees by pickup location coordinates within the same shift
 - Each group becomes a single batched Event with `List<Employee> passengers`
 - Creates paired pickup/dropoff events for shifts requiring return trips
+- Night shifts spanning midnight (endTime < startTime): the return dropoff is generated on the NEXT calendar day, while `shiftDate` stays the start day for ArbZG accounting
+- Dropoff `maxEndTime` = shift end + 1h + trip duration (the promise is "picked up within 1h of shift end"; the constraint checks arrival home, so the window must include the trip)
 - All events receive `shiftDate` (LocalDate) for ArbZG compliance — night shifts spanning midnight count toward the day the shift started
 - Boarding time: 2 min per passenger; alighting time: 1 min per passenger
 
@@ -115,16 +117,25 @@ Unlike the old `VariableListener`s, these suppliers are pure functions with no `
 - `getPeakPassengerCount()` returns the maximum concurrent load across all stops (used by capacity constraint)
 - `getPassengerDelta()` returns net passenger change (0 for self-contained multi-stop events where all passengers board and alight within the event)
 
+**Every generated event is self-contained (delta 0):** `EventGenerationService` converts all
+legacy from→to events into 2-stop form (board at origin, alight at destination) before they
+reach the solver. Passengers never remain in the vehicle BETWEEN events — between a pickup and
+its return dropoff they are at work — so vehicle capacity is governed by per-event peak load,
+not chain-cumulative occupancy. The legacy ±N delta model must not reach the solver: it breaks
+the chain zero-sum invariant when mixed with delta-0 FR-3 merged events (making the
+negative-cumulative-count hard constraint unsatisfiable) and phantom-fills capacity across a
+driver's day. Pickup-before-dropoff ordering is enforced by the pairing constraint instead.
+
 ### Constraint Provider
 
 `VrpConstraintProvider` defines hard and soft constraints:
 
 **Hard constraints:**
-- `driverAssignmentRequired` - Every event must have a driver
+- `driverAssignmentRequired` - Every event must have a driver. Weighted at structural scale (1M): with `allowsUnassignedValues = true` local search CAN unassign events, so leaving one unassigned must cost more than any violation it would take to place it
 - `vehicleCapacityConstraint` - Checks both cumulative passenger count across the driver's route AND peak concurrent load within multi-stop events; penalizes whichever exceeds driver `maxCapacity` more
 - `negativeCumulativePassengerCount` - Cumulative passenger count must never go negative (a dropoff scheduled before its paired pickup in the driver's route)
-- `timeWindowConstraint` - Event-level time window (completion before `maxEndTime`) AND per-stop time windows for multi-stop events (each stop checked against its `maxEndTime`)
-- `pairingConstraint` - Pickup/dropoff pairs must use same driver, pickup before dropoff
+- `timeWindowConstraint` - Event-level time window (completion before `maxEndTime`) for events WITHOUT per-stop deadlines; when any stop carries its own `maxEndTime` (FR-3 merged events), only the per-stop windows apply — the event-level `maxEndTime` is the tightest customer deadline and would be inherently violated by the farther stops
+- `pairingConstraint` - Pickup/dropoff pairs must use same driver, pickup before dropoff. IMPORTANT: implemented as a JOIN selecting both events into the tuple — reading the pickup transitively through `dropoff.getPairedEvent()` inside the penalty function corrupts incremental score calculation (the constraint is not re-evaluated when the pickup moves)
 - `maxDailyWorkingHours` - Per driver per shiftDate, maximum 10 hours of working time per ArbZG; night shifts count toward the day the shift started
 - `maxWeeklyWorkingHours` - Per driver across all shiftDates in the week, maximum 40 hours
 - `maxConsecutiveDrivingHours` - Per driver per shiftDate, maximum 4 hours continuous driving without a break >= 30 min; gaps < 30 min count as continuous driving; gaps between different shiftDates always reset the counter
@@ -226,6 +237,17 @@ Resources support both JSON and form-encoded data:
 - Timefold: 120s termination limit, `no-assert` environment mode (reproducible, minimal assertion overhead)
 - GraphHopper: OSM file path, cache directory, car profile
 - Logging: INFO level, DEBUG for `com.vrp` package
+
+`src/main/resources/solverConfig.xml` (auto-detected by Quarkus Timefold):
+- Construction heuristic: sorted value placer + `EventChronologicalComparator` (earliest
+  `minStartTime` first) so events are inserted chronologically — each dropoff is placed after
+  its pickup already exists and lands on the matching driver. Without this, the CH locks in
+  pairing violations (1M-scale hard penalties) that local search can never repair, because
+  every repair path passes through another 1M-scale state and late acceptance rejects it.
+- Local search: standard list moves PLUS `listRuinRecreateMoveSelector` (single-element moves
+  can never rebalance a coupled pickup+dropoffs family across drivers — ruin-and-recreate
+  unassigns a slice and rebuilds it atomically, crossing the pairing walls); late acceptance
+  1500, acceptedCountLimit 4
 
 ## Important Technical Notes
 
