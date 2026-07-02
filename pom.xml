@@ -148,6 +148,44 @@
     </build>
 
     <profiles>
+        <!--
+            Real-routing profile: auto-activates only when GRAPHHOPPER_PBF is set (the same env
+            var the real-routing tests gate on). When active it builds the GraphHopper cache from
+            the provided .pbf BEFORE the test JVM boots Quarkus - GraphHopperService.init() only
+            schedules its async load if the cache already exists at @PostConstruct. When the env
+            var is unset, this profile stays dormant so `mvn test` runs the always-on suites
+            (DB seed, Google snapshot replay, no-key validation) with no external assets required.
+        -->
+        <profile>
+            <id>real-routing</id>
+            <activation>
+                <property>
+                    <name>env.GRAPHHOPPER_PBF</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.1</version>
+                        <executions>
+                            <execution>
+                                <id>build-graphhopper-cache</id>
+                                <phase>process-test-resources</phase>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
+                                <configuration>
+                                    <mainClass>com.vrp.service.GraphHopperBuilder</mainClass>
+                                    <classpathScope>compile</classpathScope>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>native</id>
             <activation>

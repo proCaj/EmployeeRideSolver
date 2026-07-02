@@ -56,20 +56,10 @@ public class GraphHopperService {
         CompletableFuture.runAsync(() -> {
             try {
                 LOG.info("Loading GraphHopper routing engine from cache...");
-                
-                graphHopper = new GraphHopper();
-                graphHopper.setOSMFile(osmFile);
-                graphHopper.setGraphHopperLocation(cacheDir);
-                
-                Profile carProfile = new Profile("car")
-                    .setVehicle("car")
-                    .setWeighting("custom")
-                    .setCustomModel(new CustomModel());
-                graphHopper.setProfiles(carProfile);
-                graphHopper.getCHPreparationHandler().setCHProfiles(new CHProfile("car"));
-                
+
+                graphHopper = configure(new GraphHopper(), osmFile, cacheDir);
                 graphHopper.importOrLoad();
-                
+
                 initialized = true;
                 initializing = false;
                 LOG.info("GraphHopper initialization complete - real routing enabled");
@@ -79,6 +69,27 @@ public class GraphHopperService {
                 LOG.warn("Routing will use fallback (Haversine) distances");
             }
         });
+    }
+
+    /**
+     * Applies the canonical engine configuration (single "car" profile with custom
+     * weighting and contraction hierarchies) shared by the runtime loader and the
+     * offline {@link GraphHopperBuilder}. Keeping this in one place guarantees the
+     * cache built offline is byte-compatible with what {@code importOrLoad()} expects
+     * to load at runtime — any drift here would silently force a full re-import.
+     */
+    static GraphHopper configure(GraphHopper graphHopper, String osmFile, String cacheDir) {
+        graphHopper.setOSMFile(osmFile);
+        graphHopper.setGraphHopperLocation(cacheDir);
+
+        Profile carProfile = new Profile("car")
+            .setVehicle("car")
+            .setWeighting("custom")
+            .setCustomModel(new CustomModel());
+        graphHopper.setProfiles(carProfile);
+        graphHopper.getCHPreparationHandler().setCHProfiles(new CHProfile("car"));
+
+        return graphHopper;
     }
     
     public GraphHopper getGraphHopper() {
