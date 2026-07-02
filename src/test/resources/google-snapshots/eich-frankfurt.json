@@ -1,0 +1,687 @@
+{
+  "routes": [
+    {
+      "legs": [
+        {
+          "distanceMeters": 76843,
+          "duration": "3426s",
+          "staticDuration": "3789s",
+          "polyline": {
+            "encodedPolyline": "{m_nH}uxq@c@{AUq@IMyByHgAuDEKwCeK_@oAaA_DU_Ag@eBSm@}@qCGUgAyDg@_C_@uBG]AGU{BQuCGwD@iA?w@Dc@B_ALM@E@UGSHeADyBRgEBWDe@L?DCDEFOBU?CE[OOL{ATsA|@{BBIzCeIhB{EJY`CqG~BgGv@uBd@oAj@yAJYJYTo@j@cANYx@iAjA_BnA_BhAsAx@_B~@sBPc@n@uAZg@v@m@h@_@h@a@NKjAw@jAaAt@_@HGX_@N_@Tg@R}@LkA@aAHu@^}ENy@f@q@HKl@Wz@Q\\EDLDDJBF?NODYRKVQZ]BKZq@^o@DMZm@tAeCnAaC~@iBN[Ze@`@e@hB{AjEsD`@]`@SRCFRLDB?LIBUAOEKCC?aBBy@Dy@JqCVuHFiAFqAHoC@S?o@AWjBz@ZN~@b@b@RVL|Bp@XBh@CFALG@@f@D`BQf@XvAj@PH|ClAtBx@XLBaAB}G?YAUC_AEq@Iw@Gk@G_@_@yCMq@OeAOiAESIm@Ki@Km@Mk@Qk@W}@YkAUuAGc@McAEc@K{@OoASiBQsAAMAMOkAe@eEc@uDsAoLOuA_CmSI}@EYCOKaACUKs@SgAGW_@sAK]Qc@i@kASe@mBuEu@iBk@{AUiAKo@Ii@OoBIgACe@C]IkAC_@o@_J?[Ek@Co@CYOsBK{AAUI_Aa@eFOmB[iEm@{HAWG_Ak@_HEQO{Bm@{Hg@}GCc@UwCAM}@{LAMqAaQOcBO}BmAiPU{CO}BEq@]{EM_E?yC?GFkDHs@Ba@Di@FaC?oBEsAQ{BIg@ISYqDYgGAMCi@AM@e@GgBCqAHeG@{D@kCLaFToERmCl@cGbAwGlAqG\\uAn@kCxB}In@gC|@wDl@eCRkA|@aFj@_Db@}C\\uCRkBFu@Dk@\\}DHuAXcF@g@Bi@J_ELkI?]AuGGoDEeBGaBQgFaAcMAKS{BKu@MiAYsBMu@q@qC[iBMw@Oe@YkCo@mDIa@e@cCOu@_BuHi@wBKc@g@iBm@qBk@eBaAiCiA}Bu@uA}@sAiAyAsA{AmBkB{A}AcBmBsBuC{AiCy@_Bw@kBGe@Wm@GQqBkFeC}Hm@uB}@{DcAuDKSGSo@aD]mB{@sFi@cEs@oHg@yGMeBCQi@_NGcB?KGsAC]OcDMaD_AwIUuDIoBg@eLCc@iAoWcAyU}@sS}Byf@UuGSmFg@yJMcCImB?U?{@OoLE_IAsABiF?OBwE?oB?cCKuFKiBIqA_@oEa@eDSyAKo@_@oBQy@CKi@yBQs@YeAkAoDAAoA}Cw@}Au@wA[g@aAyA_AmA}@gAsLcMgAkA_AsAg@q@{AsBw@kAe@u@i@aA}@}As@oAi@gAg@cAw@cBi@mAUi@g@qAaAcC_AoC?]Gk@AGBq@No@Va@`@UZA\\JVXRh@FZ@TAt@Ml@Yf@A@YRE?[?]@mAYUGuCq@k@K[G{@QuGsA}AWaBUaBQ[C_@Co@EOAaBIYNkE[m@EeCIcBG}AAcGAc@@g@?iABuADw@BqF\\}Ix@_ALiEh@y@LaBVYF_BXgB^qAX_@FyDr@C@{JbBkCb@{KjB{B`@qEt@uMzBuCf@gBXmHnAmEt@{B`@kCb@aAPmEt@q@JqATs@LgARuB\\k@JqDn@oB\\[FoEt@qEt@yF`Aw@NOBsAT_BVuF`AkAR{M|BWD_Fz@yJbBsB\\iIvAeAPs@LcARmDj@YDqOlCeQxCaC^mEj@{E^uAHkABoBD{A@eA?sPM}@AG?uOOeFGyFEyQQ_@?QAeQO]?sGG_BA{BC{@A_AAaDC{A?wCEuEEM?I?kFGoOMgSO}SQoNOoSSkFGeFQsD]MCeEq@aEaAmEyAeAc@sB_AgEaC}DoCsAeAcIuGgH}F_@W_F}DaAy@iGcFsDwCuLwJwE{DuSwPaMaKoLkJ_CcBa@[_DwB}E{C[SqHmEuFeDmNiIeHeE}KuGkAq@wD{B}BsAoAu@yCiBGEoDsBm@]_DmB_H_EoDuByA}@}BsA{@e@cPqJyBqAuCcBmI}E}@i@{A_A{G_E}EsCmPsJsAy@eCyAmBiAqBkAwFgD_CuAsAw@oAu@mHkEcDmBiPsJqC_B{EaCmBw@k@Si@SmDcA]Ks@OmCg@SEyB[aKmAoC[oFo@sBWuH{@eAM}@Ms@Io@IUEaGs@gC[KAk@IIA{C[eGu@{L{AeD_@QCIAqDe@eH}@sFw@i@I}HgAo@KIA_AMiDg@i@GyAUc@EaGy@eAOcDe@_@OSE{AWuAQ{B]}Fs@{Fy@uCa@qDg@gIgAaC[cJcAaEa@eAK}Ee@{AOm@MQCkD[{AMqBS{Ea@a@GiHq@eNmAo@GmGk@_AIwAMuC[w@IoAMyAOmCWuDc@eAMsFo@gD]_AKgAM}C_@e@GoBUsGu@oBUwR_CkI_Aa@EkDc@{@K[EeAMmDa@a@Ks@IgAMm@IyAOcAMgGu@}BUwAO_Fm@uC]uGu@gAOkGw@iDg@qB]yBa@kDm@uHeBqCs@iIwB}D}@{D_A{FuAsJkBkASsAS{Eo@c@E_DYsIg@cJKuEByCBs@BiGXkCRqDXcFp@wARkBXmRtCeG|@uFx@eG|@eEn@k@JWFoAPy@L}C`@uATcDd@kBXqFx@mUfD}@LaANqFx@wDl@oHfAaKzAQBql@|I{@LcGz@{GbAc@FoG`A}@NiBVaEn@iAPsEp@aBVkLbBeDf@cBVkAPsEr@sARaFt@uWzDcBVaFt@oAPoBXuB\\wDj@uEr@oLdBoHhAoAPmEp@cLbBmHfA{Cd@cC\\aJtAgEl@{ATeIlAiBX}QpCo\\~Eq@LaFp@qFt@cFj@cCTeE\\s@DoDRaBF{HNu@?qA@{BCm@AiHS}BM[C{D[_BO{@KaCYSCe@I_BWeAQiB]wAY}@SmPmEiA[uCiAk@SECcCaAcDmAyAk@yJwDqAk@iCcAkFuB}B_AmMeFaNmFwAg@uIkDwCkAiCcAgIcDiNuFICsBy@uBy@gAc@oAg@i@U_@OyB}@ICgJuDeBq@uB_AgAc@gGeC}KkE_Bm@yAm@gEcByB{@mCgA{GmCyAk@cBq@yAm@uCiA_E_B_Bo@gJsDmBu@oBw@mCgAcBq@{Am@_C_AuBy@sAg@[KaBk@wAc@_@KcBa@oAWsCe@k@Ii@G{@I{CQgBG]?mAAsA@}@@sAFgAFw@Fw@H{Fl@KBoCZiGv@eALm@HaALyC`@UDYDyCj@YFkCr@iA^eE`Bo@XeCpAiDpBgBpA}AnAiCzBs@p@uD`EkC`D]f@GHkA|AwBlCiFrGeAnAeCtC{@|@mEtEsDjDe@`@{C|B}@l@o@`@wAx@wElCc@Ta@Tu@b@YGiGdDwAr@KDy@`@KCYFU@e@?WCy@YeCqA_CoAg@k@]w@COSeAWuAGMu@{FIe@S]y@iHAKS}BMwBA]MkCC{@EeDFmB@e@DiD@i@BkARaELaBHaBDu@Ay@NcCBo@FqC?eDCgBO_DG{@OyACUMcAc@mCAEYqAe@oB}@sDG[[aBIk@C[K}@Im@AQCo@GmB?wB@i@D}APeCLgA`@kDP{AR}A`@cDZiCVuBb@qDb@wERiCDk@F}@TgEVaGDiBFcC@[DeAF{AHcBf@yMDcAB_APaCDu@Do@Du@BYL_CFyBFiA@SFiABm@B_AFqB^{KPsDFmB@KD{@Bu@@IDqAX_B~@{Ch@_BDKx@cCz@_CTm@f@yANc@^iAHUl@iBj@aBL_@FSdBcFBKd@cBjAmDt@cBLYDOdBiFNk@bA{CXEHDHlAJb@@JHRDFLKMi@WsAGo@f@q@DG~@eATWBG"
+          },
+          "startLocation": {
+            "latLng": {
+              "latitude": 49.6458953,
+              "longitude": 8.3236654
+            }
+          },
+          "endLocation": {
+            "latLng": {
+              "latitude": 50.107544,
+              "longitude": 8.6637
+            }
+          },
+          "steps": [
+            {
+              "distanceMeters": 701,
+              "staticDuration": "59s",
+              "polyline": {
+                "encodedPolyline": "{m_nH}uxq@c@{AUq@IMyByHgAuDEKwCeK_@oAaA_DU_Ag@eBSm@}@qC"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.6458953,
+                  "longitude": 8.3236654
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 49.6492088,
+                  "longitude": 8.3319298
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "DEPART",
+                "instructions": "Auf K2 nach Nordosten starten"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "0,7 km"
+                },
+                "staticDuration": {
+                  "text": "1 Minute"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 450,
+              "staticDuration": "51s",
+              "polyline": {
+                "encodedPolyline": "qb`nHqizq@GUgAyDg@_C_@uBG]AGU{BQuCGwD@iA?w@Dc@B_A"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.6492088,
+                  "longitude": 8.3319298
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 49.650203399999995,
+                  "longitude": 8.3378255
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "NAME_CHANGE",
+                "instructions": "Weiter auf Dr.-Carl-Sonnenschein-Straße/K2"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "0,4 km"
+                },
+                "staticDuration": {
+                  "text": "1 Minute"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 194,
+              "staticDuration": "27s",
+              "polyline": {
+                "encodedPolyline": "wh`nHmn{q@LM@E@UGSHeADyBRgEBWDe@"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.650203399999995,
+                  "longitude": 8.3378255
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 49.649915899999996,
+                  "longitude": 8.3404086
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "ROUNDABOUT_RIGHT",
+                "instructions": "Im Kreisverkehr geradeaus auf Dr.-Carl-Sonnenschein-Straße bleiben"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "0,2 km"
+                },
+                "staticDuration": {
+                  "text": "1 Minute"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 1882,
+              "staticDuration": "213s",
+              "polyline": {
+                "encodedPolyline": "_g`nHq~{q@L?DCDEFOBU?CE[OOL{ATsA|@{BBIzCeIhB{EJY`CqG~BgGv@uBd@oAj@yAJYJYTo@j@cANYx@iAjA_BnA_BhAsAx@_B~@sBPc@n@uAZg@v@m@h@_@h@a@NKjAw@jAaAt@_@HGX_@N_@Tg@R}@LkA@aAHu@^}ENy@f@q@HKl@Wz@Q\\E"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.649915899999996,
+                  "longitude": 8.3404086
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 49.639351,
+                  "longitude": 8.3592140999999991
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "ROUNDABOUT_RIGHT",
+                "instructions": "Im Kreisverkehr dritte Ausfahrt (Gaustraße) nehmen"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "1,9 km"
+                },
+                "staticDuration": {
+                  "text": "4 Minuten"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 663,
+              "staticDuration": "99s",
+              "polyline": {
+                "encodedPolyline": "}d~mHat_r@DLDDJBF?NODYRKVQZ]BKZq@^o@DMZm@tAeCnAaC~@iBN[Ze@`@e@hB{AjEsD`@]`@SRC"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.639351,
+                  "longitude": 8.3592140999999991
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 49.634703099999996,
+                  "longitude": 8.3644521
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "ROUNDABOUT_RIGHT",
+                "instructions": "Im Kreisverkehr geradeaus auf Gaustraße bleiben"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "0,7 km"
+                },
+                "staticDuration": {
+                  "text": "2 Minuten"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 436,
+              "staticDuration": "60s",
+              "polyline": {
+                "encodedPolyline": "{g}mHyt`r@FRLDB?LIBUAOEKCC?aBBy@Dy@JqCVuHFiAFqAHoC@S?o@AW"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.634703099999996,
+                  "longitude": 8.3644521
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 49.6341828,
+                  "longitude": 8.3699516
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "ROUNDABOUT_RIGHT",
+                "instructions": "Im Kreisverkehr dritte Ausfahrt (Berliner Ring) nehmen"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "0,4 km"
+                },
+                "staticDuration": {
+                  "text": "1 Minute"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 241,
+              "staticDuration": "32s",
+              "polyline": {
+                "encodedPolyline": "sd}mHewar@jBz@ZN~@b@b@RVL|Bp@XB"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.6341828,
+                  "longitude": 8.3699516
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 49.632123899999996,
+                  "longitude": 8.3689501
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "TURN_RIGHT",
+                "instructions": "Rechts abbiegen auf Wallstraße"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "0,2 km"
+                },
+                "staticDuration": {
+                  "text": "1 Minute"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 115,
+              "staticDuration": "19s",
+              "polyline": {
+                "encodedPolyline": "ww|mH}par@h@CFALG@@f@D`BQ"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.632123899999996,
+                  "longitude": 8.3689501
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 49.631102399999996,
+                  "longitude": 8.3690708999999988
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "NAME_CHANGE",
+                "instructions": "Weiter auf Rheintorpl."
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "0,1 km"
+                },
+                "staticDuration": {
+                  "text": "1 Minute"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 263,
+              "staticDuration": "57s",
+              "polyline": {
+                "encodedPolyline": "kq|mHuqar@f@XvAj@PH|ClAtBx@XL"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.631102399999996,
+                  "longitude": 8.3690708999999988
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 49.628862800000007,
+                  "longitude": 8.3679234
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "MERGE",
+                "instructions": "Auf Ludwigstraße/B47 fahren"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "0,3 km"
+                },
+                "staticDuration": {
+                  "text": "1 Minute"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 14691,
+              "staticDuration": "770s",
+              "polyline": {
+                "encodedPolyline": "kc|mHojar@BaAB}G?YAUC_AEq@Iw@Gk@G_@_@yCMq@OeAOiAESIm@Ki@Km@Mk@Qk@W}@YkAUuAGc@McAEc@K{@OoASiBQsAAMAMOkAe@eEc@uDsAoLOuA_CmSI}@EYCOKaACUKs@SgAGW_@sAK]Qc@i@kASe@mBuEu@iBk@{AUiAKo@Ii@OoBIgACe@C]IkAC_@o@_J?[Ek@Co@CYOsBK{AAUI_Aa@eFOmB[iEm@{HAWG_Ak@_HEQO{Bm@{Hg@}GCc@UwCAM}@{LAMqAaQOcBO}BmAiPU{CO}BEq@]{EM_E?yC?GFkDHs@Ba@Di@FaC?oBEsAQ{BIg@ISYqDYgGAMCi@AM@e@GgBCqAHeG@{D@kCLaFToERmCl@cGbAwGlAqG\\uAn@kCxB}In@gC|@wDl@eCRkA|@aFj@_Db@}C\\uCRkBFu@Dk@\\}DHuAXcF@g@Bi@J_ELkI?]AuGGoDEeBGaBQgFaAcMAKS{BKu@MiAYsBMu@q@qC[iBMw@Oe@YkCo@mDIa@e@cCOu@_BuHi@wBKc@g@iBm@qBk@eBaAiCiA}Bu@uA}@sAiAyAsA{AmBkB{A}AcBmBsBuC{AiCy@_Bw@kBGe@Wm@GQqBkFeC}Hm@uB}@{DcAuDKSGSo@aD]mB{@sFi@cEs@oHg@yGMeBCQi@_NGcB?KGsAC]OcDMaD_AwIUuDIoBg@eLCc@iAoWcAyU}@sS}Byf@UuGSmFg@yJMcCImB?U?{@OoLE_IAsABiF?OBwE?oB?cCKuFKiBIqA_@oEa@eDSyAKo@_@oBQy@CKi@yBQs@YeAkAoDAAoA}Cw@}Au@wA[g@aAyA_AmA}@gAsLcMgAkA_AsAg@q@{AsBw@kAe@u@i@aA}@}As@oAi@gAg@cAw@cBi@mAUi@g@qAaAcC_AoC"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.628862800000007,
+                  "longitude": 8.3679234
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 49.6606964,
+                  "longitude": 8.5545675
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "TURN_LEFT",
+                "instructions": "Links abbiegen auf Allmendgasse/B47\nWeiter auf B47"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "14,7 km"
+                },
+                "staticDuration": {
+                  "text": "13 Minuten"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 22921,
+              "staticDuration": "861s",
+              "polyline": {
+                "encodedPolyline": "kjbnHayes@?]Gk@AGBq@No@Va@`@UZA\\JVXRh@FZ@TAt@Ml@Yf@A@YRE?[?]@mAYUGuCq@k@K[G{@QuGsA}AWaBUaBQ[C_@Co@EOAaBIYNkE[m@EeCIcBG}AAcGAc@@g@?iABuADw@BqF\\}Ix@_ALiEh@y@LaBVYF_BXgB^qAX_@FyDr@C@{JbBkCb@{KjB{B`@qEt@uMzBuCf@gBXmHnAmEt@{B`@kCb@aAPmEt@q@JqATs@LgARuB\\k@JqDn@oB\\[FoEt@qEt@yF`Aw@NOBsAT_BVuF`AkAR{M|BWD_Fz@yJbBsB\\iIvAeAPs@LcARmDj@YDqOlCeQxCaC^mEj@{E^uAHkABoBD{A@eA?sPM}@AG?uOOeFGyFEyQQ_@?QAeQO]?sGG_BA{BC{@A_AAaDC{A?wCEuEEM?I?kFGoOMgSO}SQoNOoSSkFGeFQsD]MCeEq@aEaAmEyAeAc@sB_AgEaC}DoCsAeAcIuGgH}F_@W_F}DaAy@iGcFsDwCuLwJwE{DuSwPaMaKoLkJ_CcBa@[_DwB}E{C[SqHmEuFeDmNiIeHeE}KuGkAq@wD{B}BsAoAu@yCiBGEoDsBm@]_DmB_H_EoDuByA}@}BsA{@e@cPqJyBqAuCcBmI}E}@i@{A_A{G_E}EsCmPsJsAy@eCyAmBiAqBkAwFgD_CuAsAw@oAu@mHkEcDmBiPsJqC_B{EaCmBw@k@Si@SmDcA]Ks@OmCg@SEyB[aKmAoC[oFo@sBWuH{@eAM}@Ms@Io@IUEaGs@gC[KAk@IIA{C[eGu@{L{AeD_@QCIAqDe@eH}@sFw@"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.6606964,
+                  "longitude": 8.5545675
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 49.8558427,
+                  "longitude": 8.5976527999999988
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "RAMP_RIGHT",
+                "instructions": "Bei Ausfahrt A67 Richtung Frankfurt fahren"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "22,9 km"
+                },
+                "staticDuration": {
+                  "text": "14 Minuten"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 756,
+              "staticDuration": "29s",
+              "polyline": {
+                "encodedPolyline": "_nhoHifns@i@I}HgAo@KIA_AMiDg@i@GyAUc@EaGy@eAOcDe@_@O"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.8558427,
+                  "longitude": 8.5976527999999988
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 49.8625585,
+                  "longitude": 8.5992231999999991
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "TURN_LEFT",
+                "instructions": "Links halten und weiter auf E451"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "0,8 km"
+                },
+                "staticDuration": {
+                  "text": "1 Minute"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 28164,
+              "staticDuration": "972s",
+              "polyline": {
+                "encodedPolyline": "_xioHcpns@SE{AWuAQ{B]}Fs@{Fy@uCa@qDg@gIgAaC[cJcAaEa@eAK}Ee@{AOm@MQCkD[{AMqBS{Ea@a@GiHq@eNmAo@GmGk@_AIwAMuC[w@IoAMyAOmCWuDc@eAMsFo@gD]_AKgAM}C_@e@GoBUsGu@oBUwR_CkI_Aa@EkDc@{@K[EeAMmDa@a@Ks@IgAMm@IyAOcAMgGu@}BUwAO_Fm@uC]uGu@gAOkGw@iDg@qB]yBa@kDm@uHeBqCs@iIwB}D}@{D_A{FuAsJkBkASsAS{Eo@c@E_DYsIg@cJKuEByCBs@BiGXkCRqDXcFp@wARkBXmRtCeG|@uFx@eG|@eEn@k@JWFoAPy@L}C`@uATcDd@kBXqFx@mUfD}@LaANqFx@wDl@oHfAaKzAQBql@|I{@LcGz@{GbAc@FoG`A}@NiBVaEn@iAPsEp@aBVkLbBeDf@cBVkAPsEr@sARaFt@uWzDcBVaFt@oAPoBXuB\\wDj@uEr@oLdBoHhAoAPmEp@cLbBmHfA{Cd@cC\\aJtAgEl@{ATeIlAiBX}QpCo\\~Eq@LaFp@qFt@cFj@cCTeE\\s@DoDRaBF{HNu@?qA@{BCm@AiHS}BM[C{D[_BO{@KaCYSCe@I_BWeAQiB]wAY}@SmPmEiA[uCiAk@SECcCaAcDmAyAk@yJwDqAk@iCcAkFuB}B_AmMeFaNmFwAg@uIkDwCkAiCcAgIcDiNuFICsBy@uBy@gAc@oAg@i@U_@OyB}@ICgJuDeBq@uB_AgAc@gGeC}KkE_Bm@yAm@gEcByB{@mCgA{GmCyAk@cBq@yAm@uCiA_E_B_Bo@gJsDmBu@oBw@mCgAcBq@{Am@_C_AuBy@sAg@[KaBk@wAc@_@KcBa@oAWsCe@k@Ii@G{@I{CQgBG]?mAAsA@}@@sAFgAFw@Fw@H{Fl@KBoCZiGv@eALm@HaALyC`@UDYDyCj@YFkCr@iA^eE`Bo@XeCpAiDpBgBpA}AnAiCzBs@p@uD`EkC`D]f@GHkA|AwBlCiFrGeAnAeCtC{@|@mEtEsDjDe@`@{C|B}@l@o@`@wAx@wElCc@Ta@Tu@b@"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 49.8625585,
+                  "longitude": 8.5992231999999991
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 50.109174900000006,
+                  "longitude": 8.6026869
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "NAME_CHANGE",
+                "instructions": "Weiter auf A5/E451"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "28,2 km"
+                },
+                "staticDuration": {
+                  "text": "16 Minuten"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 3189,
+              "staticDuration": "155s",
+              "polyline": {
+                "encodedPolyline": "i}ypHyeos@YGiGdDwAr@KDy@`@KCYFU@e@?WCy@YeCqA_CoAg@k@]w@COSeAWuAGMu@{FIe@S]y@iHAKS}BMwBA]MkCC{@EeDFmB@e@DiD@i@BkARaELaBHaBDu@Ay@NcCBo@FqC?eDCgBO_DG{@OyACUMcAc@mCAEYqAe@oB}@sDG[[aBIk@C[K}@Im@AQCo@GmB?wB@i@D}APeCLgA`@kDP{AR}A`@cDZiCVuBb@qDb@wERiCDk@F}@TgEVaGDiBFcC@[DeA"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 50.109174900000006,
+                  "longitude": 8.6026869
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 50.1144865,
+                  "longitude": 8.6382105
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "RAMP_RIGHT",
+                "instructions": "Am Autobahnkreuz 19-Westkreuz Frankfurt rechts halten und den Schildern A648 in Richtung F-Stadtmitte/Messe folgen"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "3,2 km"
+                },
+                "staticDuration": {
+                  "text": "3 Minuten"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 962,
+              "staticDuration": "120s",
+              "polyline": {
+                "encodedPolyline": "q~zpHycvs@F{AHcBf@yMDcAB_APaCDu@Do@Du@BYL_CFyBFiA@SFiABm@B_AFqB^{KPsDFmB@KD{@Bu@@IDqA"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 50.1144865,
+                  "longitude": 8.6382105
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 50.113276299999995,
+                  "longitude": 8.6515684
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "NAME_CHANGE",
+                "instructions": "Weiter auf Theodor-Heuss-Allee/B44/B8\nWeiter auf B44/B8"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "1,0 km"
+                },
+                "staticDuration": {
+                  "text": "2 Minuten"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 963,
+              "staticDuration": "148s",
+              "polyline": {
+                "encodedPolyline": "_wzpHiwxs@X_B~@{Ch@_BDKx@cCz@_CTm@f@yANc@^iAHUl@iBj@aBL_@FSdBcFBKd@cBjAmDt@cBLYDOdBiFNk@bA{C"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 50.113276299999995,
+                  "longitude": 8.6515684
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 50.1084385,
+                  "longitude": 8.6627394
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "TURN_SLIGHT_RIGHT",
+                "instructions": "Leicht rechts abbiegen auf Friedrich-Ebert-Anlage/B44\nWeiter auf B44"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "1,0 km"
+                },
+                "staticDuration": {
+                  "text": "2 Minuten"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 81,
+              "staticDuration": "41s",
+              "polyline": {
+                "encodedPolyline": "wxypHc}zs@XEHDHlAJb@@JHRDF"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 50.1084385,
+                  "longitude": 8.6627394
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 50.1080602,
+                  "longitude": 8.6619672999999988
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "TURN_SHARP_RIGHT",
+                "instructions": "Scharf rechts auf Poststraße"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "81 m"
+                },
+                "staticDuration": {
+                  "text": "1 Minute"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 76,
+              "staticDuration": "51s",
+              "polyline": {
+                "encodedPolyline": "kvypHixzs@LKMi@WsAGo@"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 50.1080602,
+                  "longitude": 8.6619672999999988
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 50.108223699999996,
+                  "longitude": 8.6628963
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "UTURN_LEFT",
+                "instructions": "Wenden"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "76 m"
+                },
+                "staticDuration": {
+                  "text": "1 Minute"
+                }
+              },
+              "travelMode": "DRIVE"
+            },
+            {
+              "distanceMeters": 95,
+              "staticDuration": "25s",
+              "polyline": {
+                "encodedPolyline": "kwypHc~zs@f@q@DG~@eATWBG"
+              },
+              "startLocation": {
+                "latLng": {
+                  "latitude": 50.108223699999996,
+                  "longitude": 8.6628963
+                }
+              },
+              "endLocation": {
+                "latLng": {
+                  "latitude": 50.107544,
+                  "longitude": 8.6637
+                }
+              },
+              "navigationInstruction": {
+                "maneuver": "TURN_RIGHT",
+                "instructions": "Rechts abbiegen\nFür den öffentlichen Durchgang gesperrte Straße\nDas Ziel befindet sich auf der rechten Seite"
+              },
+              "localizedValues": {
+                "distance": {
+                  "text": "0,1 km"
+                },
+                "staticDuration": {
+                  "text": "1 Minute"
+                }
+              },
+              "travelMode": "DRIVE"
+            }
+          ],
+          "localizedValues": {
+            "distance": {
+              "text": "76,8 km"
+            },
+            "duration": {
+              "text": "57 Minuten"
+            },
+            "staticDuration": {
+              "text": "1 Stunde, 3 Minuten"
+            }
+          }
+        }
+      ],
+      "distanceMeters": 76843,
+      "duration": "3426s",
+      "staticDuration": "3789s",
+      "polyline": {
+        "encodedPolyline": "{m_nH}uxq@c@{AUq@IMyByHgAuDEKwCeK_@oAaA_DU_Ag@eBSm@}@qCGUgAyDg@_C_@uBG]AGU{BQuCGwD@iA?w@Dc@B_ALM@E@UGSHeADyBRgEBWDe@L?DCDEFOBU?CE[OOL{ATsA|@{BBIzCeIhB{EJY`CqG~BgGv@uBd@oAj@yAJYJYTo@j@cANYx@iAjA_BnA_BhAsAx@_B~@sBPc@n@uAZg@v@m@h@_@h@a@NKjAw@jAaAt@_@HGX_@N_@Tg@R}@LkA@aAHu@^}ENy@f@q@HKl@Wz@Q\\EDLDDJBF?NODYRKVQZ]BKZq@^o@DMZm@tAeCnAaC~@iBN[Ze@`@e@hB{AjEsD`@]`@SRCFRLDB?LIBUAOEKCC?aBBy@Dy@JqCVuHFiAFqAHoC@S?o@AWjBz@ZN~@b@b@RVL|Bp@XBh@CFALG@@f@D`BQf@XvAj@PH|ClAtBx@XLBaAB}G?YAUC_AEq@Iw@Gk@G_@_@yCMq@OeAOiAESIm@Ki@Km@Mk@Qk@W}@YkAUuAGc@McAEc@K{@OoASiBQsAAMAMOkAe@eEc@uDsAoLOuA_CmSI}@EYCOKaACUKs@SgAGW_@sAK]Qc@i@kASe@mBuEu@iBk@{AUiAKo@Ii@OoBIgACe@C]IkAC_@o@_J?[Ek@Co@CYOsBK{AAUI_Aa@eFOmB[iEm@{HAWG_Ak@_HEQO{Bm@{Hg@}GCc@UwCAM}@{LAMqAaQOcBO}BmAiPU{CO}BEq@]{EM_E?yC?GFkDHs@Ba@Di@FaC?oBEsAQ{BIg@ISYqDYgGAMCi@AM@e@GgBCqAHeG@{D@kCLaFToERmCl@cGbAwGlAqG\\uAn@kCxB}In@gC|@wDl@eCRkA|@aFj@_Db@}C\\uCRkBFu@Dk@\\}DHuAXcF@g@Bi@J_ELkI?]AuGGoDEeBGaBQgFaAcMAKS{BKu@MiAYsBMu@q@qC[iBMw@Oe@YkCo@mDIa@e@cCOu@_BuHi@wBKc@g@iBm@qBk@eBaAiCiA}Bu@uA}@sAiAyAsA{AmBkB{A}AcBmBsBuC{AiCy@_Bw@kBGe@Wm@GQqBkFeC}Hm@uB}@{DcAuDKSGSo@aD]mB{@sFi@cEs@oHg@yGMeBCQi@_NGcB?KGsAC]OcDMaD_AwIUuDIoBg@eLCc@iAoWcAyU}@sS}Byf@UuGSmFg@yJMcCImB?U?{@OoLE_IAsABiF?OBwE?oB?cCKuFKiBIqA_@oEa@eDSyAKo@_@oBQy@CKi@yBQs@YeAkAoDAAoA}Cw@}Au@wA[g@aAyA_AmA}@gAsLcMgAkA_AsAg@q@{AsBw@kAe@u@i@aA}@}As@oAi@gAg@cAw@cBi@mAUi@g@qAaAcC_AoC?]Gk@AGBq@No@Va@`@UZA\\JVXRh@FZ@TAt@Ml@Yf@A@YRE?[?]@mAYUGuCq@k@K[G{@QuGsA}AWaBUaBQ[C_@Co@EOAaBIYNkE[m@EeCIcBG}AAcGAc@@g@?iABuADw@BqF\\}Ix@_ALiEh@y@LaBVYF_BXgB^qAX_@FyDr@C@{JbBkCb@{KjB{B`@qEt@uMzBuCf@gBXmHnAmEt@{B`@kCb@aAPmEt@q@JqATs@LgARuB\\k@JqDn@oB\\[FoEt@qEt@yF`Aw@NOBsAT_BVuF`AkAR{M|BWD_Fz@yJbBsB\\iIvAeAPs@LcARmDj@YDqOlCeQxCaC^mEj@{E^uAHkABoBD{A@eA?sPM}@AG?uOOeFGyFEyQQ_@?QAeQO]?sGG_BA{BC{@A_AAaDC{A?wCEuEEM?I?kFGoOMgSO}SQoNOoSSkFGeFQsD]MCeEq@aEaAmEyAeAc@sB_AgEaC}DoCsAeAcIuGgH}F_@W_F}DaAy@iGcFsDwCuLwJwE{DuSwPaMaKoLkJ_CcBa@[_DwB}E{C[SqHmEuFeDmNiIeHeE}KuGkAq@wD{B}BsAoAu@yCiBGEoDsBm@]_DmB_H_EoDuByA}@}BsA{@e@cPqJyBqAuCcBmI}E}@i@{A_A{G_E}EsCmPsJsAy@eCyAmBiAqBkAwFgD_CuAsAw@oAu@mHkEcDmBiPsJqC_B{EaCmBw@k@Si@SmDcA]Ks@OmCg@SEyB[aKmAoC[oFo@sBWuH{@eAM}@Ms@Io@IUEaGs@gC[KAk@IIA{C[eGu@{L{AeD_@QCIAqDe@eH}@sFw@i@I}HgAo@KIA_AMiDg@i@GyAUc@EaGy@eAOcDe@_@OSE{AWuAQ{B]}Fs@{Fy@uCa@qDg@gIgAaC[cJcAaEa@eAK}Ee@{AOm@MQCkD[{AMqBS{Ea@a@GiHq@eNmAo@GmGk@_AIwAMuC[w@IoAMyAOmCWuDc@eAMsFo@gD]_AKgAM}C_@e@GoBUsGu@oBUwR_CkI_Aa@EkDc@{@K[EeAMmDa@a@Ks@IgAMm@IyAOcAMgGu@}BUwAO_Fm@uC]uGu@gAOkGw@iDg@qB]yBa@kDm@uHeBqCs@iIwB}D}@{D_A{FuAsJkBkASsAS{Eo@c@E_DYsIg@cJKuEByCBs@BiGXkCRqDXcFp@wARkBXmRtCeG|@uFx@eG|@eEn@k@JWFoAPy@L}C`@uATcDd@kBXqFx@mUfD}@LaANqFx@wDl@oHfAaKzAQBql@|I{@LcGz@{GbAc@FoG`A}@NiBVaEn@iAPsEp@aBVkLbBeDf@cBVkAPsEr@sARaFt@uWzDcBVaFt@oAPoBXuB\\wDj@uEr@oLdBoHhAoAPmEp@cLbBmHfA{Cd@cC\\aJtAgEl@{ATeIlAiBX}QpCo\\~Eq@LaFp@qFt@cFj@cCTeE\\s@DoDRaBF{HNu@?qA@{BCm@AiHS}BM[C{D[_BO{@KaCYSCe@I_BWeAQiB]wAY}@SmPmEiA[uCiAk@SECcCaAcDmAyAk@yJwDqAk@iCcAkFuB}B_AmMeFaNmFwAg@uIkDwCkAiCcAgIcDiNuFICsBy@uBy@gAc@oAg@i@U_@OyB}@ICgJuDeBq@uB_AgAc@gGeC}KkE_Bm@yAm@gEcByB{@mCgA{GmCyAk@cBq@yAm@uCiA_E_B_Bo@gJsDmBu@oBw@mCgAcBq@{Am@_C_AuBy@sAg@[KaBk@wAc@_@KcBa@oAWsCe@k@Ii@G{@I{CQgBG]?mAAsA@}@@sAFgAFw@Fw@H{Fl@KBoCZiGv@eALm@HaALyC`@UDYDyCj@YFkCr@iA^eE`Bo@XeCpAiDpBgBpA}AnAiCzBs@p@uD`EkC`D]f@GHkA|AwBlCiFrGeAnAeCtC{@|@mEtEsDjDe@`@{C|B}@l@o@`@wAx@wElCc@Ta@Tu@b@YGiGdDwAr@KDy@`@KCYFU@e@?WCy@YeCqA_CoAg@k@]w@COSeAWuAGMu@{FIe@S]y@iHAKS}BMwBA]MkCC{@EeDFmB@e@DiD@i@BkARaELaBHaBDu@Ay@NcCBo@FqC?eDCgBO_DG{@OyACUMcAc@mCAEYqAe@oB}@sDG[[aBIk@C[K}@Im@AQCo@GmB?wB@i@D}APeCLgA`@kDP{AR}A`@cDZiCVuBb@qDb@wERiCDk@F}@TgEVaGDiBFcC@[DeAF{AHcBf@yMDcAB_APaCDu@Do@Du@BYL_CFyBFiA@SFiABm@B_AFqB^{KPsDFmB@KD{@Bu@@IDqAX_B~@{Ch@_BDKx@cCz@_CTm@f@yANc@^iAHUl@iBj@aBL_@FSdBcFBKd@cBjAmDt@cBLYDOdBiFNk@bA{CXEHDHlAJb@@JHRDFLKMi@WsAGo@f@q@DG~@eATWBG"
+      },
+      "description": "A67 und A5",
+      "warnings": [
+        "Auf dieser Route gibt es eine Autobahn."
+      ],
+      "viewport": {
+        "low": {
+          "latitude": 49.628821099999996,
+          "longitude": 8.3236654
+        },
+        "high": {
+          "latitude": 50.116352,
+          "longitude": 8.6637
+        }
+      },
+      "travelAdvisory": {},
+      "localizedValues": {
+        "distance": {
+          "text": "76,8 km"
+        },
+        "duration": {
+          "text": "57 Minuten"
+        },
+        "staticDuration": {
+          "text": "1 Stunde, 3 Minuten"
+        }
+      },
+      "routeToken": "CokDCpACMo0CGvEBClECFhaGASLuqdWNAv6UkAHNkjq8gAKGE9-WtQGY-IUBkNoP59IInfkN-ou1Wb3MpFmQv_i2BIPV87YEu9IBlo-4BeGIvwSo7C7iHf4UhSDsHwASUOXbiQUH46_aOpTMPLb35Cnh7pGlBwWdYowKZDMzCvGcmy20tQf_ufcq2NiMn1NVWZbsMbz32NqYYwSgl4samoNfOEWmOnIyGb-6VFnmrSGhGhwAKQj_____DwZMGwYnUJYGwgL5CwKsAgIJAwoAKhQUCRBxBxcEdyFYdQNwAgwQW3IUZjICDQY9Ts1pPkXTzqo-SLz4743cq4mUMSIXRm05RmFxYk5EdWJ2LV9VUG9jT0NrQTQQBRpbClkKGAoNCgIIAREAAAAAAIBmQBHfT42X7h-0QBIeCAAQAxAGEBMQEhgCQgwKBhCw17HSBhoCCAVKAggBIhsKF0ZtOUZhcGlHRE9idi1fVVBvY09Da0E0cAEoASIVAImKUdEIv37SX3ieF5Vdc7pF-yakGhgKCg3JXJcdFS4X9gQSCg2oFpcdFQhX9gQ",
+      "routeLabels": [
+        "DEFAULT_ROUTE"
+      ],
+      "polylineDetails": {}
+    }
+  ],
+  "geocodingResults": {}
+}
