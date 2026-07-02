@@ -44,6 +44,17 @@ public class Location {
     public double latitude() { return latitude; }
     public double longitude() { return longitude; }
 
+    /**
+     * Clears the process-wide routing cache. The cache is keyed purely by coordinates and is
+     * never invalidated, so values computed with one routing backend (e.g. the Haversine fallback)
+     * would otherwise leak into later callers using a different backend (e.g. real GraphHopper)
+     * within the same JVM. Tests that switch backends must call this between runs so the
+     * "real routing was actually used" guarantee holds. Package-private: a test seam, not API.
+     */
+    static void clearRoutingCache() {
+        routingCache.clear();
+    }
+
     public TravelData getRouting(Location other, GraphHopper graphHopper) {
         if (this.equals(other)) return new TravelData(0L, Duration.ZERO);
         return routingCache
