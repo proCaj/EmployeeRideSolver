@@ -1,22 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Local search tuning for the weekly VRP.
+  Solver tuning for the weekly VRP.
 
-  The pairing constraint hard-couples each return dropoff to its outbound pickup's driver,
-  so repairing a badly-ordered morning requires migrating several events across drivers at
-  once - every intermediate step breaks a pairing (1M-scale hard penalty). The default
-  late-acceptance horizon (400) treats that valley as unescapable and plateaus on a single
-  ~2.8k time-window violation; a longer horizon plus a less greedy forager reliably crosses
-  it. Termination stays in application.properties (per-profile).
+  Construction: events are inserted into the drivers' route lists chronologically
+  (SORTED value selector + EventChronologicalComparator). The pairing constraint
+  hard-couples each return dropoff to its outbound pickup's driver, so a dropoff placed
+  before its pickup exists locks in a 1M-scale hard violation that local search can never
+  repair (every repair path crosses another 1M-scale state, which late acceptance rejects).
+  Chronological insertion guarantees the pickup is already placed, so the greedy CH lands
+  the dropoff on the matching driver.
+
+  Local search: the same coupling means escaping a mis-ordered morning requires migrating
+  several events across drivers at once; the default late-acceptance horizon (400) plateaus
+  on ~2.8k-scale time-window violations, a longer horizon plus a less greedy forager
+  reliably crosses them. Termination stays in application.properties (per-profile).
 -->
 <solver xmlns="https://timefold.ai/xsd/solver">
   <constructionHeuristic>
-    <!-- With EventDifficultyComparator this inserts events chronologically, so each
-         return dropoff lands on its (already-placed) pickup's driver instead of locking
-         in a pairing violation local search cannot repair. -->
-    <constructionHeuristicType>FIRST_FIT_DECREASING</constructionHeuristicType>
+    <queuedValuePlacer>
+      <valueSelector>
+        <cacheType>PHASE</cacheType>
+        <selectionOrder>SORTED</selectionOrder>
+        <comparatorClass>com.vrp.domain.EventChronologicalComparator</comparatorClass>
+        <sorterOrder>ASCENDING</sorterOrder>
+      </valueSelector>
+    </queuedValuePlacer>
   </constructionHeuristic>
   <localSearch>
+    <!-- Standard list moves PLUS ruin-and-recreate: single-element moves can never cross
+         the 1M pairing walls (moving one member of a pickup+dropoffs family to another
+         driver transits a 1M-scale state, which late acceptance always rejects), so
+         rebalancing coupled event families across drivers requires unassigning a slice and
+         letting the construction heuristic rebuild it atomically. -->
+    <unionMoveSelector>
+      <listChangeMoveSelector/>
+      <listSwapMoveSelector/>
+      <subListChangeMoveSelector/>
+      <subListSwapMoveSelector/>
+      <listRuinRecreateMoveSelector/>
+    </unionMoveSelector>
     <acceptor>
       <lateAcceptanceSize>1500</lateAcceptanceSize>
     </acceptor>

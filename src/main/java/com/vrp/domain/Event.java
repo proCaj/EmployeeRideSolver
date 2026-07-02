@@ -2,9 +2,9 @@ package com.vrp.domain;
 
 import ai.timefold.solver.core.api.domain.entity.PlanningEntity;
 import ai.timefold.solver.core.api.domain.variable.*;
+import com.graphhopper.GraphHopper;
 import com.vrp.entity.Employee;
 import com.vrp.entity.ShiftDemand;
-import com.vrp.listener.ArrivalTimeUpdatingVariableListener;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -31,9 +31,11 @@ import java.util.stream.Collectors;
  *   fromLocation = first stop's location
  *   toLocation   = last stop's location
  */
-@PlanningEntity(difficultyComparatorClass = EventDifficultyComparator.class)
-public class Event implements Standstill {
-    
+@PlanningEntity
+public class Event {
+
+    private static final int AVERAGE_SPEED_MPS = 15; // ~54 km/h fallback when GraphHopper is unavailable
+
     private String id;
 
     // --- Legacy single-location fields (derived from stops for compatibility) ---
@@ -63,32 +65,27 @@ public class Event implements Standstill {
      * For night shifts spanning midnight, shiftDate is the day the shift STARTED per ArbZG.
      */
     private LocalDate shiftDate;
-    
-    @PlanningVariable(graphType = PlanningVariableGraphType.CHAINED, 
-                      valueRangeProviderRefs = "standstillRange")
-    private Standstill previousStandstill;
-    
-    @AnchorShadowVariable(sourceVariableName = "previousStandstill")
+
+    @InverseRelationShadowVariable(sourceVariableName = "events")
     private Driver driver;
-    
-    @ShadowVariable(variableListenerClass = ArrivalTimeUpdatingVariableListener.class,
-                     sourceVariableName = "previousStandstill")
+
+    @PreviousElementShadowVariable(sourceVariableName = "events")
+    private Event previousEvent;
+
+    @ShadowVariable(supplierName = "arrivalTimeSupplier")
     private Instant arrivalTime;
 
-    @ShadowVariable(variableListenerClass = com.vrp.listener.PassengerCountUpdatingVariableListener.class,
-                     sourceVariableName = "previousStandstill")
+    @ShadowVariable(supplierName = "cumulativePassengerCountSupplier")
     private Integer cumulativePassengerCount;
 
     private int cachedPassengerDelta;
     private int cachedPeakPassengerCount;
-    private Instant departureTime;
 
     public Event() {
         this.passengers = new ArrayList<>();
         this.stops = new ArrayList<>();
         this.cachedPassengerDelta = 0;
         this.cachedPeakPassengerCount = 0;
-        this.departureTime = null;
     }
     
     /**
@@ -154,21 +151,93 @@ public class Event implements Standstill {
         this.cachedPeakPassengerCount = computePeakPassengerCount();
     }
     
-    @Override
     public Location getLocation() {
         // The driver ends up at the LAST stop's location after completing this event
         return toLocation;
     }
-    
-    @Override
+
     public Driver getDriver() {
         return driver;
     }
-    
-    public Instant getDepartureTime() {
-        return departureTime;
+
+    public Event getPreviousEvent() {
+        return previousEvent;
     }
-    
+
+    /**
+     * Completion time of this event: when arrivalTime (or minStartTime, if the
+     * driver arrives early) plus this event's duration. Purely derived from
+     * arrivalTime so it never needs its own shadow variable.
+     */
+    public Instant getDepartureTime() {
+        if (arrivalTime == null || duration == null) {
+            return null;
+        }
+        if (minStartTime != null) {
+            Instant effectiveStart = arrivalTime.isBefore(minStartTime) ? minStartTime : arrivalTime;
+            return effectiveStart.plus(duration);
+        }
+        return arrivalTime.plus(duration);
+    }
+
+    /**
+     * Custom shadow variable: recomputed whenever this event's position in the
+     * driver's route changes (driver assignment or previous-element reassignment).
+     */
+    @ShadowSources({"driver", "previousEvent.arrivalTime"})
+    public Instant arrivalTimeSupplier(VrpSolution solution) {
+        if (driver == null) {
+            return null; // unassigned
+        }
+        if (previousEvent == null) {
+            return minStartTime; // first event in the driver's route
+        }
+        if (previousEvent.getArrivalTime() == null) {
+            return null;
+        }
+        Duration travelTime = calculateTravelTime(
+            previousEvent.getLocation(), fromLocation, solution.getGraphHopper());
+        return previousEvent.getDepartureTime().plus(travelTime);
+    }
+
+    /**
+     * Custom shadow variable: cumulative passengers carried by the driver up to
+     * and including this event, used by the capacity constraint.
+     */
+    @ShadowSources({"driver", "previousEvent.cumulativePassengerCount"})
+    public Integer cumulativePassengerCountSupplier() {
+        int previousCount = 0;
+        if (previousEvent != null) {
+            Integer prevCumulative = previousEvent.getCumulativePassengerCount();
+            previousCount = prevCumulative != null ? prevCumulative : 0;
+        }
+        return previousCount + getPassengerDelta();
+    }
+
+    /**
+     * Calculates travel time between two locations. Uses GraphHopper for real
+     * routing when available, falls back to Haversine distance / average speed.
+     */
+    private static Duration calculateTravelTime(Location from, Location to, GraphHopper graphHopper) {
+        if (from.equals(to)) {
+            return Duration.ZERO;
+        }
+        if (graphHopper != null) {
+            try {
+                Duration ghTime = from.getTravelTime(to, graphHopper);
+                if (ghTime != null && !ghTime.isZero()) {
+                    return ghTime;
+                }
+            } catch (Exception e) {
+                // Fall through to Haversine fallback
+            }
+        }
+        long distance = from.getHaversineDistance(to);
+        long travelTimeSeconds = distance / AVERAGE_SPEED_MPS;
+        return Duration.ofSeconds(travelTimeSeconds);
+    }
+
+
     public Duration getWaitingTime() {
         if (arrivalTime == null || arrivalTime.isAfter(minStartTime)) {
             return Duration.ZERO;
@@ -328,24 +397,12 @@ public class Event implements Standstill {
     public LocalDate getShiftDate() { return shiftDate; }
     public void setShiftDate(LocalDate shiftDate) { this.shiftDate = shiftDate; }
 
-    public Standstill getPreviousStandstill() { return previousStandstill; }
-    public void setPreviousStandstill(Standstill previousStandstill) { this.previousStandstill = previousStandstill; }
-
     public void setDriver(Driver driver) { this.driver = driver; }
 
+    public void setPreviousEvent(Event previousEvent) { this.previousEvent = previousEvent; }
+
     public Instant getArrivalTime() { return arrivalTime; }
-    public void setArrivalTime(Instant arrivalTime) {
-        this.arrivalTime = arrivalTime;
-        if (arrivalTime == null || duration == null) {
-            this.departureTime = null;
-        } else if (minStartTime != null) {
-            Instant effectiveStart = arrivalTime.isBefore(minStartTime) ? minStartTime : arrivalTime;
-            this.departureTime = effectiveStart.plus(duration);
-        } else {
-            // No minStartTime constraint — depart immediately after arrival + duration
-            this.departureTime = arrivalTime.plus(duration);
-        }
-    }
+    public void setArrivalTime(Instant arrivalTime) { this.arrivalTime = arrivalTime; }
 
     public Integer getCumulativePassengerCount() { return cumulativePassengerCount; }
     public void setCumulativePassengerCount(Integer cumulativePassengerCount) { this.cumulativePassengerCount = cumulativePassengerCount; }

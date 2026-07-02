@@ -32,7 +32,7 @@ public class SolverService {
     private static final Logger LOG = Logger.getLogger(SolverService.class);
     
     @Inject
-    SolverManager<VrpSolution, UUID> solverManager;
+    SolverManager<VrpSolution> solverManager;
     
     @Inject
     EventGenerationService eventGenerationService;
@@ -42,7 +42,7 @@ public class SolverService {
     
     private final ConcurrentMap<UUID, VrpSolution> solutionMap = new ConcurrentHashMap<>();
     private final ConcurrentMap<UUID, VrpSolution> bestSolutionMap = new ConcurrentHashMap<>();
-    private final ConcurrentMap<UUID, SolverJob<VrpSolution, UUID>> jobMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<UUID, SolverJob<VrpSolution>> jobMap = new ConcurrentHashMap<>();
     private final ConcurrentMap<UUID, Long> startTimeMap = new ConcurrentHashMap<>();
     private volatile UUID currentJobId = null;
     
@@ -104,14 +104,16 @@ public class SolverService {
         );
         
         try {
-            SolverJob<VrpSolution, UUID> solverJob = solverManager.solveBuilder()
+            SolverJob<VrpSolution> solverJob = solverManager.solveBuilder()
                 .withProblemId(problemId)
                 .withProblem(problem)
-                .withBestSolutionConsumer(solution -> {
+                .withBestSolutionEventConsumer(event -> {
+                    VrpSolution solution = event.solution();
                     bestSolutionMap.put(problemId, solution);
                     LOG.info("New best solution for job " + problemId + " with score: " + solution.getScore());
                 })
-                .withFinalBestSolutionConsumer(solution -> {
+                .withFinalBestSolutionEventConsumer(event -> {
+                    VrpSolution solution = event.solution();
                     solutionMap.put(problemId, solution);
                     bestSolutionMap.put(problemId, solution);
                     LOG.info("Final solution for job " + problemId + " with score: " + solution.getScore());
@@ -131,7 +133,7 @@ public class SolverService {
     }
     
     public VrpSolution getSolution(UUID problemId) {
-        SolverJob<VrpSolution, UUID> solverJob = jobMap.get(problemId);
+        SolverJob<VrpSolution> solverJob = jobMap.get(problemId);
         if (solverJob != null) {
             try {
                 VrpSolution solution = solverJob.getFinalBestSolution();
@@ -152,7 +154,7 @@ public class SolverService {
     }
     
     public String getStatus(UUID problemId) {
-        SolverJob<VrpSolution, UUID> solverJob = jobMap.get(problemId);
+        SolverJob<VrpSolution> solverJob = jobMap.get(problemId);
         if (solverJob == null) {
             return solutionMap.containsKey(problemId) ? "COMPLETED" : "NOT_FOUND";
         }
@@ -160,7 +162,7 @@ public class SolverService {
     }
     
     public void stopSolving(UUID problemId) {
-        SolverJob<VrpSolution, UUID> solverJob = jobMap.get(problemId);
+        SolverJob<VrpSolution> solverJob = jobMap.get(problemId);
         if (solverJob != null) {
             solverJob.terminateEarly();
             LOG.info("Terminated solve job " + problemId);

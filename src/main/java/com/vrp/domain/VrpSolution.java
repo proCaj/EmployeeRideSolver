@@ -2,7 +2,7 @@ package com.vrp.domain;
 
 import ai.timefold.solver.core.api.domain.solution.*;
 import ai.timefold.solver.core.api.domain.valuerange.ValueRangeProvider;
-import ai.timefold.solver.core.api.score.buildin.hardmediumsoftlong.HardMediumSoftLongScore;
+import ai.timefold.solver.core.api.score.HardMediumSoftScore;
 import com.graphhopper.GraphHopper;
 import com.vrp.entity.Customer;
 import com.vrp.entity.Employee;
@@ -10,25 +10,22 @@ import com.vrp.entity.Employee;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @PlanningSolution
 public class VrpSolution {
-    
+
     @ProblemFactCollectionProperty
     private List<Location> locations;
-    
+
     @ProblemFactCollectionProperty
     private List<Customer> customers;
-    
+
     @ProblemFactCollectionProperty
     private List<Employee> employees;
-    
-    @ProblemFactCollectionProperty
-    @ValueRangeProvider(id = "driverRange")
+
+    @PlanningEntityCollectionProperty
     private List<Driver> drivers;
-    
+
     @PlanningEntityCollectionProperty
     private List<Event> events;
     
@@ -36,8 +33,8 @@ public class VrpSolution {
     private LocalDate planningStartDate;
     
     /**
-     * GraphHopper instance stored in the solution so that VariableListeners
-     * (like ArrivalTimeUpdatingVariableListener) can access real routing data
+     * GraphHopper instance stored in the solution so that shadow variable
+     * suppliers (like Event.arrivalTimeSupplier) can access real routing data
      * during solving. Null if GraphHopper is not available (falls back to
      * Haversine distance / average speed).
      * 
@@ -48,7 +45,7 @@ public class VrpSolution {
     private GraphHopper graphHopper;
     
     @PlanningScore
-    private HardMediumSoftLongScore score;
+    private HardMediumSoftScore score;
     
     public VrpSolution() {
         this.locations = new ArrayList<>();
@@ -84,15 +81,7 @@ public class VrpSolution {
     public List<Event> getEventRange() {
         return events;
     }
-    
-    @ValueRangeProvider(id = "standstillRange")
-    public List<Standstill> getStandstillRange() {
-        return Stream.concat(
-            drivers.stream(),
-            events.stream()
-        ).collect(Collectors.toList());
-    }
-    
+
     public List<Location> getLocations() {
         return locations;
     }
@@ -149,11 +138,11 @@ public class VrpSolution {
         this.graphHopper = graphHopper;
     }
     
-    public HardMediumSoftLongScore getScore() {
+    public HardMediumSoftScore getScore() {
         return score;
     }
     
-    public void setScore(HardMediumSoftLongScore score) {
+    public void setScore(HardMediumSoftScore score) {
         this.score = score;
     }
 }

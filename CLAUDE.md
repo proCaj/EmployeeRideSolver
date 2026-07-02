@@ -7,9 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Employee Transportation VRP Solver - A Java-based optimization system for routing drivers to transport employees between a central hub (City-Fahrschule) and customer locations. Uses Timefold Solver for VRP optimization with real-world routing via GraphHopper and OSM data.
 
 **Technology Stack:**
-- Quarkus 3.17.3 (Java 17)
-- Timefold Solver 1.17.0 (VRP optimization)
-- GraphHopper 8.0 (real-world routing with OSM data)
+- Quarkus 3.33.1 (Java 21)
+- Timefold Solver 2.2.0 (VRP optimization)
+- GraphHopper 11.0 (real-world routing with OSM data; 11.0+ required on Quarkus 3.33+ because older GraphHopper uses a Jackson constant the managed Jackson removed)
 - H2 database (file-based persistence at `./db/vrp`)
 - Qute templates + HTMX + TailwindCSS (frontend)
 - Maven 3.x
@@ -51,7 +51,7 @@ The system uses `EmployeeType` enum to distinguish roles:
 1. **DRIVER** - Employees who operate vehicles
    - Filtered from active employees with `employeeType == DRIVER`
    - Converted to `Driver` domain objects in `SolverService.createDriversFromEmployees()`
-   - Used as vehicles/anchors in the Timefold chained planning graph
+   - Each `Driver` is a planning entity that owns an ordered list of `Event`s (the vehicle's route)
    - Default capacity: 6 passengers
    - ArbZG working hour limits configured on Driver: maxDailyHours (10h), maxWeeklyHours (40h), maxConsecutiveHours (4h), minBreak (30min), maxBreak (4h)
 
@@ -60,37 +60,37 @@ The system uses `EmployeeType` enum to distinguish roles:
    - Batched together when going to same customer/shift/day
    - Assigned to driver routes by the solver
 
-### Timefold Chained Planning Pattern
+### Timefold List Variable Planning Pattern
 
-The VRP uses Timefold's chained planning variable pattern (NOT vehicle routing):
+The VRP uses Timefold's planning list variable pattern (the standard VRP model since Timefold 2.0; the older chained planning variable pattern was removed in 2.0 and is no longer used here):
 
-**Key architectural rule:** `Driver` is a **problem fact**, NOT a planning entity. It must never have `@PlanningEntity` annotation.
+**Key architectural rule:** `Driver` **is** a planning entity — it owns the `@PlanningListVariable` that represents its route. This reverses the pre-2.0 rule (kept only in git history) that Driver must never be `@PlanningEntity`.
 
-**Chain structure:**
+**Route structure:**
 ```
-Driver (anchor) → Event₁ → Event₂ → ... → Eventₙ → null
-                    ↑          ↑                ↑
-             previousStandstill (chained planning variable)
+Driver.events = [Event₁, Event₂, ..., Eventₙ]   (@PlanningListVariable<Event>)
 ```
 
 **Domain objects:**
-- `Standstill` interface - Implemented by both `Driver` and `Event` to participate in chains
-- `Driver` - Anchor point, provides home location, implements `Standstill`
-- `Event` - Planning entity with `@PlanningVariable(graphType = CHAINED)` on `previousStandstill`
-- `Event.driver` - `@AnchorShadowVariable` automatically tracks which Driver owns this event
-- `Event.arrivalTime` - `@ShadowVariable` updated by `ArrivalTimeUpdatingVariableListener`
-- `Event.cumulativePassengerCount` - `@ShadowVariable` updated by `PassengerCountUpdatingVariableListener`
+- `Driver` - `@PlanningEntity` with `@PlanningListVariable(valueRangeProviderRefs = "eventRange", allowsUnassignedValues = true) private List<Event> events`
+- `Event` - `@PlanningEntity` (value class of the list variable) with shadow variables:
+  - `Event.driver` - `@InverseRelationShadowVariable(sourceVariableName = "events")` — which Driver owns this event
+  - `Event.previousEvent` - `@PreviousElementShadowVariable(sourceVariableName = "events")` — the prior event in the same driver's route (null if first, or if unassigned)
+  - `Event.arrivalTime` - Custom shadow variable (`@ShadowVariable(supplierName = "arrivalTimeSupplier")`) — a pure function of `driver` and `previousEvent.arrivalTime`, with the `VrpSolution` injected for GraphHopper access
+  - `Event.cumulativePassengerCount` - Custom shadow variable (`@ShadowVariable(supplierName = "cumulativePassengerCountSupplier")`) — a pure function of `driver` and `previousEvent.cumulativePassengerCount`
 
-**Variable listener chain propagation:**
-The `ArrivalTimeUpdatingVariableListener` recursively updates arrival times:
-- When an Event's `previousStandstill` changes, its `arrivalTime` is recalculated
-- Uses GraphHopper (stored in `VrpSolution.graphHopper`) for real routing travel times between events; falls back to Haversine distance / 15 m/s average speed when GraphHopper is unavailable
-- The listener then finds the next Event in the chain and updates it
-- This cascades through the entire route chain
+**Custom shadow variable suppliers (replace the old VariableListener classes):**
+`Event.arrivalTimeSupplier(VrpSolution solution)`:
+- Declared with `@ShadowSources({"driver", "previousEvent.arrivalTime"})` so Timefold automatically recalculates it whenever the event's position in a route changes
+- Returns `null` if unassigned, `minStartTime` if first in the route, otherwise `previousEvent.getDepartureTime() + travelTime`
+- Uses GraphHopper (injected via the `VrpSolution` parameter) for real routing travel times; falls back to Haversine distance / 15 m/s average speed when GraphHopper is unavailable
+- `Event.getDepartureTime()` is a plain derived getter (arrivalTime + duration), not its own shadow variable
 
-The `PassengerCountUpdatingVariableListener` maintains cumulative passenger counts:
-- Computes `previousEvent.cumulativePassengerCount + thisEvent.passengerDelta`
-- Cascades through the chain so capacity constraints can check cumulative + peak load
+`Event.cumulativePassengerCountSupplier()`:
+- Declared with `@ShadowSources({"driver", "previousEvent.cumulativePassengerCount"})`
+- Computes `previousEvent.cumulativePassengerCount + thisEvent.passengerDelta` (0 if first in route)
+
+Unlike the old `VariableListener`s, these suppliers are pure functions with no `scoreDirector.beforeVariableChanged`/`afterVariableChanged` bookkeeping and no manual "find the next event and recurse" traversal — Timefold's dependency graph handles cascading automatically.
 
 ### Event Generation (2-Pass Pipeline)
 
@@ -131,8 +131,9 @@ driver's day. Pickup-before-dropoff ordering is enforced by the pairing constrai
 `VrpConstraintProvider` defines hard and soft constraints:
 
 **Hard constraints:**
-- `driverAssignmentRequired` - Every event must have a driver
-- `vehicleCapacityConstraint` - Checks both cumulative passenger count across the driver's chain AND peak concurrent load within multi-stop events; penalizes whichever exceeds driver `maxCapacity` more
+- `driverAssignmentRequired` - Every event must have a driver. Weighted at structural scale (1M): with `allowsUnassignedValues = true` local search CAN unassign events, so leaving one unassigned must cost more than any violation it would take to place it
+- `vehicleCapacityConstraint` - Checks both cumulative passenger count across the driver's route AND peak concurrent load within multi-stop events; penalizes whichever exceeds driver `maxCapacity` more
+- `negativeCumulativePassengerCount` - Cumulative passenger count must never go negative (a dropoff scheduled before its paired pickup in the driver's route)
 - `timeWindowConstraint` - Event-level time window (completion before `maxEndTime`) for events WITHOUT per-stop deadlines; when any stop carries its own `maxEndTime` (FR-3 merged events), only the per-stop windows apply — the event-level `maxEndTime` is the tightest customer deadline and would be inherently violated by the farther stops
 - `pairingConstraint` - Pickup/dropoff pairs must use same driver, pickup before dropoff. IMPORTANT: implemented as a JOIN selecting both events into the tuple — reading the pickup transitively through `dropoff.getPairedEvent()` inside the penalty function corrupts incremental score calculation (the constraint is not re-evaluated when the pickup moves)
 - `maxDailyWorkingHours` - Per driver per shiftDate, maximum 10 hours of working time per ArbZG; night shifts count toward the day the shift started
@@ -185,7 +186,7 @@ Resources support both JSON and form-encoded data:
 - Loads OSM data from `rheinland-pfalz-latest.osm.pbf` (245MB file in repo root)
 - Caches routing graph in `./graphhopper-cache` directory
 - Provides real-world distance/time calculations between coordinates
-- Used in event generation for distance/duration calculations and in `ArrivalTimeUpdatingVariableListener` for real routing during solving
+- Used in event generation for distance/duration calculations and in `Event.arrivalTimeSupplier` for real routing during solving
 - GraphHopper instance stored in `VrpSolution` (shallow-copied by Timefold's SolutionCloner, NOT a @ProblemFactProperty)
 
 ## File Structure
@@ -193,10 +194,9 @@ Resources support both JSON and form-encoded data:
 **Domain (Timefold planning entities):**
 - `src/main/java/com/vrp/domain/` - Planning entities and problem facts
   - `VrpSolution.java` - `@PlanningSolution` with drivers, events, locations, customers, employees, GraphHopper instance
-  - `Event.java` - `@PlanningEntity` with chained `previousStandstill` variable, multi-stop `List<Stop>`, `shiftDate`, `cumulativePassengerCount` shadow variable
+  - `Event.java` - `@PlanningEntity` (list variable value class), multi-stop `List<Stop>`, `shiftDate`, `previousEvent`/`driver`/`arrivalTime`/`cumulativePassengerCount` shadow variables
   - `Stop.java` - Single stop within an Event's route: location, boarding passengers, alighting count, boarding duration (2 min/passenger), travel time from previous stop, per-stop `maxEndTime`
-  - `Driver.java` - Problem fact (NOT planning entity), implements `Standstill`; ArbZG fields: maxDailyHours, maxWeeklyHours, maxConsecutiveHours, minBreak, maxBreak
-  - `Standstill.java` - Interface for chain participants
+  - `Driver.java` - `@PlanningEntity` owning `@PlanningListVariable<Event> events`; ArbZG fields: maxDailyHours, maxWeeklyHours, maxConsecutiveHours, minBreak, maxBreak
   - `Location.java` - Geographic coordinates with Haversine distance and GraphHopper routing
   - `Route.java` - Simple container for a list of Events with duration
 
@@ -214,11 +214,7 @@ Resources support both JSON and form-encoded data:
 - `src/main/java/com/vrp/service/SolutionDiagnosticService.java` - Diagnoses why events remain unassigned
 
 **Constraints:**
-- `src/main/java/com/vrp/constraint/VrpConstraintProvider.java` - 7 hard + 4 soft constraints including ArbZG working hour limits
-
-**Variable Listeners:**
-- `src/main/java/com/vrp/listener/ArrivalTimeUpdatingVariableListener.java` - Shadow variable updates using GraphHopper for real routing (falls back to Haversine/15 m/s)
-- `src/main/java/com/vrp/listener/PassengerCountUpdatingVariableListener.java` - Maintains cumulative passenger count across the driver's chain
+- `src/main/java/com/vrp/constraint/VrpConstraintProvider.java` - 8 hard + 4 soft constraints including ArbZG working hour limits
 
 **REST Endpoints:**
 - `src/main/java/com/vrp/resource/` - REST API and web page controllers
@@ -238,25 +234,27 @@ Resources support both JSON and form-encoded data:
 `src/main/resources/application.properties`:
 - Database: H2 file-based at `./db/vrp`
 - HTTP: Port 5000, host 0.0.0.0
-- Timefold: 120s termination limit, REPRODUCIBLE mode
+- Timefold: 120s termination limit, `no-assert` environment mode (reproducible, minimal assertion overhead)
 - GraphHopper: OSM file path, cache directory, car profile
 - Logging: INFO level, DEBUG for `com.vrp` package
 
 `src/main/resources/solverConfig.xml` (auto-detected by Quarkus Timefold):
-- Construction heuristic: FIRST_FIT_DECREASING + `EventDifficultyComparator` (earliest
+- Construction heuristic: sorted value placer + `EventChronologicalComparator` (earliest
   `minStartTime` first) so events are inserted chronologically — each dropoff is placed after
   its pickup already exists and lands on the matching driver. Without this, the CH locks in
   pairing violations (1M-scale hard penalties) that local search can never repair, because
   every repair path passes through another 1M-scale state and late acceptance rejects it.
-- Local search: late acceptance 1500, acceptedCountLimit 4
+- Local search: standard list moves PLUS `listRuinRecreateMoveSelector` (single-element moves
+  can never rebalance a coupled pickup+dropoffs family across drivers — ruin-and-recreate
+  unassigns a slice and rebuilds it atomically, crossing the pairing walls); late acceptance
+  1500, acceptedCountLimit 4
 
 ## Important Technical Notes
 
 ### Timefold Planning Entity Rules
-- Driver must NEVER be annotated with `@PlanningEntity`
-- Quarkus Timefold processor validates this at build time
-- Only Event should be a planning entity
-- Driver is marked with `@ProblemFactCollectionProperty` in VrpSolution
+- Both `Driver` and `Event` are `@PlanningEntity` (Driver owns the `@PlanningListVariable<Event>`, Event carries the shadow variables)
+- Both are marked with `@PlanningEntityCollectionProperty` in `VrpSolution`; there are no `@ProblemFactCollectionProperty`-only entities left in the planning graph
+- `Event.arrivalTimeSupplier` / `Event.cumulativePassengerCountSupplier` must remain pure functions (no side effects) — Timefold recomputes them automatically based on their declared `@ShadowSources`
 
 ### Qute Template Escaping
 - JavaScript curly braces in templates need escaping: `{ldelim}` for `{`, `{rdelim}` for `}`

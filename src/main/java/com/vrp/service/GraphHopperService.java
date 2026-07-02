@@ -3,6 +3,7 @@ package com.vrp.service;
 import com.graphhopper.GraphHopper;
 import com.graphhopper.config.CHProfile;
 import com.graphhopper.config.Profile;
+import com.graphhopper.json.Statement;
 import com.graphhopper.util.CustomModel;
 import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -82,10 +83,15 @@ public class GraphHopperService {
         graphHopper.setOSMFile(osmFile);
         graphHopper.setGraphHopperLocation(cacheDir);
 
+        // GraphHopper 10+ removed the profile "vehicle" concept: a profile is now a custom
+        // model over encoded values. This is the canonical car equivalent of the old
+        // setVehicle("car"): impassable where car_access is false, speed capped by
+        // car_average_speed.
+        graphHopper.setEncodedValuesString("car_access, car_average_speed");
         Profile carProfile = new Profile("car")
-            .setVehicle("car")
-            .setWeighting("custom")
-            .setCustomModel(new CustomModel());
+            .setCustomModel(new CustomModel()
+                .addToPriority(Statement.If("!car_access", Statement.Op.MULTIPLY, "0"))
+                .addToSpeed(Statement.If("true", Statement.Op.LIMIT, "car_average_speed")));
         graphHopper.setProfiles(carProfile);
         graphHopper.getCHPreparationHandler().setCHProfiles(new CHProfile("car"));
 
