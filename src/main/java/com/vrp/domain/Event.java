@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  *   fromLocation = first stop's location
  *   toLocation   = last stop's location
  */
-@PlanningEntity
+@PlanningEntity(difficultyComparatorClass = EventDifficultyComparator.class)
 public class Event implements Standstill {
     
     private String id;

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Local search tuning for the weekly VRP.
+
+  The pairing constraint hard-couples each return dropoff to its outbound pickup's driver,
+  so repairing a badly-ordered morning requires migrating several events across drivers at
+  once - every intermediate step breaks a pairing (1M-scale hard penalty). The default
+  late-acceptance horizon (400) treats that valley as unescapable and plateaus on a single
+  ~2.8k time-window violation; a longer horizon plus a less greedy forager reliably crosses
+  it. Termination stays in application.properties (per-profile).
+-->
+<solver xmlns="https://timefold.ai/xsd/solver">
+  <constructionHeuristic>
+    <!-- With EventDifficultyComparator this inserts events chronologically, so each
+         return dropoff lands on its (already-placed) pickup's driver instead of locking
+         in a pairing violation local search cannot repair. -->
+    <constructionHeuristicType>FIRST_FIT_DECREASING</constructionHeuristicType>
+  </constructionHeuristic>
+  <localSearch>
+    <acceptor>
+      <lateAcceptanceSize>1500</lateAcceptanceSize>
+    </acceptor>
+    <forager>
+      <acceptedCountLimit>4</acceptedCountLimit>
+    </forager>
+  </localSearch>
+</solver>

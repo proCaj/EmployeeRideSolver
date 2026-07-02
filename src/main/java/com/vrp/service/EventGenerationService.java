@@ -202,7 +202,47 @@ public class EventGenerationService {
 
         List<Event> result = new ArrayList<>(mergedPickups);
         result.addAll(allDropoffs);
+        // Every event leaves the pipeline self-contained — see makeSelfContained for why
+        // the legacy ±delta occupancy model must not reach the solver.
+        for (Event event : result) {
+            makeSelfContained(event, hopper);
+        }
         return result;
+    }
+
+    /**
+     * Converts a legacy from→to event into the equivalent self-contained 2-stop event:
+     * passengers board at the origin and alight at the destination WITHIN the event
+     * (net delta 0, peak N). That is the physical reality for every trip in this system —
+     * nobody stays in the vehicle between events; between a pickup and its return dropoff
+     * the passengers are at work, not aboard.
+     *
+     * <p>The legacy ±N delta model instead "virtually occupies" the vehicle for the whole
+     * shift, which (a) breaks the chain zero-sum invariant whenever an FR-3 merged pickup
+     * (already delta 0) is paired with a legacy dropoff — making the negative-cumulative-count
+     * hard constraint unsatisfiable under EVERY ordering — and (b) phantom-fills capacity so
+     * a driver who ferried one group in the morning cannot ferry another before the first's
+     * return trip. Making every generated event self-contained fixes both; pickup-before-
+     * dropoff ordering stays enforced by the pairing constraint.
+     */
+    private void makeSelfContained(Event event, GraphHopper hopper) {
+        if (event.getStops() != null && !event.getStops().isEmpty()) {
+            return; // already stop-based (FR-3 merged events)
+        }
+        List<Employee> passengers = event.getPassengers() != null ? event.getPassengers() : List.of();
+
+        Stop board = new Stop(event.getFromLocation(), passengers, 0, null);
+        board.setTravelTimeFromPrevious(Duration.ZERO);
+        board.setDistanceFromPrevious(0L);
+
+        Stop alight = new Stop(event.getToLocation(), List.of(), passengers.size(),
+            event.getToLocation().name());
+        alight.setTravelTimeFromPrevious(event.getFromLocation().getTravelTime(event.getToLocation(), hopper));
+        alight.setDistanceFromPrevious(event.getFromLocation().getDistanceTo(event.getToLocation(), hopper));
+        // Per-stop maxEndTime stays null: the event-level maxEndTime already enforces
+        // the deadline, and setting it here would double-penalize lateness.
+
+        event.setStops(List.of(board, alight));
     }
 
     /**
@@ -320,16 +360,24 @@ public class EventGenerationService {
         String eventId = String.format("dropoff-%d-%d-%s-p%d",
             shift.customer.id, shift.id, shiftDate, passengers.size());
 
-        LocalDateTime shiftEndDateTime = LocalDateTime.of(shiftDate, shift.endTime);
+        // Night shifts span midnight (endTime < startTime): the return trip happens on the
+        // NEXT calendar day, otherwise its window lands ~16h before the outbound pickup and
+        // the pairing + time-window constraints become jointly unsatisfiable.
+        LocalDate dropoffDate = shift.endTime.isBefore(shift.startTime)
+            ? shiftDate.plusDays(1) : shiftDate;
+        LocalDateTime shiftEndDateTime = LocalDateTime.of(dropoffDate, shift.endTime);
         Instant shiftEndInstant = shiftEndDateTime.atZone(ZoneId.systemDefault()).toInstant();
-
-        Instant minStartTime = shiftEndInstant;
-        Instant maxEndTime = shiftEndInstant.plus(Duration.ofHours(1));
 
         Duration travelTime = fromLocation.getTravelTime(toLocation, hopper);
         long distance = fromLocation.getDistanceTo(toLocation, hopper);
         Duration boardingTime = BOARDING_TIME_PER_PASSENGER.multipliedBy(passengers.size());
         Duration totalDuration = travelTime.plus(boardingTime);
+
+        Instant minStartTime = shiftEndInstant;
+        // The service promise is "picked up within 1h of shift end". The constraint checks
+        // COMPLETION (arrival home), so the window must include the trip itself — a plain
+        // +1h is unsatisfiable for any customer more than an hour from the hub.
+        Instant maxEndTime = shiftEndInstant.plus(Duration.ofHours(1)).plus(totalDuration);
 
         Event event = new Event(eventId, fromLocation, toLocation,
             minStartTime, maxEndTime, totalDuration, distance,

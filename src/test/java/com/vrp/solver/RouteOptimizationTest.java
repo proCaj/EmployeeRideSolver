@@ -827,6 +827,7 @@ class RouteOptimizationTest {
                 Duration.ofMinutes(30), Duration.ofMinutes(45));
         // Derive shiftDate from minStart (tests are single-day, so this works)
         event.setShiftDate(minStart.atZone(ZONE).toLocalDate());
+        selfContain(event, from, to, passengers, travelTime, distance);
         return event;
     }
 
@@ -842,7 +843,25 @@ class RouteOptimizationTest {
                 Duration.ZERO, Duration.ZERO);
         // Derive shiftDate from minStart (tests are single-day, so this works)
         event.setShiftDate(minStart.atZone(ZONE).toLocalDate());
+        selfContain(event, from, to, passengers, travelTime, distance);
         return event;
+    }
+
+    /**
+     * Mirrors EventGenerationService.makeSelfContained: every event that reaches the solver
+     * in production is self-contained (passengers board and alight WITHIN the event, net
+     * delta 0), so the test scenarios must model the same — the legacy ±delta form phantom-
+     * occupies the vehicle between a pickup and its return dropoff.
+     */
+    static void selfContain(Event event, Location from, Location to,
+                            List<Employee> passengers, Duration travelTime, long distance) {
+        Stop board = new Stop(from, passengers, 0, null);
+        board.setTravelTimeFromPrevious(Duration.ZERO);
+        board.setDistanceFromPrevious(0L);
+        Stop alight = new Stop(to, List.of(), passengers.size(), to.name());
+        alight.setTravelTimeFromPrevious(travelTime);
+        alight.setDistanceFromPrevious(distance);
+        event.setStops(List.of(board, alight));
     }
 
     static Stop createStop(Location location, List<Employee> boardingPassengers,
